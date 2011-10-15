@@ -55,7 +55,9 @@ object Release {
       val extracted = Project.extract(st)
       val (releaseV, nextV) = extracted.get(versions)
       releaseStage2.key.label :: extracted.append(Seq(
+        // set the version in the next stage to the release version
         version := releaseV,
+        // carry over release-version and next-version, otherwise they would get reset by the 'versions <== ...' statement
         versions := (releaseV, nextV)
       ), st)
     },
