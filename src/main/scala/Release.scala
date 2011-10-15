@@ -10,7 +10,7 @@ object Release {
   lazy val checkSnapshotDependencies = TaskKey[Boolean]("release-check-snapshot-dependencies")
 
   type Versions = (String, String)
-  lazy val versions = TaskKey[Versions]("release-versions")
+  lazy val versions = SettingKey[Versions]("release-versions")
   lazy val inquireVersions = TaskKey[Versions]("release-inquire-versions")
 
   lazy val useDefaults = TaskKey[Boolean]("release-use-defaults")
@@ -53,18 +53,21 @@ object Release {
       (_, testTask) => testTask.map( _ => ())
     } updateState { case (st, _) =>
       val extracted = Project.extract(st)
-      val (newSt, (releaseV, _)) = extracted.runTask(versions, st)
+      val (releaseV, nextV) = extracted.get(versions)
       releaseStage2.key.label :: extracted.append(Seq(
-        version := releaseV
-      ), newSt)
+        version := releaseV,
+        versions := (releaseV, nextV)
+      ), st)
     },
 
+    // releaseStage2 is run after the version has been set to the release-version in the release task.
+    // using publish-local for now.
     releaseStage2 <<= (test in Test, publishLocal.task) flatMap {
       (_, publishTask) => publishTask
     } updateState { case (st, _) =>
       val extracted = Project.extract(st)
-      val (newSt, (_, nextV)) = extracted.runTask(versions, st)
-      extracted.append(Seq(version := nextV), newSt)
+      val (_, nextV) = extracted.get(versions)
+      extracted.append(Seq(version := nextV), st)
     }
 
   )
@@ -82,16 +85,14 @@ object Release {
       val releaseV = readVersion(releaseVersion, "Release version [%s] : " format releaseVersion)
       val nextV = readVersion(nextVersion, "Next version [%s] : " format nextVersion)
       (releaseV, nextV)
-    }).keepAs(versions)
+    }).updateState { case (st, vs) =>
+      val extracted = Project.extract(st)
+      extracted.append(Seq(versions := vs), st)
+    }
 
-  def loadOrSetVersions = versions <<= {
-    val init: Project.Initialize[Task[Versions]] = (state, resolvedScoped, version) map ((s, ctx, ver) =>
-      getFromContext(versions, ctx, s) match {
-        case Some(v) => v
-        case None => Version(ver).map( v => (v.withoutQualifier.string, v.bump.asSnapshot.string)).getOrElse(versionFormatError)
-      })
-    init.keepAs(versions)
-  }
+  def loadOrSetVersions = versions <<= version(ver => Version(ver).map(
+    v => (v.withoutQualifier.string, v.bump.asSnapshot.string)).getOrElse(versionFormatError)
+  )
 
   private def versionFormatError = sys.error("Version format is not compatible with [0-9]+([0-9]+)?([0-9]+)?(-.*)?")
 
