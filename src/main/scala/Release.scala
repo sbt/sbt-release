@@ -49,8 +49,8 @@ object Release {
     },
 
     // executes the tests, set the version to the release-version and let release2 run after reapplying the settings.
-    release <<= (release, executeTests.task in Test) flatMap {
-      (_, testTask) => testTask.map( _ => ())
+    release <<= (release, test.task in Test) flatMap {
+      (_, testTask) => testTask
     } updateState { case (st, _) =>
       val extracted = Project.extract(st)
       val (releaseV, nextV) = extracted.get(versions)
