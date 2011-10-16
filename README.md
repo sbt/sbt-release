@@ -130,3 +130,6 @@ After publishing the actual build artifacts, we also publish the release notes.
 **Side note:** Since the release process consists of state transformation functions (`State => State`),
 we can't just add tasks directly. But we can use the helper function `releaseTask` that wraps a state transformation
 function around the task and evaluates the task when needed.
+
+## Credits
+Thank you Jason (@retronym) and Mark (@harrah) for your feedback and ideas.
