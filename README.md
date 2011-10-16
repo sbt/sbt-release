@@ -6,6 +6,14 @@ This sbt plugin provides a customizable release process that you can add to your
  * The version of the project adheres to the pattern `[0-9]+(.[0-9)+)?(.[0-9]+)?(-.*)?`
  * git [optional]
 
+## Restrictions
+Since the build definition is actual Scala code, it's not as straight forward to change something in the middle of
+it as it is with an XML definition.
+
+For this reason, *sbt-release* won't ever touch your build definitions,
+but instead write the new versions to a file called **`version.sbt`** in the root directory of the project.
+
+
 ## Usage
 ### Adding the plugin dependency
 
