@@ -67,3 +67,66 @@ For all interactions, the following default value will be chosen:
 ### Skipping tests
 For that emergency release at 2am on a Sunday, you can optionally avoid running any tests by providing the `skip-tests` argument to the `release` command.
 
+## Not all releases are created equal
+The release process can be customized to the project's needs.
+
+Not using Git? Then strip it out.
+
+Want to check for the existance of release notes at the start and then publish it with [posterous-sbt](https://github.com/n8han/posterous-sbt) at the end? Just add it.
+
+
+The release process is defined by state transformation functions (`State => State`) and stored in the setting `releaseProcess`.
+Take a look at the [default definition](https://github.com/gseitz/sbt-release/blob/master/src/main/scala/ReleasePlugin.scala#L49) before continuing.
+
+If you project's release process differs from the one outlined above, you can provide a different one yourself.
+
+Here is one, that doesn't use git:
+
+    import sbtrelease._
+
+    // ...
+
+    releaseProcess <<= thisProjectRef apply { ref =>
+        import ReleaseStateTransformations._
+        Seq[ReleasePart](
+          checkSnapshotDependencies,
+          inquireVersions,
+          runTest,
+          setReleaseVersion,
+          runTest,
+          releaseTask(publish in Global in ref),
+          setNextVersion,
+        )
+      }
+
+Notice that the overall process was the same, only the git specific tasks were left out.
+
+Now let's add steps for [posterous-sbt](https://github.com/n8han/posterous-sbt):
+
+    import posterous.Publish._
+    import sbtrelease._
+
+    // ...
+
+    releaseProcess <<= thisProjectRef apply { ref =>
+        import ReleaseStateTransformations._
+        Seq[ReleasePart](
+          checkSnapshotDependencies,
+          releaseTask(check in Posterous in ref), // upfront check
+          inquireVersions,
+          runTest,
+          setReleaseVersion,
+          runTest,
+          releaseTask(publish in Global in ref),
+          releaseTask(publish in Posterous in ref), // publish release notes
+          setNextVersion,
+        )
+      }
+
+We added the check at the start, to make sure we have everything set up to post the release notes later on.
+
+After publishing the actual build artifacts, we also publish the release notes.
+
+**Side note:** Since the release process consists of state transformation functions (`State => State`),
+we can't just add tasks directly. But we can use the helper function `releaseTask` that wraps a state transformation
+function around the task and evaluates the task when needed.
