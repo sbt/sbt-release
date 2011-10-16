@@ -24,7 +24,7 @@ object ReleaseStateTransformations {
   lazy val checkSnapshotDependencies: ReleasePart = { st =>
     val extracted = Project.extract(st)
     val snapshotDeps = extracted.evalTask(snapshotDependencies, st)
-    val useDefs = extracted.get(useDefaults)
+    val useDefs = st.get(useDefaults).getOrElse(false)
     if (!snapshotDeps.isEmpty) {
       if (useDefs) {
         sys.error("Aborting release due to snapshot dependencies.")
@@ -42,11 +42,12 @@ object ReleaseStateTransformations {
 
   lazy val inquireVersions: ReleasePart = { st =>
     val extracted = Project.extract(st)
-    val useDefs = extracted.get(useDefaults)
     val (releaseVersion, nextVersion) = extracted.get(versions)
 
+    val useDefs = st.get(useDefaults).getOrElse(false)
+
     val releaseV =
-      if (useDefs) releaseVersion
+    if (useDefs) releaseVersion
       else readVersion(releaseVersion, "Release version [%s] : " format releaseVersion)
 
     val nextV =
@@ -57,7 +58,16 @@ object ReleaseStateTransformations {
   }
 
 
-  lazy val setReleaseVersion:ReleasePart = setVersion(_._1)
+  lazy val runTest: ReleasePart = {st =>
+    if (!st.get(skipTests).getOrElse(false)) {
+      val extracted = Project.extract(st)
+      val ref = extracted.get(thisProjectRef)
+      extracted.evalTask(test in Test in ref, st)
+    }
+    st
+  }
+
+  lazy val setReleaseVersion: ReleasePart = setVersion(_._1)
   lazy val setNextVersion: ReleasePart = setVersion(_._2)
   private def setVersion(selectVersion: Versions => String): ReleasePart =  { st =>
     val extracted = Project.extract(st)
@@ -71,7 +81,7 @@ object ReleaseStateTransformations {
     IO.append(new File("version.sbt"), versionString)
 
     extracted.append(Seq(
-      version := selected,
+      version in ThisBuild := selected,
       versions := vs
     ), st)
   }
@@ -80,7 +90,7 @@ object ReleaseStateTransformations {
   lazy val commitNextVersion: ReleasePart = commitVersion("Bump to %s")
   private def commitVersion(msgPattern: String): ReleasePart = { st =>
     val extracted = Project.extract(st)
-    val v = extracted.get(version)
+    val v = extracted.get(version in ThisBuild)
 
     Git.add("version.sbt") !! st.logger
     Git.commit(msgPattern format v) !! st.logger
@@ -90,7 +100,7 @@ object ReleaseStateTransformations {
 
   lazy val tagRelease: ReleasePart = { st =>
     val extracted = Project.extract(st)
-    val v = extracted.get(version)
+    val v = extracted.get(version in ThisBuild)
 
     Git.tag(v) !! st.logger
 

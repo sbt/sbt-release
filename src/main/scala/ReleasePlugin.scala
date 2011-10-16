@@ -8,18 +8,24 @@ object Release {
 
   object ReleaseKeys {
     lazy val snapshotDependencies = TaskKey[Seq[ModuleID]]("release-snapshot-dependencies")
-    lazy val useDefaults = SettingKey[Boolean]("release-use-defaults")
     lazy val versions = SettingKey[Versions]("release-versions")
     lazy val releaseProcess = SettingKey[Seq[ReleasePart]]("release-process")
 
-    private lazy val releaseCommandKey = "release"
-    private val releaseParser = (Space ~> "with-defaults")?
+    lazy val useDefaults = AttributeKey[Boolean]("release-use-defaults")
+    lazy val skipTests = AttributeKey[Boolean]("release-skip-tests")
 
-    val releaseCommand: Command = Command(releaseCommandKey)(_ => releaseParser) { (st, switch) =>
+    private lazy val releaseCommandKey = "release"
+    private val WithDefaults = "with-defaults"
+    private val SkipTests = "skip-tests"
+    private val releaseParser = (Space ~> WithDefaults | Space ~> SkipTests).*
+
+    val releaseCommand: Command = Command(releaseCommandKey)(_ => releaseParser) { (st, args) =>
       val extracted = Project.extract(st)
       val process = extracted.get(releaseProcess)
 
-      val startState = extracted.append(Seq(useDefaults := switch.isDefined), st)
+      val startState = st
+        .put(useDefaults, args.contains(WithDefaults))
+        .put(skipTests, args.contains(SkipTests))
 
       Function.chain(process)(startState)
     }
@@ -28,8 +34,6 @@ object Release {
   import ReleaseKeys._
 
   lazy val releaseSettings = Seq[Setting[_]](
-    useDefaults := false,
-
     snapshotDependencies <<= (fullClasspath in Runtime) map { cp: Classpath =>
       val moduleIds = cp.flatMap(_.get(moduleID.key))
       val snapshots = moduleIds.filter(m => m.isChanging || m.revision.endsWith("-SNAPSHOT"))
@@ -48,9 +52,9 @@ object Release {
         initialGitChecks,
         checkSnapshotDependencies,
         inquireVersions,
-        releaseTask(test in Test in ref),
+        runTest,
         setReleaseVersion,
-        releaseTask(test in Test in ref),
+        runTest,
         releaseTask(publishLocal in Global in ref),
         commitReleaseVersion,
         tagRelease,
