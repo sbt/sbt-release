@@ -3,7 +3,7 @@ This sbt plugin provides a customizable release process that you can add to your
 
 ## Requirements
  * sbt 0.11.0 or greater
- * The version of the project adheres to the pattern `[0-9]+(.[0-9)+)?(.[0-9]+)?(-.*)?`
+ * The version of the project adheres to the pattern `[0-9]+(.[0-9)+)?(.[0-9]+)?(-.*)?`, basically: major[.minor[.micro]][-QUALIFIER]
  * git [optional]
 
 ## Restrictions
