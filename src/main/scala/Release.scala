@@ -6,6 +6,7 @@ import complete.DefaultParsers._
 import util.control.Exception._
 
 object Release {
+  import Utilities._
 
   lazy val snapshotDependencies = TaskKey[Seq[ModuleID]]("release-snapshot-dependencies")
 
@@ -13,10 +14,6 @@ object Release {
 
   type Versions = (String, String)
   lazy val versions = SettingKey[Versions]("release-versions")
-  lazy val inquireVersions = TaskKey[Versions]("release-inquire-versions")
-
-  lazy val releaseStage2 = TaskKey[Unit]("release-stage-2")
-
 
 
   val releaseCommand = "release"
@@ -28,33 +25,66 @@ object Release {
     import Project.showFullKey
 
     Seq(
+      initialGitChecksCommand,
       checkSnapshotDependenciesCommand,
-      showFullKey(inquireVersions in Global in ref),
+      inquireVersionsCommand,
       showFullKey(test in Test in ref),
       setReleaseVersionCommand,
+      commitReleaseVersionCommand,
+      tagReleaseCommand,
       showFullKey(test in Test in ref),
       showFullKey(publishLocal in Global in ref),
-      setNextVersionCommand
+      setNextVersionCommand,
+      commitNextVersionCommand
     ) ::: Project.extract(st).append(Seq(useDefaults := switch.isDefined), st)
+  }
+
+  val initialGitChecksCommand = "release-git-checks"
+  val initialGitChecks = Command.command(initialGitChecksCommand) { st =>
+    if (!new File(".git").exists) {
+      sys.error("Aborting release. Working directory is not a git repository.")
+    }
+    val status = (Git.status !!).removeLastNL
+    if (!status.isEmpty) {
+      sys.error("Aborting release. Working directory is dirty.")
+    }
+    st
   }
 
   val checkSnapshotDependenciesCommand = "release-check-snapshot-dependencies"
   val checkSnapshotDependencies = Command.command(checkSnapshotDependenciesCommand) { (st) =>
     val extracted = Project.extract(st)
-    val (newSt, snapshotDeps) = extracted.runTask(snapshotDependencies, st)
+    val snapshotDeps = extracted.evalTask(snapshotDependencies, st)
     val useDefs = extracted.get(useDefaults)
     if (!snapshotDeps.isEmpty) {
       if (useDefs) {
         sys.error("Aborting release due to snapshot dependencies.")
       } else {
-        CommandSupport.logger(newSt).warn("Snapshot dependencies detected:\n" + snapshotDeps.mkString("\n"))
+        st.logger.warn("Snapshot dependencies detected:\n" + snapshotDeps.mkString("\n"))
         SimpleReader.readLine("Do you want to continue (y/n)? [n] ") match {
           case Some("y") | Some("Y") =>
           case _ => sys.error("Aborting release due to snapshot dependencies.")
         }
       }
     }
-    newSt
+    st
+  }
+
+  val inquireVersionsCommand = "release-inquire-versions"
+  val inquireVersions = Command.command(inquireVersionsCommand) { st =>
+    val extracted = Project.extract(st)
+    val useDefs = extracted.get(useDefaults)
+    val (releaseVersion, nextVersion) = extracted.get(versions)
+
+    val releaseV =
+      if (useDefs) releaseVersion
+      else readVersion(releaseVersion, "Release version [%s] : " format releaseVersion)
+
+    val nextV =
+      if (useDefs) nextVersion
+      else readVersion(nextVersion, "Next version [%s] : " format nextVersion)
+
+    extracted.append(Seq(versions := (releaseV, nextV)), st)
   }
 
   val setReleaseVersionCommand = "release-set-release-version"
@@ -69,7 +99,11 @@ object Release {
     val vs = extracted.get(versions)
     val selected = selectVersion(vs)
 
-    CommandSupport.logger(st).info("Setting version to '%s'." format selected)
+    st.logger.info("Setting version to '%s'." format selected)
+
+
+    val versionString = "%sversion in ThisBuild := \"%s\"%s" format (lineSep, selected, lineSep)
+    IO.append(new File("version.sbt"), versionString)
 
     extracted.append(Seq(
       version := selected,
@@ -77,6 +111,31 @@ object Release {
     ), st)
   }
 
+  val commitReleaseVersionCommand = "release-commit-release-version"
+  val commitReleaseVersion = commitVersion(commitReleaseVersionCommand, "Releasing %s")
+
+  val commitNextVersionCommand = "release-commit-next-version"
+  val commitNextVersion = commitVersion(commitNextVersionCommand, "Bump to %s")
+
+  def commitVersion(key: String, msgPattern: String) = Command.command(key) { st =>
+    val extracted = Project.extract(st)
+    val v = extracted.get(version)
+
+    Git.add("version.sbt") !! st.logger
+    Git.commit(msgPattern format v) !! st.logger
+
+    st
+  }
+
+  val tagReleaseCommand = "release-tag-release"
+  val tagRelease = Command.command(tagReleaseCommand) { st =>
+    val extracted = Project.extract(st)
+    val v = extracted.get(version)
+
+    Git.tag(v) !! st.logger
+
+    st
+  }
 
   lazy val settings = Seq[Setting[_]](
     useDefaults := false,
@@ -91,9 +150,16 @@ object Release {
       v => (v.withoutQualifier.string, v.bump.asSnapshot.string)).getOrElse(versionFormatError)
     ),
 
-    inquireVersionsTask,
-
-    commands ++= Seq(release, checkSnapshotDependencies, setReleaseVersion, setNextVersion)
+    commands ++= Seq(
+      release,
+      checkSnapshotDependencies,
+      inquireVersions,
+      setReleaseVersion,
+      setNextVersion,
+      initialGitChecks,
+      commitReleaseVersion,
+      commitNextVersion,
+      tagRelease)
 
   )
 
@@ -105,21 +171,21 @@ object Release {
     }
   }
 
-  def inquireVersionsTask =
-    inquireVersions <<= (useDefaults, versions, streams).map({ case (useDefs, (releaseVersion, nextVersion), s) =>
-      val releaseV =
-        if (useDefs) releaseVersion
-        else readVersion(releaseVersion, "Release version [%s] : " format releaseVersion)
-
-      val nextV =
-        if (useDefs) nextVersion
-        else readVersion(nextVersion, "Next version [%s] : " format nextVersion)
-
-      (releaseV, nextV)
-    }).updateState { case (st, vs) =>
-      val extracted = Project.extract(st)
-      extracted.append(Seq(versions := vs), st)
-    }
-
   private def versionFormatError = sys.error("Version format is not compatible with [0-9]+([0-9]+)?([0-9]+)?(-.*)?")
+}
+
+
+object Utilities {
+  val lineSep = sys.props.get("line.separator").getOrElse(sys.error("No line separator? Really?"))
+
+  class StringW(s: String) {
+    def removeLastNL = s.reverse.replaceFirst(lineSep, "").reverse
+  }
+
+  implicit def stringW(s: String): StringW = new StringW(s)
+
+  class StateW(st: State) {
+    def logger = CommandSupport.logger(st)
+  }
+  implicit def stateW(st: State): StateW = new StateW(st)
 }
