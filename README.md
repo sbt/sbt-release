@@ -3,6 +3,7 @@ This sbt plugin provides a customizable release process that you can add to your
 
 ## Requirements
  * sbt 0.11.0 or greater
+ * The version of the project adheres to the pattern `[0-9]+(.[0-9)+)?(.[0-9]+)?(-.*)?`
  * git [optional]
 
 ## Usage
@@ -51,7 +52,7 @@ In case of a failure of a task, the release process is aborted.
 You can run a non-interactive release by prividing the argument `with-defaults` (tab completion works) to the `release` command.
 For all interactions, the following default value will be chosen:
 
- * Snapshots detected. Continue? **no**
+ * Continue with snapshots dependencies: no
  * Release Version: current version without the qualifier (eg. 1.2-SNAPSHOT -> 1.2)
  * Next Version: increase the last segment of the current version and set the qualifier to '-SNAPSHOT' (eg. 1.2-SNAPSHOT -> 1.3-SNAPSHOT)
 
