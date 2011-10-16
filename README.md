@@ -22,13 +22,13 @@ but instead write the new versions to a file called **`version.sbt`** in the roo
     addSbtPlugin("com.github.gseitz" % "sbt-release" % "0.1")
 
 ### Import sbt-release settings
-##### build.sbt (simple build definition)
+#### build.sbt (simple build definition)
 
     import sbtrelease.Release._
 
     seq(releaseSettings: _*)
 
-##### build.scala (full build definition)
+#### build.scala (full build definition)
 
     import sbtrelease.Release._
 
