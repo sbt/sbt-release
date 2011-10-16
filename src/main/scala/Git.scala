@@ -7,9 +7,9 @@ object Git {
 
   private def cmd(args: Any*): ProcessBuilder = Process("git" +: args.map(_.toString))
 
-  def trackingBranch: String = (cmd("for-each-ref", "--format=%(upstream:short)", "refs/heads/" + currentBranch) !!) removeAllNL
+  def trackingBranch: String = (cmd("for-each-ref", "--format=%(upstream:short)", "refs/heads/" + currentBranch) !!) trim
 
-  def currentBranch = (cmd("name-rev", "HEAD", "--name-only") !!) removeAllNL
+  def currentBranch = (cmd("name-rev", "HEAD", "--name-only") !!) trim
 
   def add(files: String*) = cmd(("add" +: files): _*)
 

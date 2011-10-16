@@ -44,7 +44,7 @@ object Release {
     if (!new File(".git").exists) {
       sys.error("Aborting release. Working directory is not a git repository.")
     }
-    val status = (Git.status !!).removeLastNL
+    val status = (Git.status !!).trim
     if (!status.isEmpty) {
       sys.error("Aborting release. Working directory is dirty.")
     }
@@ -177,13 +177,6 @@ object Release {
 
 object Utilities {
   val lineSep = sys.props.get("line.separator").getOrElse(sys.error("No line separator? Really?"))
-
-  class StringW(s: String) {
-    def removeLastNL = s.reverse.replaceFirst(lineSep, "").reverse
-    def removeAllNL = s.replace(lineSep, "")
-  }
-
-  implicit def stringW(s: String): StringW = new StringW(s)
 
   class StateW(st: State) {
     def logger = CommandSupport.logger(st)
