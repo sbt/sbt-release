@@ -78,7 +78,7 @@ object ReleaseStateTransformations {
 
 
     val versionString = "%sversion in ThisBuild := \"%s\"%s" format (lineSep, selected, lineSep)
-    IO.append(new File("version.sbt"), versionString)
+    IO.write(new File("version.sbt"), versionString)
 
     extracted.append(Seq(
       version in ThisBuild := selected,
