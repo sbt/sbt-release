@@ -87,17 +87,17 @@ Here is one, that doesn't use git:
     // ...
 
     releaseProcess <<= thisProjectRef apply { ref =>
-        import ReleaseStateTransformations._
-        Seq[ReleasePart](
-          checkSnapshotDependencies,
-          inquireVersions,
-          runTest,
-          setReleaseVersion,
-          runTest,
-          releaseTask(publish in Global in ref),
-          setNextVersion,
-        )
-      }
+      import ReleaseStateTransformations._
+      Seq[ReleasePart](
+        checkSnapshotDependencies,
+        inquireVersions,
+        runTest,
+        setReleaseVersion,
+        runTest,
+        releaseTask(publish in Global in ref),
+        setNextVersion,
+      )
+    }
 
 Notice that the overall process was the same, only the git specific tasks were left out.
 
@@ -109,19 +109,19 @@ Now let's add steps for [posterous-sbt](https://github.com/n8han/posterous-sbt):
     // ...
 
     releaseProcess <<= thisProjectRef apply { ref =>
-        import ReleaseStateTransformations._
-        Seq[ReleasePart](
-          checkSnapshotDependencies,
-          releaseTask(check in Posterous in ref), // upfront check
-          inquireVersions,
-          runTest,
-          setReleaseVersion,
-          runTest,
-          releaseTask(publish in Global in ref),
-          releaseTask(publish in Posterous in ref), // publish release notes
-          setNextVersion,
-        )
-      }
+      import ReleaseStateTransformations._
+      Seq[ReleasePart](
+        checkSnapshotDependencies,
+        releaseTask(check in Posterous in ref), // upfront check
+        inquireVersions,
+        runTest,
+        setReleaseVersion,
+        runTest,
+        releaseTask(publish in Global in ref),
+        releaseTask(publish in Posterous in ref), // publish release notes
+        setNextVersion,
+      )
+    }
 
 We added the check at the start, to make sure we have everything set up to post the release notes later on.
 
