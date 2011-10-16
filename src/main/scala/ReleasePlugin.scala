@@ -50,10 +50,10 @@ object Release {
         inquireVersions,
         releaseTask(test in Test in ref),
         setReleaseVersion,
-        commitReleaseVersion,
-        tagRelease,
         releaseTask(test in Test in ref),
         releaseTask(publishLocal in Global in ref),
+        commitReleaseVersion,
+        tagRelease,
         setNextVersion,
         commitNextVersion
       )
