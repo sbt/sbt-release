@@ -3,12 +3,13 @@ package sbtrelease
 import sbt._
 
 object Git {
+  import Utilities._
 
   private def cmd(args: Any*): ProcessBuilder = Process("git" +: args.map(_.toString))
 
-  def trackingBranch: String = (cmd("for-each-ref", "--format=%(upstream:short)", "refs/heads/" + currentBranch) !!) replaceAll("\n", "")
+  def trackingBranch: String = (cmd("for-each-ref", "--format=%(upstream:short)", "refs/heads/" + currentBranch) !!) removeAllNL
 
-  def currentBranch = (cmd("name-rev", "HEAD", "--name-only") !!).replaceAll("\n", "")
+  def currentBranch = (cmd("name-rev", "HEAD", "--name-only") !!) removeAllNL
 
   def add(files: String*) = cmd(("add" +: files): _*)
 

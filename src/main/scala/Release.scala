@@ -180,6 +180,7 @@ object Utilities {
 
   class StringW(s: String) {
     def removeLastNL = s.reverse.replaceFirst(lineSep, "").reverse
+    def removeAllNL = s.replace(lineSep, "")
   }
 
   implicit def stringW(s: String): StringW = new StringW(s)
