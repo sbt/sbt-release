@@ -3,7 +3,6 @@ package sbtrelease
 import sbt._
 import Keys._
 import complete.DefaultParsers._
-import util.control.Exception._
 
 object Release {
   import Utilities._
@@ -13,34 +12,31 @@ object Release {
   lazy val useDefaults = SettingKey[Boolean]("release-use-defaults")
 
   type Versions = (String, String)
+  type ReleasePart = State => State
+
   lazy val versions = SettingKey[Versions]("release-versions")
+  lazy val releaseProcess = SettingKey[Seq[ReleasePart]]("release-process")
 
 
-  val releaseCommand = "release"
-  val releaseParser = (Space ~> "with-defaults")?
-  val release: Command = Command(releaseCommand)(_ => releaseParser) { (st, switch) =>
-    val extracted = Project.extract(st)
-    val ref = extracted.get(thisProjectRef)
-
-    import Project.showFullKey
-
-    Seq(
-      initialGitChecksCommand,
-      checkSnapshotDependenciesCommand,
-      inquireVersionsCommand,
-      showFullKey(test in Test in ref),
-      setReleaseVersionCommand,
-      commitReleaseVersionCommand,
-      tagReleaseCommand,
-      showFullKey(test in Test in ref),
-      showFullKey(publishLocal in Global in ref),
-      setNextVersionCommand,
-      commitNextVersionCommand
-    ) ::: Project.extract(st).append(Seq(useDefaults := switch.isDefined), st)
+  def releaseTask[T](key: ScopedTask[T]): ReleasePart = { st =>
+    Project.extract(st).evalTask(key, st)
+    st
   }
 
-  val initialGitChecksCommand = "release-git-checks"
-  val initialGitChecks = Command.command(initialGitChecksCommand) { st =>
+  lazy val releaseCommandKey = "release"
+  val releaseParser = (Space ~> "with-defaults")?
+  val releaseCommand: Command = Command(releaseCommandKey)(_ => releaseParser) { (st, switch) =>
+    val extracted = Project.extract(st)
+    val process = extracted.get(releaseProcess)
+
+    val startState = extracted.append(Seq(useDefaults := switch.isDefined), st)
+
+    (startState /: process)((st, part) => part(st))
+  }
+
+  lazy val initialGitChecksCommandKey = "release-git-checks"
+  lazy val initialGitChecksCommand = Command.command(initialGitChecksCommandKey)(initialGitChecks)
+  lazy val initialGitChecks: ReleasePart = { st =>
     if (!new File(".git").exists) {
       sys.error("Aborting release. Working directory is not a git repository.")
     }
@@ -51,8 +47,9 @@ object Release {
     st
   }
 
-  val checkSnapshotDependenciesCommand = "release-check-snapshot-dependencies"
-  val checkSnapshotDependencies = Command.command(checkSnapshotDependenciesCommand) { (st) =>
+  lazy val checkSnapshotDependenciesCommandKey = "release-check-snapshot-dependencies"
+  lazy val checkSnapshotDependenciesCommand = Command.command(checkSnapshotDependenciesCommandKey)(checkSnapshotDependencies)
+  lazy val checkSnapshotDependencies: ReleasePart = { st =>
     val extracted = Project.extract(st)
     val snapshotDeps = extracted.evalTask(snapshotDependencies, st)
     val useDefs = extracted.get(useDefaults)
@@ -70,8 +67,9 @@ object Release {
     st
   }
 
-  val inquireVersionsCommand = "release-inquire-versions"
-  val inquireVersions = Command.command(inquireVersionsCommand) { st =>
+  lazy val inquireVersionsCommandKey = "release-inquire-versions"
+  lazy val inquireVersionsCommand = Command.command(inquireVersionsCommandKey)(inquireVersions)
+  lazy val inquireVersions: ReleasePart = { st =>
     val extracted = Project.extract(st)
     val useDefs = extracted.get(useDefaults)
     val (releaseVersion, nextVersion) = extracted.get(versions)
@@ -87,14 +85,16 @@ object Release {
     extracted.append(Seq(versions := (releaseV, nextV)), st)
   }
 
-  val setReleaseVersionCommand = "release-set-release-version"
-  val setReleaseVersion = setVersionCommand(setReleaseVersionCommand, _._1)
+  lazy val setReleaseVersionCommandKey = "release-set-release-version"
+  lazy val setReleaseVersionCommand = Command.command(setReleaseVersionCommandKey)(setReleaseVersion)
+  lazy val setReleaseVersion:ReleasePart = setVersion(_._1)
 
-  val setNextVersionCommand = "release-set-next-version"
-  val setNextVersion = setVersionCommand(setNextVersionCommand, _._2)
+  lazy val setNextVersionCommandKey = "release-set-next-version"
+  lazy val setNextVersionCommand = Command.command(setNextVersionCommandKey)(setNextVersion)
+  lazy val setNextVersion: ReleasePart = setVersion(_._2)
 
 
-  def setVersionCommand(key: String, selectVersion: Versions => String) = Command.command(key) { st =>
+  def setVersion(selectVersion: Versions => String): ReleasePart =  { st =>
     val extracted = Project.extract(st)
     val vs = extracted.get(versions)
     val selected = selectVersion(vs)
@@ -111,13 +111,15 @@ object Release {
     ), st)
   }
 
-  val commitReleaseVersionCommand = "release-commit-release-version"
-  val commitReleaseVersion = commitVersion(commitReleaseVersionCommand, "Releasing %s")
+  lazy val commitReleaseVersionCommandKey = "release-commit-release-version"
+  lazy val commitReleaseVersionCommand =  Command.command(commitReleaseVersionCommandKey)(commitReleaseVersion)
+  lazy val commitReleaseVersion: ReleasePart = commitVersion("Releasing %s")
 
-  val commitNextVersionCommand = "release-commit-next-version"
-  val commitNextVersion = commitVersion(commitNextVersionCommand, "Bump to %s")
+  lazy val commitNextVersionCommandKey = "release-commit-next-version"
+  lazy val commitNextVersionCommand = Command.command(commitNextVersionCommandKey)(commitNextVersion)
+  lazy val commitNextVersion: ReleasePart = commitVersion("Bump to %s")
 
-  def commitVersion(key: String, msgPattern: String) = Command.command(key) { st =>
+  def commitVersion(msgPattern: String): ReleasePart = { st =>
     val extracted = Project.extract(st)
     val v = extracted.get(version)
 
@@ -127,8 +129,9 @@ object Release {
     st
   }
 
-  val tagReleaseCommand = "release-tag-release"
-  val tagRelease = Command.command(tagReleaseCommand) { st =>
+  lazy val tagReleaseCommandKey = "release-tag-release"
+  lazy val tagReleaseCommand = Command.command(tagReleaseCommandKey)(tagRelease)
+  lazy val tagRelease: ReleasePart = { st =>
     val extracted = Project.extract(st)
     val v = extracted.get(version)
 
@@ -150,16 +153,32 @@ object Release {
       v => (v.withoutQualifier.string, v.bump.asSnapshot.string)).getOrElse(versionFormatError)
     ),
 
+    releaseProcess <<= thisProjectRef apply { ref =>
+      Seq[ReleasePart](
+        initialGitChecks,
+        checkSnapshotDependencies,
+        inquireVersions,
+        releaseTask(test in Test in ref),
+        setReleaseVersion,
+        commitReleaseVersion,
+        tagRelease,
+        releaseTask(test in Test in ref),
+        releaseTask(publishLocal in Global in ref),
+        setNextVersion,
+        commitNextVersion
+      )
+    },
+
     commands ++= Seq(
-      release,
-      checkSnapshotDependencies,
-      inquireVersions,
-      setReleaseVersion,
-      setNextVersion,
-      initialGitChecks,
-      commitReleaseVersion,
-      commitNextVersion,
-      tagRelease)
+      releaseCommand,
+      checkSnapshotDependenciesCommand,
+      inquireVersionsCommand,
+      setReleaseVersionCommand,
+      setNextVersionCommand,
+      initialGitChecksCommand,
+      commitReleaseVersionCommand,
+      commitNextVersionCommand,
+      tagReleaseCommand)
 
   )
 
