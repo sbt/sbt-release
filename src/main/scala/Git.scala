@@ -10,11 +10,15 @@ object Git {
 
   def currentBranch = (cmd("name-rev", "HEAD", "--name-only") !!).replaceAll("\n", "")
 
-  def commit(message: String, files: String*) = cmd((Seq("commit", "-m", message) ++ files): _*)
+  def add(files: String*) = cmd(("add" +: files): _*)
+
+  def commit(message: String) = cmd("commit", "-m", message)
 
   def tag(name: String) = cmd("tag", name)
 
   def pushTags = cmd("push", "--tags")
+
+  def status = cmd("status", "--porcelain")
 
   def pushCurrentBranch = {
     val localBranch = currentBranch
