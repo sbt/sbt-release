@@ -11,6 +11,8 @@ object Git {
 
   def currentBranch = (cmd("name-rev", "HEAD", "--name-only") !!) trim
 
+  def currentHash = (cmd("rev-prase", "HEAD") !!) trim
+
   def add(files: String*) = cmd(("add" +: files): _*)
 
   def commit(message: String) = cmd("commit", "-m", message)

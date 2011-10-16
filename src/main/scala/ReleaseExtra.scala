@@ -16,6 +16,7 @@ object ReleaseStateTransformations {
     if (!status.isEmpty) {
       sys.error("Aborting release. Working directory is dirty.")
     }
+    st.logger.info("Starting release process off git commit: " + Git.currentHash)
     st
   }
 
