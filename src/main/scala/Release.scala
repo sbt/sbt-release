@@ -31,7 +31,7 @@ object Release {
 
     val startState = extracted.append(Seq(useDefaults := switch.isDefined), st)
 
-    (startState /: process)((st, part) => part(st))
+    Function.chain(process)(startState)
   }
 
   lazy val initialGitChecksCommandKey = "release-git-checks"
