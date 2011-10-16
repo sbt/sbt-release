@@ -87,7 +87,7 @@ object Release {
       snapshots
     },
 
-    versions <<= version(ver => Version(ver).map(
+    versions <<= version apply (ver => Version(ver).map(
       v => (v.withoutQualifier.string, v.bump.asSnapshot.string)).getOrElse(versionFormatError)
     ),
 
