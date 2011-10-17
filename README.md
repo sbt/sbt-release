@@ -13,6 +13,7 @@ This sbt plugin provides a customizable release process that you can add to your
      * 1.2
      * 1
      * 1-BETA17
+ * A [publish repository](https://github.com/harrah/xsbt/wiki/Publishing) configured. (Required only for the default release process. See further below for release process customizations.)
  * git [optional]
 
 ## Usage
