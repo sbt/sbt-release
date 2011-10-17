@@ -23,6 +23,9 @@ This sbt plugin provides a customizable release process that you can add to your
     addSbtPlugin("com.github.gseitz" % "sbt-release" % "0.1")
 
 ### Including sbt-release settings
+**Important:** The settings `releaseSettings` only need to be included in the **root project's** setting.
+Make sure they are not included in a settings value that is used for all sub-projects as well. 
+
 #### build.sbt (simple build definition)
 
     import sbtrelease.Release._
