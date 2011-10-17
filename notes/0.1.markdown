@@ -1,0 +1,1 @@
+* Initial release, see the [README](https://github.com/gseitz/sbt-release/blob/master/README.md) for a comprehensive introduction.
