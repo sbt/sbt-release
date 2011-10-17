@@ -59,7 +59,7 @@ The default release process consists of the following tasks:
  1. If there are any snapshot dependencies, ask the user whether to continue or not (default: no).
  1. Ask the user for the `release version` and the `next development version`. Sensible defaults are provided.
  1. Run `test:test`, if any test fails, the release process is aborted.
- 1. Write `version in ThisBuild := "$releaseVersion"` to the file `version.sbt` and also apply this setting to the current build state.
+ 1. Write `version in ThisBuild := "$releaseVersion"` to the file `version.sbt` and also apply this setting to the current [build state](https://github.com/harrah/xsbt/wiki/Build-State).
  1. Run `test:test`.
  1. Run `publish`.
  1. Commit the changes in `version.sbt`.
@@ -73,8 +73,8 @@ You can run a non-interactive release by prividing the argument `with-defaults` 
 For all interactions, the following default value will be chosen:
 
  * Continue with snapshots dependencies: no
- * Release Version: current version without the qualifier (eg. 1.2-SNAPSHOT -> 1.2)
- * Next Version: increase the last segment of the current version and set the qualifier to '-SNAPSHOT' (eg. 1.2-SNAPSHOT -> 1.3-SNAPSHOT)
+ * Release Version: current version without the qualifier (eg. `1.2-SNAPSHOT` -> `1.2`)
+ * Next Version: increase the last segment of the current version and set the qualifier to '-SNAPSHOT' (eg. `1.2-SNAPSHOT` -> `1.3-SNAPSHOT`)
 
 ### Skipping tests
 For that emergency release at 2am on a Sunday, you can optionally avoid running any tests by providing the `skip-tests` argument to the `release` command.
