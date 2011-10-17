@@ -3,7 +3,16 @@ This sbt plugin provides a customizable release process that you can add to your
 
 ## Requirements
  * sbt 0.11.0 or greater
- * The version of the project adheres to the pattern `[0-9]+(.[0-9)+)?(.[0-9]+)?(-.*)?`, basically: major[.minor[.micro]][-QUALIFIER]
+ * The version of the project should follow the semantic versioning scheme on [semver.org](http://www.semver.org) with the following additions:
+   * The minor and bugfix part of the version are optional.
+   * The appendix after the bugfix part must be alphanumeric (`[0-9a-zA-Z]`) but may also contain dash characters `-`.
+   * These are all valid version numbers:
+     * 1.2.3
+     * 1.2.3-SNAPSHOT
+     * 1.2beta1
+     * 1.2
+     * 1
+     * 1-BETA17
  * git [optional]
 
 ## Restrictions
@@ -21,7 +30,7 @@ but instead write the new versions to a file called **`version.sbt`** in the roo
 
     addSbtPlugin("com.github.gseitz" % "sbt-release" % "0.1")
 
-### Import sbt-release settings
+### Including sbt-release settings
 #### build.sbt (simple build definition)
 
     import sbtrelease.Release._
@@ -51,7 +60,7 @@ The default release process consists of the following tasks:
  1. Run `test:test`.
  1. Run `publish`.
  1. Commit the changes in `version.sbt`.
- 1. Tag the previous commit with 'Releasing $version`.
+ 1. Tag the previous commit with `v$version` (eg. `v1.2`, `v1.2.3`).
  1. Write `version in ThisBuild := "nextVersion"` to the file `version.sbt` and also apply this setting to the current build state.
 
 In case of a failure of a task, the release process is aborted.
