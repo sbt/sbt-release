@@ -44,7 +44,7 @@ Make sure they are not included in a settings value that is used for all sub-pro
       )
     }
 
-## `version.sbt`
+## version.sbt
 Since the build definition is actual Scala code, it's not as straight forward to change something in the middle of
 it as it is with an XML definition.
 
