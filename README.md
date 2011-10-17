@@ -79,20 +79,59 @@ For all interactions, the following default value will be chosen:
 ### Skipping tests
 For that emergency release at 2am on a Sunday, you can optionally avoid running any tests by providing the `skip-tests` argument to the `release` command.
 
-## Not all releases are created equal
+## Not all releases are created equal - Customizing the release process
 The release process can be customized to the project's needs.
 
-Not using Git? Then strip it out.
+  * Not using Git? Then strip it out.
+  * Want to check for the existance of release notes at the start and then publish it with [posterous-sbt](https://github.com/n8han/posterous-sbt) at the end? Just add it.
 
-Want to check for the existance of release notes at the start and then publish it with [posterous-sbt](https://github.com/n8han/posterous-sbt) at the end? Just add it.
+
+The release process is defined by [State](http://harrah.github.com/xsbt/latest/api/sbt/State.html) transformation functions (`State => State`), for which sbt-release defines the type synonym:
+
+    type ReleasePart = State => State
+    
+The sequence of `ReleasePart`s that make up the release process is stored in the setting `releaseProcess: SettingKey[Seq[State => State]]`.
+
+The state transformations functions used in sbt-release are the same as the action/body part of a no-argument command.
+You can read more about [building commands](https://github.com/harrah/xsbt/wiki/Commands) in the sbt wiki.
+
+### Release parts
+There are basically 2 ways to creating a new `ReleasePart` (remember, that's just a synonym for `State => State`):
+
+#### Defining your own release parts
+You can define your own state tansformation functions, just like sbt-release does, for example:
+
+    val checkOrganization: ReleasePart = { st: State =>
+      // extract the build state
+      val extracted = Project.extract(st)
+      // retrieve the value of the organization SettingKey
+      val org = extracted.get(Keys.organization)
+      
+      if (org.startsWith("com.acme")
+        sys.error("Hey, no need to release a toy project!")
+      
+      st
+    }
+    
+We will later see how to make this function a part of the release process.
+
+#### Reusing already defined  tasks
+Sometimes you just want to run an already existing task. 
+This is especially useful if the task raises an error in case something went wrong and therefore interrupts the release process.
+
+sbt-release comes with a [convenience function](https://github.com/gseitz/sbt-release/blob/master/src/main/scala/package.scala) 
+
+    releaseTask[T](task: ScopedTask[T]): ReleasePart
+    
+that takes any scoped task and wraps it in a state transformation function, executing the task when an instance of `State` is applied to the function.
 
 
-The release process is defined by state transformation functions (`State => State`) and stored in the setting `releaseProcess`.
-Take a look at the [default definition](https://github.com/gseitz/sbt-release/blob/master/src/main/scala/ReleasePlugin.scala#L49) before continuing.
+I highly recommend to make yourself familiar with the [State API](http://harrah.github.com/xsbt/latest/api/sbt/State.html) before you continue your journey to a fully customized release process.
 
-If you project's release process differs from the one outlined above, you can provide a different one yourself.
+### Can we finally customize that release process, please?
+Yes, and as a start, let's take a look at the [default `releaseProcess` definition](https://github.com/gseitz/sbt-release/blob/master/src/main/scala/ReleasePlugin.scala#L49):
 
-Here is one, that doesn't use git:
+#### The default release process
 
     import sbtrelease._
 
@@ -101,6 +140,34 @@ Here is one, that doesn't use git:
     releaseProcess <<= thisProjectRef apply { ref =>
       import ReleaseStateTransformations._
       Seq[ReleasePart](
+        initialGitChecks,                       // : ReleasePart
+        checkSnapshotDependencies,              // : ReleasePart
+        inquireVersions,                        // : ReleasePart
+        runTest,                                // : ReleasePart
+        setReleaseVersion,                      // : ReleasePart
+        runTest,                                // : ReleasePart
+        releaseTask(publish in Global in ref),  // : TaskKey refurbished as a ReleasePart
+        commitReleaseVersion,                   // : ReleasePart
+        tagRelease,                             // : ReleasePart
+        setNextVersion,                         // : ReleasePart
+        commitNextVersion                       // : ReleasePart
+      )
+    }
+
+The names of the individual parts of the release process are pretty much self-describing. 
+Notice how we can just reuse the `publish` task, but keep in mind that it needs to be properly scoped (more info on [scoping and settings](https://github.com/harrah/xsbt/wiki/Settings)).
+
+#### No Git, and no toy projects!
+Let's modify the previous release process and remove the Git parts of it, who uses that anyway.
+
+    import sbtrelease._
+
+    // ...
+
+    releaseProcess <<= thisProjectRef apply { ref =>
+      import ReleaseStateTransformations._
+      Seq[ReleasePart](
+        checkOrganization,                // Look Ma', my own release part!
         checkSnapshotDependencies,
         inquireVersions,
         runTest,
@@ -111,9 +178,13 @@ Here is one, that doesn't use git:
       )
     }
 
-Notice that the overall process was the same, only the git specific tasks were left out.
+Overall, the process stayed pretty much the same:
+  
+  * The Git related parts were left out.
+  * Our `checkOrganization` task was added in the beginning, just to be sure this is a serious project.
 
-Now let's add steps for [posterous-sbt](https://github.com/n8han/posterous-sbt):
+#### Release notes anyone?
+Now let's also add steps for [posterous-sbt](https://github.com/n8han/posterous-sbt):
 
     import posterous.Publish._
     import sbtrelease._
@@ -123,8 +194,9 @@ Now let's add steps for [posterous-sbt](https://github.com/n8han/posterous-sbt):
     releaseProcess <<= thisProjectRef apply { ref =>
       import ReleaseStateTransformations._
       Seq[ReleasePart](
+        checkOrganization,
         checkSnapshotDependencies,
-        releaseTask(check in Posterous in ref), // upfront check
+        releaseTask(check in Posterous in ref),   // upfront check
         inquireVersions,
         runTest,
         setReleaseVersion,
@@ -136,12 +208,7 @@ Now let's add steps for [posterous-sbt](https://github.com/n8han/posterous-sbt):
     }
 
 We added the check at the start, to make sure we have everything set up to post the release notes later on.
-
 After publishing the actual build artifacts, we also publish the release notes.
 
-**Side note:** Since the release process consists of state transformation functions (`State => State`),
-we can't just add tasks directly. But we can use the helper function `releaseTask` that wraps a state transformation
-function around the task and evaluates the task when needed.
-
 ## Credits
-Thank you Jason (@retronym) and Mark (@harrah) for your feedback and ideas.
+Thank you, Jason (@retronym) and Mark (@harrah), for your feedback and ideas.
