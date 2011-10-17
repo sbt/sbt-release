@@ -3,7 +3,7 @@ package sbtrelease
 import util.control.Exception._
 
 private[sbtrelease] object Version {
-  val VersionR = """([0-9]+)(?:(?:\.([0-9]+))?(?:\.([0-9]+))?)?(-.*)?""".r
+  val VersionR = """([0-9]+)(?:(?:\.([0-9]+))?(?:\.([0-9]+))?)?([\-0-9a-zA-Z]*)?""".r
 
   def apply(s: String): Option[Version] = {
     allCatch opt {
