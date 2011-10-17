@@ -15,14 +15,6 @@ This sbt plugin provides a customizable release process that you can add to your
      * 1-BETA17
  * git [optional]
 
-## Restrictions
-Since the build definition is actual Scala code, it's not as straight forward to change something in the middle of
-it as it is with an XML definition.
-
-For this reason, *sbt-release* won't ever touch your build definitions,
-but instead write the new versions to a file called **`version.sbt`** in the root directory of the project.
-
-
 ## Usage
 ### Adding the plugin dependency
 
@@ -48,6 +40,14 @@ but instead write the new versions to a file called **`version.sbt`** in the roo
         settings = Defaults.defaultSettings ++ releaseSettings ++ Seq( /* custom settings here */ )
       )
     }
+
+## `version.sbt`
+Since the build definition is actual Scala code, it's not as straight forward to change something in the middle of
+it as it is with an XML definition.
+
+For this reason, *sbt-release* won't ever touch your build definition files,
+but instead writes the new release or development version to a file called **`version.sbt`** in the root directory of the project.
+
 
 ## Release Process
 The default release process consists of the following tasks:
