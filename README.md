@@ -155,7 +155,8 @@ Yes, and as a start, let's take a look at the [default `releaseProcess` definiti
     }
 
 The names of the individual parts of the release process are pretty much self-describing. 
-Notice how we can just reuse the `publish` task, but keep in mind that it needs to be properly scoped (more info on [scoping and settings](https://github.com/harrah/xsbt/wiki/Settings)).
+Notice how we can just reuse the `publish` task by utilizing the `releaseTask` helper function,
+but keep in mind that it needs to be properly scoped (more info on [scoping and settings](https://github.com/harrah/xsbt/wiki/Settings)).
 
 #### No Git, and no toy projects!
 Let's modify the previous release process and remove the Git parts of it, who uses that anyway.
