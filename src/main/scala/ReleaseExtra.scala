@@ -102,7 +102,7 @@ object ReleaseStateTransformations {
     val extracted = Project.extract(st)
     val v = extracted.get(version in ThisBuild)
 
-    Git.tag(v) !! st.logger
+    Git.tag("v" + v) !! st.logger
 
     st
   }
