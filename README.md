@@ -70,7 +70,7 @@ The default release process consists of the following tasks:
 In case of a failure of a task, the release process is aborted.
 
 ### Non-interactive release
-You can run a non-interactive release by prividing the argument `with-defaults` (tab completion works) to the `release` command.
+You can run a non-interactive release by providing the argument `with-defaults` (tab completion works) to the `release` command.
 For all interactions, the following default value will be chosen:
 
  * Continue with snapshots dependencies: no
