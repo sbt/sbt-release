@@ -1,0 +1,3 @@
+ * \[Improvement\] [#3](https://github.com/gseitz/sbt-release/issues/3): Default version policy should increase the minor number, not the micro/bugfix
+ * \[Improvement\] [#4](https://github.com/gseitz/sbt-release/issues/4): The default next
+ * \[Improvement\] Allow easier customization deriving the release/next version. See `SettingKey`s `releaseVersion` and `nextVersion`.
