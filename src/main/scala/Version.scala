@@ -22,8 +22,8 @@ case class Version(major: Int, minor: Option[Int], bugfix: Option[Int], qualifie
     maybeBumpedBugfix.orElse(maybeBumpedMinor).getOrElse(bumpedMajor)
   }
 
-  def bumpMajor = copy(major = major + 1, minor = None, bugfix = None)
-  def bumpMinor = copy(minor = minor.map(_ + 1), bugfix = None)
+  def bumpMajor = copy(major = major + 1, minor = minor.map(_ => 0), bugfix = bugfix.map(_ => 0))
+  def bumpMinor = copy(minor = minor.map(_ + 1), bugfix = bugfix.map(_ => 0))
   def bumpBugfix = copy(bugfix = bugfix.map(_ + 1))
 
   def withoutQualifier = copy(qualifier = None)
