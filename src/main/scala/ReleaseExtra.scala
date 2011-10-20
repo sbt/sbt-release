@@ -42,22 +42,20 @@ object ReleaseStateTransformations {
 
   lazy val inquireVersions: ReleasePart = { st =>
     val extracted = Project.extract(st)
-    val (releaseVersion, nextVersion) = extracted.get(versions)
 
     val useDefs = st.get(useDefaults).getOrElse(false)
+    val currentV = extracted.get(version)
 
-    val releaseV =
-    if (useDefs) releaseVersion
-      else readVersion(releaseVersion, "Release version [%s] : " format releaseVersion)
+    val releaseFunc = extracted.get(releaseVersion)
+    val suggestedReleaseV = releaseFunc(currentV)
 
-    val nextV =
-      if (useDefs) nextVersion
-      else {
-        val suggested = Version(releaseV).map(_.bumpMinor.asSnapshot.string).getOrElse(versionFormatError)
-        readVersion(suggested, "Next version [%s] : " format suggested)
-      }
+    val releaseV = readVersion(suggestedReleaseV, "Release version [%s] : ", useDefs)
 
-    extracted.append(Seq(versions := (releaseV, nextV)), st)
+    val nextFunc = extracted.get(nextVersion)
+    val suggestedNextV = nextFunc(releaseV)
+    val nextV = readVersion(suggestedNextV, "Next version [%s] : ", useDefs)
+
+    st.put(versions, (releaseV, nextV))
   }
 
 
@@ -74,7 +72,7 @@ object ReleaseStateTransformations {
   lazy val setNextVersion: ReleasePart = setVersion(_._2)
   private def setVersion(selectVersion: Versions => String): ReleasePart =  { st =>
     val extracted = Project.extract(st)
-    val vs = extracted.get(versions)
+    val vs = st.get(versions).getOrElse(sys.error("No versions are set! Was this release part executed before inquireVersions?"))
     val selected = selectVersion(vs)
 
     st.logger.info("Setting version to '%s'." format selected)
@@ -84,8 +82,7 @@ object ReleaseStateTransformations {
     IO.write(new File("version.sbt"), versionString)
 
     extracted.append(Seq(
-      version in ThisBuild := selected,
-      versions := vs
+      version in ThisBuild := selected
     ), st)
   }
 
@@ -110,8 +107,9 @@ object ReleaseStateTransformations {
     st
   }
 
-  private def readVersion(ver: String, prompt: String): String = {
-    SimpleReader.readLine(prompt) match {
+  private def readVersion(ver: String, prompt: String, useDef: Boolean): String = {
+    if (useDef) ver
+    else SimpleReader.readLine(prompt format ver) match {
       case Some("") => ver
       case Some(input) => Version(input).map(_.string).getOrElse(versionFormatError)
       case None => sys.error("No version provided!")
