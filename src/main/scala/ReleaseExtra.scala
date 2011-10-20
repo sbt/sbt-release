@@ -52,7 +52,10 @@ object ReleaseStateTransformations {
 
     val nextV =
       if (useDefs) nextVersion
-      else readVersion(nextVersion, "Next version [%s] : " format nextVersion)
+      else {
+        val suggested = Version(releaseV).map(_.bumpMinor.asSnapshot.string).getOrElse(versionFormatError)
+        readVersion(suggested, "Next version [%s] : " format suggested)
+      }
 
     extracted.append(Seq(versions := (releaseV, nextV)), st)
   }
