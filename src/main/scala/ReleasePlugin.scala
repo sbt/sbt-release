@@ -42,7 +42,7 @@ object Release {
 
     versions <<= version apply { ver =>
       Version(ver).map {
-        v => (v.withoutQualifier.string, v.bump.asSnapshot.string)
+        v => (v.withoutQualifier.string, v.bumpMinor.asSnapshot.string)
       } getOrElse(versionFormatError)
     },
 

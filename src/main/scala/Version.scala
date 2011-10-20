@@ -2,7 +2,7 @@ package sbtrelease
 
 import util.control.Exception._
 
-private[sbtrelease] object Version {
+object Version {
   val VersionR = """([0-9]+)(?:(?:\.([0-9]+))?(?:\.([0-9]+))?)?([\-0-9a-zA-Z]*)?""".r
 
   def apply(s: String): Option[Version] = {
@@ -13,19 +13,23 @@ private[sbtrelease] object Version {
   }
 }
 
-private[sbtrelease] case class Version(major: Int, minor: Option[Int], micro: Option[Int], qualifier: Option[String]) {
+case class Version(major: Int, minor: Option[Int], bugfix: Option[Int], qualifier: Option[String]) {
   def bump = {
-    val maybeBumpedMicro = micro.map(m => copy(micro = Some(m + 1)))
+    val maybeBumpedBugfix = bugfix.map(m => copy(bugfix = Some(m + 1)))
     val maybeBumpedMinor = minor.map(m => copy(minor = Some(m + 1)))
     lazy val bumpedMajor = copy(major = major + 1)
 
-    maybeBumpedMicro.orElse(maybeBumpedMinor).getOrElse(bumpedMajor)
+    maybeBumpedBugfix.orElse(maybeBumpedMinor).getOrElse(bumpedMajor)
   }
+
+  def bumpMajor = copy(major = major + 1, minor = None, bugfix = None)
+  def bumpMinor = copy(minor = minor.map(_ + 1), bugfix = None)
+  def bumpBugfix = copy(bugfix = bugfix.map(_ + 1))
 
   def withoutQualifier = copy(qualifier = None)
   def asSnapshot = copy(qualifier = Some("-SNAPSHOT"))
 
-  def string = "" + major + get(minor) + get(micro) + qualifier.getOrElse("")
+  def string = "" + major + get(minor) + get(bugfix) + qualifier.getOrElse("")
 
   private def get(part: Option[Int]) = part.map("." + _).getOrElse("")
 }
