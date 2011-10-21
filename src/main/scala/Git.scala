@@ -17,7 +17,7 @@ object Git {
 
   def commit(message: String) = cmd("commit", "-m", message)
 
-  def tag(name: String) = cmd("tag", name)
+  def tag(name: String) = cmd("tag", "-a", name, "-m", "Releasing " + name)
 
   def pushTags = cmd("push", "--tags")
 
