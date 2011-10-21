@@ -3,6 +3,7 @@ package sbtrelease
 import java.io.File
 import sbt._
 import Keys._
+import sbt.Package.ManifestAttributes
 
 object ReleaseStateTransformations {
   import Release.ReleaseKeys._
@@ -84,7 +85,14 @@ object ReleaseStateTransformations {
     ), st)
   }
 
-  lazy val commitReleaseVersion: ReleasePart = commitVersion("Releasing %s")
+  lazy val commitReleaseVersion: ReleasePart = { st =>
+    val newState = commitVersion("Releasing %s")(st)
+    reapply(Seq[Setting[_]](
+      packageOptions += ManifestAttributes(
+        "Git-Release-Hash" -> Git.currentHash
+      )
+    ), newState)
+  }
   lazy val commitNextVersion: ReleasePart = commitVersion("Bump to %s")
   private def commitVersion(msgPattern: String): ReleasePart = { st =>
     val v = st.extract.get(version in ThisBuild)
@@ -100,7 +108,9 @@ object ReleaseStateTransformations {
 
     Git.tag(tag) !! st.logger
 
-    st
+    reapply(Seq[Setting[_]](
+      packageOptions += ManifestAttributes("Git-Release-Tag" -> tag)
+    ), st)
   }
 
   private def readVersion(ver: String, prompt: String, useDef: Boolean): String = {
