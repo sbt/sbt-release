@@ -112,6 +112,19 @@ object ReleaseStateTransformations {
       case None => sys.error("No version provided!")
     }
   }
+
+  def reapply(settings: Seq[Setting[_]], state: State) = {
+    val extracted = state.extract
+    import extracted._
+
+    val append = Load.transformSettings(Load.projectScope(currentRef), currentRef.build, rootProject, settings)
+
+    // We don't want even want to be able to save the settings that are applied to the session during the release cycle.
+    // Just using an empty string works fine and in case the user calls `session save`, empty lines will be generated.
+    val EmptySettingString = ""
+		val newSession = session.appendSettings( append map (a => (a, EmptySettingString)))
+		BuiltinCommands.reapply(newSession, structure, state)
+  }
 }
 
 
