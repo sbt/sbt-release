@@ -159,7 +159,7 @@ that takes any scoped task and wraps it in a state transformation function, exec
 I highly recommend to make yourself familiar with the [State API](http://harrah.github.com/xsbt/latest/api/sbt/State.html) before you continue your journey to a fully customized release process.
 
 ### Can we finally customize that release process, please?
-Yes, and as a start, let's take a look at the [default `releaseProcess` definition](https://github.com/gseitz/sbt-release/blob/master/src/main/scala/ReleasePlugin.scala#L49):
+Yes, and as a start, let's take a look at the [default definition](https://github.com/gseitz/sbt-release/blob/master/src/main/scala/ReleasePlugin.scala#L49) of `releaseProcess`:
 
 #### The default release process
 
