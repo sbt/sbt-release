@@ -62,10 +62,11 @@ The default release process consists of the following tasks:
  1. Run `test:test`, if any test fails, the release process is aborted.
  1. Write `version in ThisBuild := "$releaseVersion"` to the file `version.sbt` and also apply this setting to the current [build state](https://github.com/harrah/xsbt/wiki/Build-State).
  1. Run `test:test`.
- 1. Run `publish`.
  1. Commit the changes in `version.sbt`.
  1. Tag the previous commit with `v$version` (eg. `v1.2`, `v1.2.3`).
+ 1. Run `publish`.
  1. Write `version in ThisBuild := "nextVersion"` to the file `version.sbt` and also apply this setting to the current build state.
+ 1. Commit the changes in `version.sbt`.
 
 In case of a failure of a task, the release process is aborted.
 
