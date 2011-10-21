@@ -81,6 +81,34 @@ For all interactions, the following default value will be chosen:
 ### Skipping tests
 For that emergency release at 2am on a Sunday, you can optionally avoid running any tests by providing the `skip-tests` argument to the `release` command.
 
+### Custom versioning
+*sbt-release* comes with two settings for deriving the release version and the next development version from a given version.
+These derived versions are used for the suggestions/defaults in the prompt and for non-interactive releases.
+
+Let's take a look at the types:
+
+    val releaseVersion : SettingKey[String => String]
+    val nextVersion    : SettingKey[String => String]
+
+The default settings make use of the helper class [`Version`](https://github.com/gseitz/sbt-release/blob/master/src/main/scala/Version.scala) that ships with *sbt-release*.
+
+    // strip the qualifier off the input version, eg. 1.2.1-SNAPSHOT -> 1.2.1
+    releaseVersion := { ver => Version(ver).map(_.withoutQualifier.string).getOrElse(versionFormatError) }
+
+    // bump the minor version and append '-SNAPSHOT', eg. 1.2.1 -> 1.3.0-SNAPSHOT
+    nextVersion    := { ver => Version(ver).map(_.bumpMinor.asSnapshot.string).getOrElse(versionFormatError) }
+
+If you want to customize the versioning, keep the following in mind:
+
+ * `releaseVersion`
+   * input: the current development version
+   * output: the release version
+
+ * `nextVersion`
+   * input: the release version (either automatically 'chosen' in a non-interactive build or from user input)
+   * output: the next development version
+
+
 ## Not all releases are created equal - Customizing the release process
 The release process can be customized to the project's needs.
 
