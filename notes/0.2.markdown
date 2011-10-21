@@ -1,3 +1,4 @@
+ * \[Improvement\] [#1](https://github.com/gseitz/sbt-release/issues/1): Include the Git tag and the has of the release commit in the JAR manifest.
  * \[Improvement\] [#3](https://github.com/gseitz/sbt-release/issues/3): Default version policy should increase the minor number, not the micro/bugfix
  * \[Improvement\] [#4](https://github.com/gseitz/sbt-release/issues/4): The suggested next development version should be based on the entered release version.
- * \[Improvement\] Allow easier customization for deriving the release/next version. See `SettingKey`s `releaseVersion` and `nextVersion`.
+ * \[Improvement\] Allow easier customization of the release/next version. More info in the section *Custom versioning* in the [README](https://github.com/gseitz/sbt-release/blob/master/README.md).
