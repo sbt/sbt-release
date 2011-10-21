@@ -79,7 +79,7 @@ object ReleaseStateTransformations {
     val versionString = "%sversion in ThisBuild := \"%s\"%s" format (lineSep, selected, lineSep)
     IO.write(new File("version.sbt"), versionString)
 
-    extracted.append(Seq(
+    reapply(Seq(
       version in ThisBuild := selected
     ), st)
   }
@@ -96,10 +96,9 @@ object ReleaseStateTransformations {
   }
 
   lazy val tagRelease: ReleasePart = { st =>
-    val extracted = Project.extract(st)
-    val v = extracted.get(version in ThisBuild)
+    val tag = "v" + st.extract.get(version in ThisBuild)
 
-    Git.tag("v" + v) !! st.logger
+    Git.tag(tag) !! st.logger
 
     st
   }
