@@ -88,20 +88,20 @@ The release process can be customized to the project's needs.
   * Want to check for the existance of release notes at the start and then publish it with [posterous-sbt](https://github.com/n8han/posterous-sbt) at the end? Just add it.
 
 
-The release process is defined by [State](http://harrah.github.com/xsbt/latest/api/sbt/State.html) transformation functions (`State => State`), for which sbt-release defines the type synonym:
+The release process is defined by [State](http://harrah.github.com/xsbt/latest/api/sbt/State.html) transformation functions (`State => State`), for which *sbt-release* defines the type synonym:
 
     type ReleasePart = State => State
     
 The sequence of `ReleasePart`s that make up the release process is stored in the setting `releaseProcess: SettingKey[Seq[State => State]]`.
 
-The state transformations functions used in sbt-release are the same as the action/body part of a no-argument command.
+The state transformations functions used in *sbt-release* are the same as the action/body part of a no-argument command.
 You can read more about [building commands](https://github.com/harrah/xsbt/wiki/Commands) in the sbt wiki.
 
 ### Release parts
 There are basically 2 ways to creating a new `ReleasePart` (remember, that's just a synonym for `State => State`):
 
 #### Defining your own release parts
-You can define your own state tansformation functions, just like sbt-release does, for example:
+You can define your own state tansformation functions, just like *sbt-release* does, for example:
 
     val checkOrganization: ReleasePart = { st: State =>
       // extract the build state
@@ -121,7 +121,7 @@ We will later see how to make this function a part of the release process.
 Sometimes you just want to run an already existing task. 
 This is especially useful if the task raises an error in case something went wrong and therefore interrupts the release process.
 
-sbt-release comes with a [convenience function](https://github.com/gseitz/sbt-release/blob/master/src/main/scala/package.scala) 
+*sbt-release* comes with a [convenience function](https://github.com/gseitz/sbt-release/blob/master/src/main/scala/package.scala)
 
     releaseTask[T](task: ScopedTask[T]): ReleasePart
     
