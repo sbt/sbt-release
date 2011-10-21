@@ -76,7 +76,7 @@ For all interactions, the following default value will be chosen:
 
  * Continue with snapshots dependencies: no
  * Release Version: current version without the qualifier (eg. `1.2-SNAPSHOT` -> `1.2`)
- * Next Version: increase the last segment of the current version and set the qualifier to '-SNAPSHOT' (eg. `1.2-SNAPSHOT` -> `1.3-SNAPSHOT`)
+ * Next Version: increase the minor version segment of the current version and set the qualifier to '-SNAPSHOT' (eg. `1.2.1-SNAPSHOT` -> `1.3.0-SNAPSHOT`)
 
 ### Skipping tests
 For that emergency release at 2am on a Sunday, you can optionally avoid running any tests by providing the `skip-tests` argument to the `release` command.
