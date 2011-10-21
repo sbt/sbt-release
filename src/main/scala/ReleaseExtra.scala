@@ -22,8 +22,7 @@ object ReleaseStateTransformations {
 
 
   lazy val checkSnapshotDependencies: ReleasePart = { st =>
-    val extracted = Project.extract(st)
-    val snapshotDeps = extracted.evalTask(snapshotDependencies, st)
+    val snapshotDeps = st.extract.evalTask(snapshotDependencies, st)
     val useDefs = st.get(useDefaults).getOrElse(false)
     if (!snapshotDeps.isEmpty) {
       if (useDefs) {
@@ -71,7 +70,6 @@ object ReleaseStateTransformations {
   lazy val setReleaseVersion: ReleasePart = setVersion(_._1)
   lazy val setNextVersion: ReleasePart = setVersion(_._2)
   private def setVersion(selectVersion: Versions => String): ReleasePart =  { st =>
-    val extracted = Project.extract(st)
     val vs = st.get(versions).getOrElse(sys.error("No versions are set! Was this release part executed before inquireVersions?"))
     val selected = selectVersion(vs)
 
@@ -89,8 +87,7 @@ object ReleaseStateTransformations {
   lazy val commitReleaseVersion: ReleasePart = commitVersion("Releasing %s")
   lazy val commitNextVersion: ReleasePart = commitVersion("Bump to %s")
   private def commitVersion(msgPattern: String): ReleasePart = { st =>
-    val extracted = Project.extract(st)
-    val v = extracted.get(version in ThisBuild)
+    val v = st.extract.get(version in ThisBuild)
 
     Git.add("version.sbt") !! st.logger
     Git.commit(msgPattern format v) !! st.logger
@@ -153,6 +150,7 @@ object Utilities {
 
   class StateW(st: State) {
     def logger = CommandSupport.logger(st)
+    def extract = Project.extract(st)
   }
   implicit def stateW(st: State): StateW = new StateW(st)
 }
