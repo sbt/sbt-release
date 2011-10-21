@@ -148,9 +148,9 @@ Yes, and as a start, let's take a look at the [default `releaseProcess` definiti
         runTest,                                // : ReleasePart
         setReleaseVersion,                      // : ReleasePart
         runTest,                                // : ReleasePart
-        releaseTask(publish in Global in ref),  // : TaskKey refurbished as a ReleasePart
         commitReleaseVersion,                   // : ReleasePart
         tagRelease,                             // : ReleasePart
+        releaseTask(publish in Global in ref),  // : TaskKey refurbished as a ReleasePart
         setNextVersion,                         // : ReleasePart
         commitNextVersion                       // : ReleasePart
       )
