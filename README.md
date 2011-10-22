@@ -21,7 +21,7 @@ This sbt plugin provides a customizable release process that you can add to your
 
     resolvers += "gseitz@github" at "http://gseitz.github.com/maven/"
 
-    addSbtPlugin("com.github.gseitz" % "sbt-release" % "0.1")
+    addSbtPlugin("com.github.gseitz" % "sbt-release" % "0.2")
 
 ### Including sbt-release settings
 **Important:** The settings `releaseSettings` only need to be included in the **root project's** setting.
