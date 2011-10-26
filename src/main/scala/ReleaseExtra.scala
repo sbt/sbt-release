@@ -6,7 +6,7 @@ import Keys._
 import sbt.Package.ManifestAttributes
 
 object ReleaseStateTransformations {
-  import Release.ReleaseKeys._
+  import ReleaseKeys._
   import Utilities._
 
   lazy val initialGitChecks: ReleasePart = { st =>
