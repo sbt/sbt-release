@@ -1,6 +1,8 @@
 # SBT-RELEASE
 This sbt plugin provides a customizable release process that you can add to your project.
 
+**Notice:** This README contains information for the latest snapshots. Please refer to the documents for a specific version by looking up the respective [tag](https://github.com/gseitz/sbt-release/tags).
+
 ## Requirements
  * sbt 0.11.0 or greater
  * The version of the project should follow the semantic versioning scheme on [semver.org](http://www.semver.org) with the following additions:
