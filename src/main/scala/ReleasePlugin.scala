@@ -55,7 +55,6 @@ object Release {
         inquireVersions,
         runTest,
         setReleaseVersion,
-        runTest,
         commitReleaseVersion,
         tagRelease,
         releaseTask(publish in Global in ref),

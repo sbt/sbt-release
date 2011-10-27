@@ -61,7 +61,6 @@ The default release process consists of the following tasks:
  1. Ask the user for the `release version` and the `next development version`. Sensible defaults are provided.
  1. Run `test:test`, if any test fails, the release process is aborted.
  1. Write `version in ThisBuild := "$releaseVersion"` to the file `version.sbt` and also apply this setting to the current [build state](https://github.com/harrah/xsbt/wiki/Build-State).
- 1. Run `test:test`.
  1. Commit the changes in `version.sbt`.
  1. Tag the previous commit with `v$version` (eg. `v1.2`, `v1.2.3`).
  1. Run `publish`.
@@ -175,7 +174,6 @@ Yes, and as a start, let's take a look at the [default definition](https://githu
         inquireVersions,                        // : ReleasePart
         runTest,                                // : ReleasePart
         setReleaseVersion,                      // : ReleasePart
-        runTest,                                // : ReleasePart
         commitReleaseVersion,                   // : ReleasePart
         tagRelease,                             // : ReleasePart
         releaseTask(publish in Global in ref),  // : TaskKey refurbished as a ReleasePart
@@ -203,7 +201,6 @@ Let's modify the previous release process and remove the Git parts of it, who us
         inquireVersions,
         runTest,
         setReleaseVersion,
-        runTest,
         releaseTask(publish in Global in ref),
         setNextVersion,
       )
@@ -231,7 +228,6 @@ Now let's also add steps for [posterous-sbt](https://github.com/n8han/posterous-
         inquireVersions,
         runTest,
         setReleaseVersion,
-        runTest,
         releaseTask(publish in Global in ref),
         releaseTask(publish in Posterous in ref), // publish release notes
         setNextVersion,
@@ -242,4 +238,4 @@ We added the check at the start, to make sure we have everything set up to post 
 After publishing the actual build artifacts, we also publish the release notes.
 
 ## Credits
-Thank you, Jason (@retronym) and Mark (@harrah), for your feedback and ideas.
+Thank you, [Jason](http://github.com/retronym) and [Mark](http://github.com/harrah), for your feedback and ideas.
