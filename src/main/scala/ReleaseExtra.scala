@@ -104,7 +104,7 @@ object ReleaseStateTransformations {
   }
 
   lazy val tagRelease: ReleasePart = { st =>
-    val tag = "v" + st.extract.get(version in ThisBuild)
+    val tag = st.extract.get(tagName)
 
     Git.tag(tag) !! st.logger
 

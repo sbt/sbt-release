@@ -9,6 +9,7 @@ object ReleaseKeys {
   lazy val releaseProcess = SettingKey[Seq[ReleasePart]]("release-process")
   lazy val releaseVersion = SettingKey[String => String]("release-release-version")
   lazy val nextVersion = SettingKey[String => String]("release-next-version")
+  lazy val tagName = SettingKey[String]("release-tag-name")
 
   lazy val versions = AttributeKey[Versions]("release-versions")
   lazy val useDefaults = AttributeKey[Boolean]("release-use-defaults")
@@ -43,6 +44,8 @@ object Release {
 
     releaseVersion := { ver => Version(ver).map(_.withoutQualifier.string).getOrElse(versionFormatError) },
     nextVersion := { ver => Version(ver).map(_.bumpMinor.asSnapshot.string).getOrElse(versionFormatError) },
+
+    tagName <<= (version in ThisBuild) (v => "v" + v),
 
     releaseProcess <<= thisProjectRef apply { ref =>
       import ReleaseStateTransformations._
