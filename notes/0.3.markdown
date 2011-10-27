@@ -1,0 +1,3 @@
+ * \[New\] [#5](https://github.com/gseitz/sbt-release/issues/5): Added the key `tagName: SettingKey[String]("release-tag-name")` for easier customization of the used git tag name. Default setting: `tagName <<= (version in ThisBuild)(v => "v"+v)`
+ * \[Fix\] [#6](https://github.com/gseitz/sbt-release/issues/6): The git command on Windows should be `git.exe`. Preliminary fix until the [sbt-git-plugin](http://github.com/jsuereth/sbt-git-plugin) is ready.
+ * \[Improvement] [#7](https://github.com/gseitz/sbt-release/issues/7): Tests are not executed after setting the release version anymore (only before the switch).
