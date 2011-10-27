@@ -21,6 +21,8 @@ This sbt plugin provides a customizable release process that you can add to your
 ## Usage
 ### Adding the plugin dependency
 
+Add the following lines to `./project/build.sbt`. See the section [Using Plugins](https://github.com/harrah/xsbt/wiki/Getting-Started-Using-Plugins) in the xsbt wiki for more information.
+
     resolvers += "gseitz@github" at "http://gseitz.github.com/maven/"
 
     addSbtPlugin("com.github.gseitz" % "sbt-release" % "0.2")
