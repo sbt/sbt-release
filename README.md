@@ -25,7 +25,7 @@ Add the following lines to `./project/build.sbt`. See the section [Using Plugins
 
     resolvers += "gseitz@github" at "http://gseitz.github.com/maven/"
 
-    addSbtPlugin("com.github.gseitz" % "sbt-release" % "0.2")
+    addSbtPlugin("com.github.gseitz" % "sbt-release" % "0.3")
 
 ### Including sbt-release settings
 **Important:** The settings `releaseSettings` only need to be included in the **root project's** setting.
