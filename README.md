@@ -25,11 +25,11 @@ Add the following lines to `./project/build.sbt`. See the section [Using Plugins
 
     resolvers += "gseitz@github" at "http://gseitz.github.com/maven/"
 
-    addSbtPlugin("com.github.gseitz" % "sbt-release" % "0.3")
+    addSbtPlugin("com.github.gseitz" % "sbt-release" % "0.4")
 
 ### Including sbt-release settings
-**Important:** The settings `releaseSettings` only need to be included in the **root project's** setting.
-Make sure they are not included in a settings value that is used for all sub-projects as well. 
+**Important:** The settings `releaseSettings` need to be mixed into every sub-projects `settings`.
+This is usually achieved by extracting common settings into a `val standardSettings: Seq[Setting[_]]` which is then included in all sub-projects.
 
 #### build.sbt (simple build definition)
 
