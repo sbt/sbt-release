@@ -1,1 +1,2 @@
  * \[Fix\] `test` and `publish` are now properly propagated from the root project to aggregated projects.
+ * In a multi-project build, `Release.releaseSettings` should be mixed into every sub-project.
