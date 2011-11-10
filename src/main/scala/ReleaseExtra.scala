@@ -63,9 +63,8 @@ object ReleaseStateTransformations {
     if (!st.get(skipTests).getOrElse(false)) {
       val extracted = Project.extract(st)
       val ref = extracted.get(thisProjectRef)
-      extracted.evalTask(test in Test in ref, st)
-    }
-    st
+      extracted.runAggregated(test in Test in ref, st)
+    } else st
   }
 
   lazy val setReleaseVersion: ReleasePart = setVersion(_._1)
