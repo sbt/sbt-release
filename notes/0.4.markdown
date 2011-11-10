@@ -1,0 +1,1 @@
+ * \[Fix\] `test` and `publish` are now properly propagated from the root project to aggregated projects.
