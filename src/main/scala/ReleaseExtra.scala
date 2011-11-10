@@ -4,6 +4,7 @@ import java.io.File
 import sbt._
 import Keys._
 import sbt.Package.ManifestAttributes
+import sbt.Aggregation.KeyValue
 
 object ReleaseStateTransformations {
   import ReleaseKeys._
@@ -21,10 +22,14 @@ object ReleaseStateTransformations {
     st
   }
 
-
   lazy val checkSnapshotDependencies: ReleasePart = { st =>
-    val snapshotDeps = st.extract.evalTask(snapshotDependencies, st)
-    val useDefs = st.get(useDefaults).getOrElse(false)
+    val thisRef = st.extract.get(thisProjectRef)
+    val (newSt, result) = runTaskAggregated(snapshotDependencies in thisRef, st)
+    val snapshotDeps = result match {
+      case Value(value) => value.flatMap(_.value)
+      case Inc(cause) => sys.error("Error checking for snapshot dependencies: " + cause)
+    }
+    val useDefs = newSt.get(useDefaults).getOrElse(false)
     if (!snapshotDeps.isEmpty) {
       if (useDefs) {
         sys.error("Aborting release due to snapshot dependencies.")
@@ -36,7 +41,7 @@ object ReleaseStateTransformations {
         }
       }
     }
-    st
+    newSt
   }
 
 
@@ -174,5 +179,26 @@ object Utilities {
     def extract = Project.extract(st)
   }
   implicit def stateW(st: State): StateW = new StateW(st)
+
+  private[sbtrelease] def resolve[T](key: ScopedKey[T], extracted: Extracted): ScopedKey[T] =
+		Project.mapScope(Scope.resolveScope(GlobalScope, extracted.currentRef.build, extracted.rootProject) )( key.scopedKey )
+
+  def runTaskAggregated[T](taskKey: TaskKey[T], state: State) = {
+    import EvaluateTask._
+    val extra = Aggregation.Dummies(KNil, HNil)
+    val extracted = state.extract
+    val config = extractedConfig(extracted, extracted.structure)
+
+    val rkey = resolve(taskKey.scopedKey, extracted)
+    val tasks = Aggregation.getTasks(rkey, extracted.structure, true)
+    val toRun = tasks map { case KeyValue(k,t) => t.map(v => KeyValue(k,v)) } join;
+
+
+    val (newS, result) = withStreams(extracted.structure, state){ str =>
+			val transform = nodeView(state, str, extra.tasks, extra.values)
+			runTask(toRun, state,str, extracted.structure.index.triggers, config)(transform)
+		}
+    (newS, result)
+  }
 }
 
