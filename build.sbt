@@ -1,7 +1,3 @@
-import sbtrelease.Release._
-
-seq(releaseSettings: _*)
-
 organization := "com.github.gseitz"
 
 name := "sbt-release"
