@@ -4,7 +4,7 @@ This sbt plugin provides a customizable release process that you can add to your
 **Notice:** This README contains information for the latest snapshots. Please refer to the documents for a specific version by looking up the respective [tag](https://github.com/gseitz/sbt-release/tags).
 
 ## Requirements
- * sbt 0.11.0 or greater
+ * sbt 0.11.1 (since *sbt-release 0.4*)
  * The version of the project should follow the semantic versioning scheme on [semver.org](http://www.semver.org) with the following additions:
    * The minor and bugfix part of the version are optional.
    * The appendix after the bugfix part must be alphanumeric (`[0-9a-zA-Z]`) but may also contain dash characters `-`.
