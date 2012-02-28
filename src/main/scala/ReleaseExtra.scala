@@ -7,7 +7,7 @@ import sbt.Package.ManifestAttributes
 import sbt.Aggregation.KeyValue
 
 object ReleaseStateTransformations {
-  import ReleaseKeys._
+  import ReleasePlugin.ReleaseKeys._
   import Utilities._
 
   lazy val initialGitChecks: ReleasePart = { st =>
@@ -190,7 +190,8 @@ object Utilities {
     val config = extractedConfig(extracted, extracted.structure)
 
     val rkey = resolve(taskKey.scopedKey, extracted)
-    val tasks = Aggregation.getTasks(rkey, extracted.structure, true)
+    val keys = Aggregation.aggregate(rkey, ScopeMask(), extracted.structure.extra)
+    val tasks = Act.keyValues(extracted.structure)(keys)
     val toRun = tasks map { case KeyValue(k,t) => t.map(v => KeyValue(k,v)) } join;
 
 
