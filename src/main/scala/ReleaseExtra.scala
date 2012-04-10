@@ -134,7 +134,7 @@ object ReleaseStateTransformations {
 
     // We don't want even want to be able to save the settings that are applied to the session during the release cycle.
     // Just using an empty string works fine and in case the user calls `session save`, empty lines will be generated.
-    val EmptySettingString = ""
+    val EmptySettingString = Nil
 		val newSession = session.appendSettings( append map (a => (a, EmptySettingString)))
 		BuiltinCommands.reapply(newSession, structure, state)
   }
