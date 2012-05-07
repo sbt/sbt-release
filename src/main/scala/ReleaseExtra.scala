@@ -18,7 +18,7 @@ object ReleaseStateTransformations {
     if (!status.isEmpty) {
       sys.error("Aborting release. Working directory is dirty.")
     }
-    st.logger.info("Starting release process off git commit: " + Git.currentHash)
+    st.log.info("Starting release process off git commit: " + Git.currentHash)
     st
   }
 
@@ -34,7 +34,7 @@ object ReleaseStateTransformations {
       if (useDefs) {
         sys.error("Aborting release due to snapshot dependencies.")
       } else {
-        st.logger.warn("Snapshot dependencies detected:\n" + snapshotDeps.mkString("\n"))
+        st.log.warn("Snapshot dependencies detected:\n" + snapshotDeps.mkString("\n"))
         SimpleReader.readLine("Do you want to continue (y/n)? [n] ") match {
           case Some("y") | Some("Y") =>
           case _ => sys.error("Aborting release due to snapshot dependencies.")
@@ -78,7 +78,7 @@ object ReleaseStateTransformations {
     val vs = st.get(versions).getOrElse(sys.error("No versions are set! Was this release part executed before inquireVersions?"))
     val selected = selectVersion(vs)
 
-    st.logger.info("Setting version to '%s'." format selected)
+    st.log.info("Setting version to '%s'." format selected)
 
 
     val versionString = "%sversion in ThisBuild := \"%s\"%s" format (lineSep, selected, lineSep)
@@ -101,8 +101,8 @@ object ReleaseStateTransformations {
   private def commitVersion(msgPattern: String): ReleasePart = { st =>
     val v = st.extract.get(version in ThisBuild)
 
-    Git.add("version.sbt") !! st.logger
-    Git.commit(msgPattern format v) !! st.logger
+    Git.add("version.sbt") !! st.log
+    Git.commit(msgPattern format v) !! st.log
 
     st
   }
@@ -110,7 +110,7 @@ object ReleaseStateTransformations {
   lazy val tagRelease: ReleasePart = { st =>
     val tag = st.extract.get(tagName)
 
-    Git.tag(tag) !! st.logger
+    Git.tag(tag) !! st.log
 
     reapply(Seq[Setting[_]](
       packageOptions += ManifestAttributes("Git-Release-Tag" -> tag)
@@ -175,7 +175,6 @@ object Utilities {
   val lineSep = sys.props.get("line.separator").getOrElse(sys.error("No line separator? Really?"))
 
   class StateW(st: State) {
-    def logger = CommandSupport.logger(st)
     def extract = Project.extract(st)
   }
   implicit def stateW(st: State): StateW = new StateW(st)
