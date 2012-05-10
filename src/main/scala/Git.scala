@@ -3,7 +3,11 @@ package sbtrelease
 import sbt._
 
 object Git {
-  import Utilities._
+  private val devnull = new ProcessLogger {
+    def info(s: => String) {}
+    def error(s: => String) {}
+    def buffer[T](f: => T): T = f
+  }
 
   private lazy val gitExec = {
     val maybeOsName = sys.props.get("os.name").map(_.toLowerCase)
@@ -13,9 +17,15 @@ object Git {
 
   private def cmd(args: Any*): ProcessBuilder = Process(gitExec +: args.map(_.toString))
 
-  def trackingBranch: String = (cmd("for-each-ref", "--format=%(upstream:short)", "refs/heads/" + currentBranch) !!) trim
+  private val trackingBranchCmd = cmd("config", "branch.%s.merge" format currentBranch)
+  def trackingBranch: String = (trackingBranchCmd !!).trim.stripPrefix("refs/heads/")
 
-  def currentBranch = (cmd("name-rev", "HEAD", "--name-only") !!) trim
+  private val trackingRemoteCmd: ProcessBuilder = cmd("config", "branch.%s.remote" format currentBranch)
+  def trackingRemote: String = (trackingRemoteCmd !!) trim
+
+  def hasUpstream = trackingRemoteCmd ! devnull == 0 && trackingBranchCmd ! devnull == 0
+
+  def currentBranch =  (cmd("symbolic-ref", "HEAD") !!).trim.stripPrefix("refs/heads/")
 
   def currentHash = (cmd("rev-parse", "HEAD") !!) trim
 
@@ -25,14 +35,13 @@ object Git {
 
   def tag(name: String) = cmd("tag", "-a", name, "-m", "Releasing " + name)
 
-  def pushTags = cmd("push", "--tags")
+  def pushTags = cmd("push", "--tags", trackingRemote)
 
   def status = cmd("status", "--porcelain")
 
   def pushCurrentBranch = {
     val localBranch = currentBranch
-    val Array(remoteRepo, remoteBranch)  = trackingBranch.split("/")
-    cmd("push", remoteRepo, "%s:%s" format (localBranch, remoteBranch))
+    cmd("push", trackingRemote, "%s:%s" format (localBranch, trackingBranch))
   }
 
   def resetHard(hash: String) = cmd("reset", "--hard", hash)
