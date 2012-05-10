@@ -7,7 +7,7 @@ import sbt.Package.ManifestAttributes
 import sbt.Aggregation.KeyValue
 
 object ReleaseStateTransformations {
-  import ReleaseKeys._
+  import ReleasePlugin.ReleaseKeys._
   import Utilities._
 
   lazy val initialGitChecks: ReleasePart = { st =>

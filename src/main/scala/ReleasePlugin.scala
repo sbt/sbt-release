@@ -4,35 +4,37 @@ import sbt._
 import Keys._
 import complete.DefaultParsers._
 
-object ReleaseKeys {
-  lazy val snapshotDependencies = TaskKey[Seq[ModuleID]]("release-snapshot-dependencies")
-  lazy val releaseProcess = SettingKey[Seq[ReleasePart]]("release-process")
-  lazy val releaseVersion = SettingKey[String => String]("release-release-version")
-  lazy val nextVersion = SettingKey[String => String]("release-next-version")
-  lazy val tagName = SettingKey[String]("release-tag-name")
 
-  lazy val versions = AttributeKey[Versions]("release-versions")
-  lazy val useDefaults = AttributeKey[Boolean]("release-use-defaults")
-  lazy val skipTests = AttributeKey[Boolean]("release-skip-tests")
 
-  private lazy val releaseCommandKey = "release"
-  private val WithDefaults = "with-defaults"
-  private val SkipTests = "skip-tests"
-  private val releaseParser = (Space ~> WithDefaults | Space ~> SkipTests).*
+object ReleasePlugin extends Plugin {
+  object ReleaseKeys {
+    lazy val snapshotDependencies = TaskKey[Seq[ModuleID]]("release-snapshot-dependencies")
+    lazy val releaseProcess = SettingKey[Seq[ReleasePart]]("release-process")
+    lazy val releaseVersion = SettingKey[String => String]("release-release-version")
+    lazy val nextVersion = SettingKey[String => String]("release-next-version")
+    lazy val tagName = SettingKey[String]("release-tag-name")
 
-  val releaseCommand: Command = Command(releaseCommandKey)(_ => releaseParser) { (st, args) =>
-    val extracted = Project.extract(st)
-    val process = extracted.get(releaseProcess)
+    lazy val versions = AttributeKey[Versions]("release-versions")
+    lazy val useDefaults = AttributeKey[Boolean]("release-use-defaults")
+    lazy val skipTests = AttributeKey[Boolean]("release-skip-tests")
 
-    val startState = st
-      .put(useDefaults, args.contains(WithDefaults))
-      .put(skipTests, args.contains(SkipTests))
+    private lazy val releaseCommandKey = "release"
+    private val WithDefaults = "with-defaults"
+    private val SkipTests = "skip-tests"
+    private val releaseParser = (Space ~> WithDefaults | Space ~> SkipTests).*
 
-    Function.chain(process)(startState)
+    val releaseCommand: Command = Command(releaseCommandKey)(_ => releaseParser) { (st, args) =>
+      val extracted = Project.extract(st)
+      val process = extracted.get(releaseProcess)
+
+      val startState = st
+        .put(useDefaults, args.contains(WithDefaults))
+        .put(skipTests, args.contains(SkipTests))
+
+      Function.chain(process)(startState)
+    }
   }
-}
 
-object Release {
   import ReleaseKeys._
 
   lazy val releaseSettings = Seq[Setting[_]](
