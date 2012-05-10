@@ -117,6 +117,20 @@ object ReleaseStateTransformations {
     ), st)
   }
 
+  lazy val pushChanges: ReleasePart = { st =>
+    if (Git.hasUpstream) {
+      SimpleReader.readLine("Push changes to the remote repository (y/n)? [y] ") match {
+        case Some("y") | Some("Y") =>
+          Git.pushCurrentBranch !! st.log
+          Git.pushTags !! st.log
+        case _ => st.log.warn("Remember to push the changes yourself!")
+      }
+    } else {
+      st.log.info("Changes were NOT pushed, because no upstream branch is configured for the local branch [%s]" format Git.currentBranch)
+    }
+    st
+  }
+
   private def readVersion(ver: String, prompt: String, useDef: Boolean): String = {
     if (useDef) ver
     else SimpleReader.readLine(prompt format ver) match {
@@ -168,6 +182,8 @@ object ExtraReleaseCommands {
   private lazy val tagReleaseCommandKey = "release-tag-release"
   lazy val tagReleaseCommand = Command.command(tagReleaseCommandKey)(tagRelease)
 
+  private lazy val pushChangesCommandKey = "release-push-changes"
+  lazy val pushChangesCommand = Command.command(pushChangesCommandKey)(pushChanges)
 }
 
 

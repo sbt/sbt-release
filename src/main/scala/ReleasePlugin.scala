@@ -38,7 +38,7 @@ object ReleasePlugin extends Plugin {
   import ReleaseKeys._
 
   lazy val releaseSettings = Seq[Setting[_]](
-    snapshotDependencies <<= (fullClasspath in Runtime) map { cp: Classpath =>
+    snapshotDependencies <<= (managedClasspath in Runtime) map { cp: Classpath =>
       val moduleIds = cp.flatMap(_.get(moduleID.key))
       val snapshots = moduleIds.filter(m => m.isChanging || m.revision.endsWith("-SNAPSHOT"))
       snapshots
@@ -61,7 +61,8 @@ object ReleasePlugin extends Plugin {
         tagRelease,
         releaseTask(publish in Global in ref),
         setNextVersion,
-        commitNextVersion
+        commitNextVersion,
+        pushChanges
       )
     },
 
@@ -80,7 +81,8 @@ object ReleasePlugin extends Plugin {
         initialGitChecksCommand,
         commitReleaseVersionCommand,
         commitNextVersionCommand,
-        tagReleaseCommand
+        tagReleaseCommand,
+        pushChangesCommand
       )
     )
   }
