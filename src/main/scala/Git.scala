@@ -33,7 +33,9 @@ object Git {
 
   def commit(message: String) = cmd("commit", "-m", message)
 
-  def tag(name: String) = cmd("tag", "-a", name, "-m", "Releasing " + name)
+  def tag(name: String, force: Boolean = false) = cmd("tag", "-a", name, "-m", "Releasing " + name, if(force) "-f" else "")
+
+  def existsTag(name: String) = cmd("show-ref", "--quiet", "--tags", "--verify", "refs/tags/" + name) ! devnull == 0
 
   def pushTags = cmd("push", "--tags", trackingRemote)
 

@@ -5,6 +5,7 @@ import sbt._
 import Keys._
 import sbt.Package.ManifestAttributes
 import sbt.Aggregation.KeyValue
+import annotation.tailrec
 
 object ReleaseStateTransformations {
   import ReleasePlugin.ReleaseKeys._
@@ -113,13 +114,42 @@ object ReleaseStateTransformations {
   }
 
   lazy val tagRelease: ReleasePart = { st =>
+    @tailrec
+    def findTag(tag: String): Option[String] = {
+      if (Git.existsTag(tag)) {
+        SimpleReader.readLine("Tag [%s] exists! Overwrite, keep or abort or enter a new tag (o/k/a)? [a] " format tag) match {
+          case Some("" | "a" | "A") =>
+            sys.error("Aborting release!")
+
+          case Some("k" | "K") =>
+            st.log.warn("The current tag [%s] does not point to the commit for this release!" format tag)
+            None
+
+          case Some("o" | "O") =>
+            st.log.warn("Overwriting a tag can cause problems if others have already seen the tag (see `git help tag`)!")
+            Some(tag)
+
+          case Some(newTag) =>
+            findTag(newTag)
+
+          case None =>
+            sys.error("No tag entered. Aborting release!")
+        }
+      } else {
+        Some(tag)
+      }
+    }
+
     val tag = st.extract.get(tagName)
+    val tagToUse = findTag(tag)
+    tagToUse.foreach(Git.tag(_, force = true) !! st.log)
 
-    Git.tag(tag) !! st.log
 
-    reapply(Seq[Setting[_]](
-      packageOptions += ManifestAttributes("Git-Release-Tag" -> tag)
-    ), st)
+    tagToUse map (t =>
+      reapply(Seq[Setting[_]](
+        packageOptions += ManifestAttributes("Git-Release-Tag" -> t)
+      ), st)
+    ) getOrElse st
   }
 
   lazy val pushChanges: ReleasePart = { st =>
