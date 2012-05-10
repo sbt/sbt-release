@@ -102,8 +102,13 @@ object ReleaseStateTransformations {
     val v = st.extract.get(version in ThisBuild)
 
     Git.add("version.sbt") !! st.log
-    Git.commit(msgPattern format v) !! st.log
+    val status = (Git.status !!) trim
 
+    if (status.nonEmpty) {
+      Git.commit(msgPattern format v) ! st.log
+    } else {
+      // nothing to commit. this happens if the version.sbt file hasn't changed.
+    }
     st
   }
 
