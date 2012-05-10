@@ -5,6 +5,7 @@ import sbt._
 import Keys._
 import sbt.Package.ManifestAttributes
 import sbt.Aggregation.KeyValue
+import sbtrelease.Utilities.Yes
 import annotation.tailrec
 
 object ReleaseStateTransformations {
@@ -16,7 +17,7 @@ object ReleaseStateTransformations {
       sys.error("Aborting release. Working directory is not a git repository.")
     }
     val status = (Git.status !!).trim
-    if (!status.isEmpty) {
+    if (status.nonEmpty) {
       sys.error("Aborting release. Working directory is dirty.")
     }
     st.log.info("Starting release process off git commit: " + Git.currentHash)
@@ -37,7 +38,7 @@ object ReleaseStateTransformations {
       } else {
         st.log.warn("Snapshot dependencies detected:\n" + snapshotDeps.mkString("\n"))
         SimpleReader.readLine("Do you want to continue (y/n)? [n] ") match {
-          case Some("y") | Some("Y") =>
+          case Yes() =>
           case _ => sys.error("Aborting release due to snapshot dependencies.")
         }
       }
@@ -155,7 +156,7 @@ object ReleaseStateTransformations {
   lazy val pushChanges: ReleasePart = { st =>
     if (Git.hasUpstream) {
       SimpleReader.readLine("Push changes to the remote repository (y/n)? [y] ") match {
-        case Some("y") | Some("Y") =>
+        case Yes() =>
           Git.pushCurrentBranch !! st.log
           Git.pushTags !! st.log
         case _ => st.log.warn("Remember to push the changes yourself!")
@@ -249,6 +250,10 @@ object Utilities {
 			runTask(toRun, state,str, extracted.structure.index.triggers, config)(transform)
 		}
     (newS, result)
+  }
+
+  object Yes {
+    def unapply(s: Option[String]) = s.exists(_.toLowerCase == "y")
   }
 }
 
