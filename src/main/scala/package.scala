@@ -2,9 +2,8 @@ import sbt._
 
 package object sbtrelease {
   type Versions = (String, String)
-  type ReleasePart = State => State
 
-  def releaseTask[T](key: TaskKey[T]): ReleasePart = { st =>
+  def releaseTask[T](key: TaskKey[T]): ReleasePart = { st: State =>
     Project.extract(st).runAggregated(key, st)
   }
 

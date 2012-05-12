@@ -27,7 +27,13 @@ object Git {
 
   def currentBranch =  (cmd("symbolic-ref", "HEAD") !!).trim.stripPrefix("refs/heads/")
 
-  def currentHash = (cmd("rev-parse", "HEAD") !!) trim
+  def currentHash = revParse(currentBranch)
+
+  def trackingBranchHash = revParse(trackingRemote + "/" + trackingBranch)
+
+  def revParse(name: String) = (cmd("rev-parse", name) !!) trim
+
+  def isBehindRemote = (cmd("rev-list", "%s..%s/%s".format(currentBranch, trackingRemote, trackingBranch)) !! devnull).trim.nonEmpty
 
   def add(files: String*) = cmd(("add" +: files): _*)
 
@@ -36,6 +42,8 @@ object Git {
   def tag(name: String, force: Boolean = false) = cmd("tag", "-a", name, "-m", "Releasing " + name, if(force) "-f" else "")
 
   def existsTag(name: String) = cmd("show-ref", "--quiet", "--tags", "--verify", "refs/tags/" + name) ! devnull == 0
+
+  def fetch(remote: String) = cmd("fetch", remote)
 
   def pushTags = cmd("push", "--tags", trackingRemote)
 

@@ -4,8 +4,6 @@ import sbt._
 import Keys._
 import complete.DefaultParsers._
 
-
-
 object ReleasePlugin extends Plugin {
   object ReleaseKeys {
     lazy val snapshotDependencies = TaskKey[Seq[ModuleID]]("release-snapshot-dependencies")
@@ -25,12 +23,16 @@ object ReleasePlugin extends Plugin {
 
     val releaseCommand: Command = Command(releaseCommandKey)(_ => releaseParser) { (st, args) =>
       val extracted = Project.extract(st)
-      val process = extracted.get(releaseProcess)
+      val releaseParts = extracted.get(releaseProcess)
 
       val startState = st
         .put(useDefaults, args.contains(WithDefaults))
         .put(skipTests, args.contains(SkipTests))
 
+      val initialChecks = releaseParts.map(_.check)
+      val process = releaseParts.map(_.f)
+
+      initialChecks.foreach(_(startState))
       Function.chain(process)(startState)
     }
   }
@@ -52,14 +54,20 @@ object ReleasePlugin extends Plugin {
     releaseProcess <<= thisProjectRef apply { ref =>
       import ReleaseStateTransformations._
       Seq[ReleasePart](
-        initialGitChecks,
         checkSnapshotDependencies,
         inquireVersions,
         runTest,
         setReleaseVersion,
         commitReleaseVersion,
         tagRelease,
-        releaseTask(publish in Global in ref),
+        // TODO: make it a bit nicer or at least extract the publish release part out
+        ReleasePart(f = releaseTask(publish in Global in ref),
+          check = s => {
+            // getPublishTo fails if no publish repository is set up.
+            Classpaths.getPublishTo(Project.extract(s).get(publishTo in Global in ref))
+            s
+          }
+        ),
         setNextVersion,
         commitNextVersion,
         pushChanges
@@ -86,4 +94,12 @@ object ReleasePlugin extends Plugin {
       )
     )
   }
+}
+
+
+case class ReleasePart(f: State => State, check: State => State = identity)
+object ReleasePart {
+  implicit def func2ReleasePart(f: State => State): ReleasePart = ReleasePart(f)
+
+  implicit def releasePart2Func(rp: ReleasePart): State=>State = rp.f
 }

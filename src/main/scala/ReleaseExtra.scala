@@ -12,19 +12,7 @@ object ReleaseStateTransformations {
   import ReleasePlugin.ReleaseKeys._
   import Utilities._
 
-  lazy val initialGitChecks: ReleasePart = { st =>
-    if (!new File(".git").exists) {
-      sys.error("Aborting release. Working directory is not a git repository.")
-    }
-    val status = (Git.status !!).trim
-    if (status.nonEmpty) {
-      sys.error("Aborting release. Working directory is dirty.")
-    }
-    st.log.info("Starting release process off git commit: " + Git.currentHash)
-    st
-  }
-
-  lazy val checkSnapshotDependencies: ReleasePart = { st =>
+  lazy val checkSnapshotDependencies: ReleasePart = { st: State =>
     val thisRef = st.extract.get(thisProjectRef)
     val (newSt, result) = runTaskAggregated(snapshotDependencies in thisRef, st)
     val snapshotDeps = result match {
@@ -47,7 +35,7 @@ object ReleaseStateTransformations {
   }
 
 
-  lazy val inquireVersions: ReleasePart = { st =>
+  lazy val inquireVersions: ReleasePart = { st: State =>
     val extracted = Project.extract(st)
 
     val useDefs = st.get(useDefaults).getOrElse(false)
@@ -66,7 +54,7 @@ object ReleaseStateTransformations {
   }
 
 
-  lazy val runTest: ReleasePart = {st =>
+  lazy val runTest: ReleasePart = {st: State =>
     if (!st.get(skipTests).getOrElse(false)) {
       val extracted = Project.extract(st)
       val ref = extracted.get(thisProjectRef)
@@ -76,12 +64,11 @@ object ReleaseStateTransformations {
 
   lazy val setReleaseVersion: ReleasePart = setVersion(_._1)
   lazy val setNextVersion: ReleasePart = setVersion(_._2)
-  private def setVersion(selectVersion: Versions => String): ReleasePart =  { st =>
+  private[sbtrelease] def setVersion(selectVersion: Versions => String): ReleasePart =  { st: State =>
     val vs = st.get(versions).getOrElse(sys.error("No versions are set! Was this release part executed before inquireVersions?"))
     val selected = selectVersion(vs)
 
     st.log.info("Setting version to '%s'." format selected)
-
 
     val versionString = "%sversion in ThisBuild := \"%s\"%s" format (lineSep, selected, lineSep)
     IO.write(new File("version.sbt"), versionString)
@@ -91,7 +78,23 @@ object ReleaseStateTransformations {
     ), st)
   }
 
-  lazy val commitReleaseVersion: ReleasePart = { st =>
+  lazy val commitReleaseVersion = ReleasePart(commitReleaseVersionF, initialGitChecks)
+
+  private[sbtrelease] lazy val initialGitChecks = { st: State =>
+    if (!new File(".git").exists) {
+      sys.error("Aborting release. Working directory is not a git repository.")
+    }
+
+    val status = (Git.status !!).trim
+    if (status.nonEmpty) {
+      sys.error("Aborting release. Working directory is dirty.")
+    }
+
+    st.log.info("Starting release process off git commit: " + Git.currentHash)
+    st
+  }
+
+  private[sbtrelease] lazy val commitReleaseVersionF = { st: State =>
     val newState = commitVersion("Releasing %s")(st)
     reapply(Seq[Setting[_]](
       packageOptions += ManifestAttributes(
@@ -99,8 +102,9 @@ object ReleaseStateTransformations {
       )
     ), newState)
   }
-  lazy val commitNextVersion: ReleasePart = commitVersion("Bump to %s")
-  private def commitVersion(msgPattern: String): ReleasePart = { st =>
+
+  lazy val commitNextVersion: ReleasePart = ReleasePart(commitVersion("Bump to %s"))
+  private[sbtrelease] def commitVersion(msgPattern: String) = { st: State =>
     val v = st.extract.get(version in ThisBuild)
 
     Git.add("version.sbt") !! st.log
@@ -114,7 +118,7 @@ object ReleaseStateTransformations {
     st
   }
 
-  lazy val tagRelease: ReleasePart = { st =>
+  lazy val tagRelease: ReleasePart = { st: State =>
     @tailrec
     def findTag(tag: String): Option[String] = {
       if (Git.existsTag(tag)) {
@@ -153,7 +157,31 @@ object ReleaseStateTransformations {
     ) getOrElse st
   }
 
-  lazy val pushChanges: ReleasePart = { st =>
+  lazy val pushChanges: ReleasePart = ReleasePart(pushChangesF, checkUpstream)
+  private[sbtrelease] lazy val checkUpstream = { st: State =>
+    if (!Git.hasUpstream) {
+      sys.error("No tracking branch is set up. Either configure a remote tracking branch, or remove the pushChanges release part.")
+    }
+
+    st.log.info("Fetching from remote [%s] ..." format Git.trackingRemote)
+    val result = Git.fetch(Git.trackingRemote) ! st.log
+    if (result != 0) {
+      SimpleReader.readLine("Error while fetching from remote. Still continue (y/n)? [n] ") match {
+        case Yes() => // do nothing
+        case _ => sys.error("Aborting the release!")
+      }
+    }
+
+    if (Git.isBehindRemote) {
+      SimpleReader.readLine("The upstream branch has unmerged commits. A subsequent push will fail! Continue (y/n)? [n] ") match {
+        case Yes() => // do nothing
+        case _ => sys.error("Merge the upstream commits and run `release` again.")
+      }
+    }
+    st
+  }
+
+  private[sbtrelease] lazy val pushChangesF = { st: State =>
     if (Git.hasUpstream) {
       SimpleReader.readLine("Push changes to the remote repository (y/n)? [y] ") match {
         case Yes() =>
