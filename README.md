@@ -1,10 +1,10 @@
 # SBT-RELEASE
 This sbt plugin provides a customizable release process that you can add to your project.
 
-**Notice:** This README contains information for the latest snapshots. Please refer to the documents for a specific version by looking up the respective [tag](https://github.com/gseitz/sbt-release/tags).
+**Notice:** This README contains information for the latest release. Please refer to the documents for a specific version by looking up the respective [tag](https://github.com/sbt/sbt-release/tags).
 
 ## Requirements
- * sbt 0.11.1 (since *sbt-release 0.4*)
+ * sbt >= 0.11.1 for *sbt-release* 0.4; sbt 0.11.3 or 0.12.0-Beta2 for *sbt-release* 0.5-SNAPSHOT
  * The version of the project should follow the semantic versioning scheme on [semver.org](http://www.semver.org) with the following additions:
    * The minor and bugfix part of the version are optional.
    * The appendix after the bugfix part must be alphanumeric (`[0-9a-zA-Z]`) but may also contain dash characters `-`.
@@ -23,23 +23,23 @@ This sbt plugin provides a customizable release process that you can add to your
 
 Add the following lines to `./project/build.sbt`. See the section [Using Plugins](https://github.com/harrah/xsbt/wiki/Getting-Started-Using-Plugins) in the xsbt wiki for more information.
 
-    resolvers += "gseitz@github" at "http://gseitz.github.com/maven/"
+    resolvers += Resolver.url("artifactory", url("http://scalasbt.artifactoryonline.com/scalasbt/sbt-plugin-snapshots"))(Resolver.ivyStylePatterns)
 
-    addSbtPlugin("com.github.gseitz" % "sbt-release" % "0.4")
+    addSbtPlugin("com.github.gseitz" % "sbt-release" % "0.5-SNAPSHOT")
 
 ### Including sbt-release settings
 **Important:** The settings `releaseSettings` need to be mixed into every sub-projects `settings`.
 This is usually achieved by extracting common settings into a `val standardSettings: Seq[Setting[_]]` which is then included in all sub-projects.
 
-#### build.sbt (simple build definition)
+Setting/task keys are defined in `sbtrelease.ReleasePlugin.ReleaseKeys`.
 
-    import sbtrelease.Release._
+#### build.sbt (simple build definition)
 
     seq(releaseSettings: _*)
 
 #### build.scala (full build definition)
 
-    import sbtrelease.Release._
+    import sbtrelease.ReleasePlugin._
 
     object MyBuild extends Build {
       lazy val MyProject(
@@ -93,7 +93,7 @@ Let's take a look at the types:
     val releaseVersion : SettingKey[String => String]
     val nextVersion    : SettingKey[String => String]
 
-The default settings make use of the helper class [`Version`](https://github.com/gseitz/sbt-release/blob/master/src/main/scala/Version.scala) that ships with *sbt-release*.
+The default settings make use of the helper class [`Version`](https://github.com/sbt/sbt-release/blob/master/src/main/scala/Version.scala) that ships with *sbt-release*.
 
     // strip the qualifier off the input version, eg. 1.2.1-SNAPSHOT -> 1.2.1
     releaseVersion := { ver => Version(ver).map(_.withoutQualifier.string).getOrElse(versionFormatError) }
@@ -119,22 +119,26 @@ The release process can be customized to the project's needs.
   * Want to check for the existance of release notes at the start and then publish it with [posterous-sbt](https://github.com/n8han/posterous-sbt) at the end? Just add it.
 
 
-The release process is defined by [State](http://harrah.github.com/xsbt/latest/api/sbt/State.html) transformation functions (`State => State`), for which *sbt-release* defines the type synonym:
+The release process is defined by [State](http://harrah.github.com/xsbt/latest/api/sbt/State.html) transformation functions (`State => State`), for which *sbt-release* defines the this case class:
 
-    type ReleasePart = State => State
+    case class ReleaseStep(action: State => State, check: State => State = identity)
+
+The function `action` is used to perform the actual release step. Additionally, each release step can provide a `check`
+function that is run at the beginning of the release and can be used to prevent the release from running because of an
+unsatisified invariant (i.e. the release step for publishing artifacts checks that publishTo is properly set up).
     
-The sequence of `ReleasePart`s that make up the release process is stored in the setting `releaseProcess: SettingKey[Seq[State => State]]`.
+The sequence of `ReleaseStep`s that make up the release process is stored in the setting `releaseProcess: SettingKey[Seq[ReleaseStep]]`.
 
 The state transformations functions used in *sbt-release* are the same as the action/body part of a no-argument command.
 You can read more about [building commands](https://github.com/harrah/xsbt/wiki/Commands) in the sbt wiki.
 
-### Release parts
-There are basically 2 ways to creating a new `ReleasePart` (remember, that's just a synonym for `State => State`):
+### Release Steps
+There are basically 2 ways to creating a new `ReleaseStep`:
 
-#### Defining your own release parts
+#### Defining your own release steps
 You can define your own state tansformation functions, just like *sbt-release* does, for example:
 
-    val checkOrganization: ReleasePart = { st: State =>
+    val checkOrganization: ReleaseStep(action = st => {
       // extract the build state
       val extracted = Project.extract(st)
       // retrieve the value of the organization SettingKey
@@ -144,17 +148,17 @@ You can define your own state tansformation functions, just like *sbt-release* d
         sys.error("Hey, no need to release a toy project!")
       
       st
-    }
+    })
     
-We will later see how to make this function a part of the release process.
+We will later see how to let this release step participate in the release process.
 
 #### Reusing already defined  tasks
 Sometimes you just want to run an already existing task. 
 This is especially useful if the task raises an error in case something went wrong and therefore interrupts the release process.
 
-*sbt-release* comes with a [convenience function](https://github.com/gseitz/sbt-release/blob/master/src/main/scala/package.scala)
+*sbt-release* comes with a [convenience function](https://github.com/sbt/sbt-release/blob/master/src/main/scala/package.scala)
 
-    releaseTask[T](task: ScopedTask[T]): ReleasePart
+    releaseTask[T](task: TaskKey[T]): ReleaseStep
     
 that takes any scoped task and wraps it in a state transformation function, executing the task when an instance of `State` is applied to the function.
 
@@ -162,57 +166,54 @@ that takes any scoped task and wraps it in a state transformation function, exec
 I highly recommend to make yourself familiar with the [State API](http://harrah.github.com/xsbt/latest/api/sbt/State.html) before you continue your journey to a fully customized release process.
 
 ### Can we finally customize that release process, please?
-Yes, and as a start, let's take a look at the [default definition](https://github.com/gseitz/sbt-release/blob/master/src/main/scala/ReleasePlugin.scala#L49) of `releaseProcess`:
+Yes, and as a start, let's take a look at the [default definition](https://github.com/sbt/sbt-release/blob/master/src/main/scala/ReleasePlugin.scala#L49) of `releaseProcess`:
 
 #### The default release process
 
     import sbtrelease._
+    import ReleaseStateTransformations._
 
     // ...
 
-    releaseProcess <<= thisProjectRef apply { ref =>
-      import ReleaseStateTransformations._
-      Seq[ReleasePart](
-        initialGitChecks,                       // : ReleasePart
-        checkSnapshotDependencies,              // : ReleasePart
-        inquireVersions,                        // : ReleasePart
-        runTest,                                // : ReleasePart
-        setReleaseVersion,                      // : ReleasePart
-        commitReleaseVersion,                   // : ReleasePart
-        tagRelease,                             // : ReleasePart
-        releaseTask(publish in Global in ref),  // : TaskKey refurbished as a ReleasePart
-        setNextVersion,                         // : ReleasePart
-        commitNextVersion                       // : ReleasePart
-      )
-    }
+    releaseProcess := Seq[ReleaseStep](
+      checkSnapshotDependencies,              // : ReleaseStep
+      inquireVersions,                        // : ReleaseStep
+      runTest,                                // : ReleaseStep
+      setReleaseVersion,                      // : ReleaseStep
+      commitReleaseVersion,                   // : ReleaseStep, performs the initial git checks
+      tagRelease,                             // : ReleaseStep
+      publishArtifacts,                       // : ReleaseStep, checks whether `publishTo` is properly set up
+      setNextVersion,                         // : ReleaseStep
+      commitNextVersion,                      // : ReleaseStep
+      pushChanges                             // : ReleaseStep, also checks that an upstream branch is properly configured
+    )
 
-The names of the individual parts of the release process are pretty much self-describing. 
+The names of the individual steps of the release process are pretty much self-describing.
 Notice how we can just reuse the `publish` task by utilizing the `releaseTask` helper function,
 but keep in mind that it needs to be properly scoped (more info on [scoping and settings](https://github.com/harrah/xsbt/wiki/Settings)).
 
 #### No Git, and no toy projects!
-Let's modify the previous release process and remove the Git parts of it, who uses that anyway.
+Let's modify the previous release process and remove the Git related steps, who uses that anyway.
 
     import sbtrelease._
+    import ReleaseStateTransformations._
 
     // ...
 
-    releaseProcess <<= thisProjectRef apply { ref =>
-      import ReleaseStateTransformations._
-      Seq[ReleasePart](
-        checkOrganization,                // Look Ma', my own release part!
-        checkSnapshotDependencies,
-        inquireVersions,
-        runTest,
-        setReleaseVersion,
-        releaseTask(publish in Global in ref),
-        setNextVersion,
+    releaseProcess := Seq[ReleaseStep](
+      checkOrganization,                // Look Ma', my own release step!
+      checkSnapshotDependencies,
+      inquireVersions,
+      runTest,
+      setReleaseVersion,
+      publishArtifacts,
+      setNextVersion,
       )
     }
 
 Overall, the process stayed pretty much the same:
   
-  * The Git related parts were left out.
+  * The Git related steps were left out.
   * Our `checkOrganization` task was added in the beginning, just to be sure this is a serious project.
 
 #### Release notes anyone?
@@ -223,22 +224,28 @@ Now let's also add steps for [posterous-sbt](https://github.com/n8han/posterous-
 
     // ...
 
+    val publishReleaseNotes = (ref: ProjectRef) => ReleaseStep(
+      check  = releaseTask(check in Posterous in ref,   // upfront check
+      action = releaseTask(publish in Posterous in ref) // publish release notes
+    )
+
+    // ...
+
     releaseProcess <<= thisProjectRef apply { ref =>
       import ReleaseStateTransformations._
-      Seq[ReleasePart](
+      Seq[ReleaseStep](
         checkOrganization,
         checkSnapshotDependencies,
-        releaseTask(check in Posterous in ref),   // upfront check
         inquireVersions,
         runTest,
         setReleaseVersion,
-        releaseTask(publish in Global in ref),
-        releaseTask(publish in Posterous in ref), // publish release notes
+        publishArtifacts,
+        publishReleaseNotes(ref) // we need to forward `thisProjectRef` for proper scoping of the underlying tasks
         setNextVersion,
       )
     }
 
-We added the check at the start, to make sure we have everything set up to post the release notes later on.
+The `check` part of the release step is run at the start, to make sure we have everything set up to post the release notes later on.
 After publishing the actual build artifacts, we also publish the release notes.
 
 ## Credits
