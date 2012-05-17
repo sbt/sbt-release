@@ -14,7 +14,7 @@ object ReleaseStateTransformations {
 
   lazy val checkSnapshotDependencies: ReleasePart = { st: State =>
     val thisRef = st.extract.get(thisProjectRef)
-    val (newSt, result) = runTaskAggregated(snapshotDependencies in thisRef, st)
+    val (newSt, result) = SbtCompat.runTaskAggregated(snapshotDependencies in thisRef, st)
     val snapshotDeps = result match {
       case Value(value) => value.flatMap(_.value)
       case Inc(cause) => sys.error("Error checking for snapshot dependencies: " + cause)
@@ -212,8 +212,7 @@ object ReleaseStateTransformations {
 
     // We don't want even want to be able to save the settings that are applied to the session during the release cycle.
     // Just using an empty string works fine and in case the user calls `session save`, empty lines will be generated.
-    val EmptySettingString = ""
-		val newSession = session.appendSettings( append map (a => (a, EmptySettingString)))
+		val newSession = session.appendSettings( append map (a => (a, SbtCompat.EmptySetting)))
 		BuiltinCommands.reapply(newSession, structure, state)
   }
 }
@@ -261,24 +260,6 @@ object Utilities {
 
   private[sbtrelease] def resolve[T](key: ScopedKey[T], extracted: Extracted): ScopedKey[T] =
 		Project.mapScope(Scope.resolveScope(GlobalScope, extracted.currentRef.build, extracted.rootProject) )( key.scopedKey )
-
-  def runTaskAggregated[T](taskKey: TaskKey[T], state: State) = {
-    import EvaluateTask._
-    val extra = Aggregation.Dummies(KNil, HNil)
-    val extracted = state.extract
-    val config = extractedConfig(extracted, extracted.structure)
-
-    val rkey = resolve(taskKey.scopedKey, extracted)
-    val tasks = Aggregation.getTasks(rkey, extracted.structure, true)
-    val toRun = tasks map { case KeyValue(k,t) => t.map(v => KeyValue(k,v)) } join;
-
-
-    val (newS, result) = withStreams(extracted.structure, state){ str =>
-			val transform = nodeView(state, str, extra.tasks, extra.values)
-			runTask(toRun, state,str, extracted.structure.index.triggers, config)(transform)
-		}
-    (newS, result)
-  }
 
   object Yes {
     def unapply(s: Option[String]) = s.exists(_.toLowerCase == "y")
