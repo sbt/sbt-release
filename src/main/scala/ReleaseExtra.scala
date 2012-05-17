@@ -11,7 +11,7 @@ object ReleaseStateTransformations {
   import ReleasePlugin.ReleaseKeys._
   import Utilities._
 
-  lazy val checkSnapshotDependencies: ReleasePart = { st: State =>
+  lazy val checkSnapshotDependencies: ReleaseStep = { st: State =>
     val thisRef = st.extract.get(thisProjectRef)
     val (newSt, result) = SbtCompat.runTaskAggregated(snapshotDependencies in thisRef, st)
     val snapshotDeps = result match {
@@ -34,7 +34,7 @@ object ReleaseStateTransformations {
   }
 
 
-  lazy val inquireVersions: ReleasePart = { st: State =>
+  lazy val inquireVersions: ReleaseStep = { st: State =>
     val extracted = Project.extract(st)
 
     val useDefs = st.get(useDefaults).getOrElse(false)
@@ -53,7 +53,7 @@ object ReleaseStateTransformations {
   }
 
 
-  lazy val runTest: ReleasePart = {st: State =>
+  lazy val runTest: ReleaseStep = {st: State =>
     if (!st.get(skipTests).getOrElse(false)) {
       val extracted = Project.extract(st)
       val ref = extracted.get(thisProjectRef)
@@ -61,9 +61,9 @@ object ReleaseStateTransformations {
     } else st
   }
 
-  lazy val setReleaseVersion: ReleasePart = setVersion(_._1)
-  lazy val setNextVersion: ReleasePart = setVersion(_._2)
-  private[sbtrelease] def setVersion(selectVersion: Versions => String): ReleasePart =  { st: State =>
+  lazy val setReleaseVersion: ReleaseStep = setVersion(_._1)
+  lazy val setNextVersion: ReleaseStep = setVersion(_._2)
+  private[sbtrelease] def setVersion(selectVersion: Versions => String): ReleaseStep =  { st: State =>
     val vs = st.get(versions).getOrElse(sys.error("No versions are set! Was this release part executed before inquireVersions?"))
     val selected = selectVersion(vs)
 
@@ -77,7 +77,7 @@ object ReleaseStateTransformations {
     ), st)
   }
 
-  lazy val commitReleaseVersion = ReleasePart(commitReleaseVersionAction, initialGitChecks)
+  lazy val commitReleaseVersion = ReleaseStep(commitReleaseVersionAction, initialGitChecks)
 
   private[sbtrelease] lazy val initialGitChecks = { st: State =>
     if (!new File(".git").exists) {
@@ -102,7 +102,7 @@ object ReleaseStateTransformations {
     ), newState)
   }
 
-  lazy val commitNextVersion: ReleasePart = ReleasePart(commitVersion("Bump to %s"))
+  lazy val commitNextVersion: ReleaseStep = ReleaseStep(commitVersion("Bump to %s"))
   private[sbtrelease] def commitVersion(msgPattern: String) = { st: State =>
     val v = st.extract.get(version in ThisBuild)
 
@@ -117,7 +117,7 @@ object ReleaseStateTransformations {
     st
   }
 
-  lazy val tagRelease: ReleasePart = { st: State =>
+  lazy val tagRelease: ReleaseStep = { st: State =>
     @tailrec
     def findTag(tag: String): Option[String] = {
       if (Git.existsTag(tag)) {
@@ -156,7 +156,7 @@ object ReleaseStateTransformations {
     ) getOrElse st
   }
 
-  lazy val pushChanges: ReleasePart = ReleasePart(pushChangesAction, checkUpstream)
+  lazy val pushChanges: ReleaseStep = ReleaseStep(pushChangesAction, checkUpstream)
   private[sbtrelease] lazy val checkUpstream = { st: State =>
     if (!Git.hasUpstream) {
       sys.error("No tracking branch is set up. Either configure a remote tracking branch, or remove the pushChanges release part.")
@@ -194,7 +194,7 @@ object ReleaseStateTransformations {
     st
   }
 
-  lazy val publishArtifacts = ReleasePart(
+  lazy val publishArtifacts = ReleaseStep(
     action = publishArtifactsAction,
     check = st => {
       // getPublishTo fails if no publish repository is set up.

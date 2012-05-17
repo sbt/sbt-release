@@ -7,7 +7,7 @@ import complete.DefaultParsers._
 object ReleasePlugin extends Plugin {
   object ReleaseKeys {
     lazy val snapshotDependencies = TaskKey[Seq[ModuleID]]("release-snapshot-dependencies")
-    lazy val releaseProcess = SettingKey[Seq[ReleasePart]]("release-process")
+    lazy val releaseProcess = SettingKey[Seq[ReleaseStep]]("release-process")
     lazy val releaseVersion = SettingKey[String => String]("release-release-version")
     lazy val nextVersion = SettingKey[String => String]("release-next-version")
     lazy val tagName = SettingKey[String]("release-tag-name")
@@ -52,7 +52,7 @@ object ReleasePlugin extends Plugin {
 
     tagName <<= (version in ThisBuild) (v => "v" + v),
 
-    releaseProcess := Seq[ReleasePart](
+    releaseProcess := Seq[ReleaseStep](
       checkSnapshotDependencies,
       inquireVersions,
       runTest,
@@ -88,9 +88,10 @@ object ReleasePlugin extends Plugin {
 }
 
 
-case class ReleasePart(action: State => State, check: State => State = identity)
-object ReleasePart {
-  implicit def func2ReleasePart(f: State => State): ReleasePart = ReleasePart(f)
+case class ReleaseStep(action: State => State, check: State => State = identity)
 
-  implicit def releasePart2Func(rp: ReleasePart): State=>State = rp.action
+object ReleaseStep {
+  implicit def func2ReleasePart(f: State => State): ReleaseStep = ReleaseStep(f)
+
+  implicit def releasePart2Func(rp: ReleaseStep): State=>State = rp.action
 }
