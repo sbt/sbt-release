@@ -40,7 +40,6 @@ object ReleasePlugin extends Plugin {
   import ReleaseKeys._
   import ReleaseStateTransformations._
 
-
   lazy val releaseSettings = Seq[Setting[_]](
     snapshotDependencies <<= (managedClasspath in Runtime) map { cp: Classpath =>
       val moduleIds = cp.flatMap(_.get(moduleID.key))
