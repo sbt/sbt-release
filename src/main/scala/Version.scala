@@ -8,7 +8,7 @@ object Version {
   def apply(s: String): Option[Version] = {
     allCatch opt {
       val VersionR(maj, min, mic, qual) = s
-      Version(maj.toInt, Option(min).map(_.toInt), Option(mic).map(_.toInt), Option(qual))
+      Version(maj.toInt, Option(min).map(_.toInt), Option(mic).map(_.toInt), Option(qual).filterNot(_.isEmpty))
     }
   }
 }
