@@ -38,6 +38,8 @@ object ReleasePlugin extends Plugin {
   }
 
   import ReleaseKeys._
+  import ReleaseStateTransformations._
+
 
   lazy val releaseSettings = Seq[Setting[_]](
     snapshotDependencies <<= (managedClasspath in Runtime) map { cp: Classpath =>
@@ -51,28 +53,18 @@ object ReleasePlugin extends Plugin {
 
     tagName <<= (version in ThisBuild) (v => "v" + v),
 
-    releaseProcess <<= thisProjectRef apply { ref =>
-      import ReleaseStateTransformations._
-      Seq[ReleasePart](
-        checkSnapshotDependencies,
-        inquireVersions,
-        runTest,
-        setReleaseVersion,
-        commitReleaseVersion,
-        tagRelease,
-        // TODO: make it a bit nicer or at least extract the publish release part out
-        ReleasePart(f = releaseTask(publish in Global in ref),
-          check = s => {
-            // getPublishTo fails if no publish repository is set up.
-            Classpaths.getPublishTo(Project.extract(s).get(publishTo in Global in ref))
-            s
-          }
-        ),
-        setNextVersion,
-        commitNextVersion,
-        pushChanges
-      )
-    },
+    releaseProcess := Seq[ReleasePart](
+      checkSnapshotDependencies,
+      inquireVersions,
+      runTest,
+      setReleaseVersion,
+      commitReleaseVersion,
+      tagRelease,
+      publishArtifacts,
+      setNextVersion,
+      commitNextVersion,
+      pushChanges
+    ),
 
     commands += releaseCommand
   )

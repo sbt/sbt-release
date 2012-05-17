@@ -4,9 +4,8 @@ import java.io.File
 import sbt._
 import Keys._
 import sbt.Package.ManifestAttributes
-import sbt.Aggregation.KeyValue
-import sbtrelease.Utilities.Yes
 import annotation.tailrec
+import Utilities._
 
 object ReleaseStateTransformations {
   import ReleasePlugin.ReleaseKeys._
@@ -78,7 +77,7 @@ object ReleaseStateTransformations {
     ), st)
   }
 
-  lazy val commitReleaseVersion = ReleasePart(commitReleaseVersionF, initialGitChecks)
+  lazy val commitReleaseVersion = ReleasePart(commitReleaseVersionAction, initialGitChecks)
 
   private[sbtrelease] lazy val initialGitChecks = { st: State =>
     if (!new File(".git").exists) {
@@ -94,7 +93,7 @@ object ReleaseStateTransformations {
     st
   }
 
-  private[sbtrelease] lazy val commitReleaseVersionF = { st: State =>
+  private[sbtrelease] lazy val commitReleaseVersionAction = { st: State =>
     val newState = commitVersion("Releasing %s")(st)
     reapply(Seq[Setting[_]](
       packageOptions += ManifestAttributes(
@@ -157,7 +156,7 @@ object ReleaseStateTransformations {
     ) getOrElse st
   }
 
-  lazy val pushChanges: ReleasePart = ReleasePart(pushChangesF, checkUpstream)
+  lazy val pushChanges: ReleasePart = ReleasePart(pushChangesAction, checkUpstream)
   private[sbtrelease] lazy val checkUpstream = { st: State =>
     if (!Git.hasUpstream) {
       sys.error("No tracking branch is set up. Either configure a remote tracking branch, or remove the pushChanges release part.")
@@ -181,7 +180,7 @@ object ReleaseStateTransformations {
     st
   }
 
-  private[sbtrelease] lazy val pushChangesF = { st: State =>
+  private[sbtrelease] lazy val pushChangesAction = { st: State =>
     if (Git.hasUpstream) {
       SimpleReader.readLine("Push changes to the remote repository (y/n)? [y] ") match {
         case Yes() =>
@@ -193,6 +192,22 @@ object ReleaseStateTransformations {
       st.log.info("Changes were NOT pushed, because no upstream branch is configured for the local branch [%s]" format Git.currentBranch)
     }
     st
+  }
+
+  lazy val publishArtifacts = ReleasePart(
+    action = publishArtifactsAction,
+    check = st => {
+      // getPublishTo fails if no publish repository is set up.
+      val ex = st.extract
+      val ref = ex.get(thisProjectRef)
+      Classpaths.getPublishTo(ex.get(publishTo in Global in ref))
+      st
+    }
+  )
+  private[sbtrelease] lazy val publishArtifactsAction = { st: State =>
+    val extracted = st.extract
+    val ref = extracted.get(thisProjectRef)
+    extracted.runAggregated(publish in Global in ref, st)
   }
 
   private def readVersion(ver: String, prompt: String, useDef: Boolean): String = {
