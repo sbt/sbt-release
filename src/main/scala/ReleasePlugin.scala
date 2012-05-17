@@ -30,7 +30,7 @@ object ReleasePlugin extends Plugin {
         .put(skipTests, args.contains(SkipTests))
 
       val initialChecks = releaseParts.map(_.check)
-      val process = releaseParts.map(_.f)
+      val process = releaseParts.map(_.action)
 
       initialChecks.foreach(_(startState))
       Function.chain(process)(startState)
@@ -97,9 +97,9 @@ object ReleasePlugin extends Plugin {
 }
 
 
-case class ReleasePart(f: State => State, check: State => State = identity)
+case class ReleasePart(action: State => State, check: State => State = identity)
 object ReleasePart {
   implicit def func2ReleasePart(f: State => State): ReleasePart = ReleasePart(f)
 
-  implicit def releasePart2Func(rp: ReleasePart): State=>State = rp.f
+  implicit def releasePart2Func(rp: ReleasePart): State=>State = rp.action
 }
