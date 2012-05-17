@@ -8,4 +8,13 @@ unmanagedSourceDirectories in Compile <+= (sbtVersion, sourceDirectory in Compil
 
 sbtPlugin := true
 
-publishTo := Some(Resolver.file("gseitz@github", file(Path.userHome + "/dev/repo")))
+publishTo <<= (version) { version: String =>
+   val scalasbt = "http://scalasbt.artifactoryonline.com/scalasbt/"
+   val (name, url) = if (version.contains("-SNAPSHOT"))
+                       ("sbt-plugin-snapshots", scalasbt+"sbt-plugin-snapshots")
+                     else
+                       ("sbt-plugin-releases", scalasbt+"sbt-plugin-releases")
+   Some(Resolver.url(name, new URL(url))(Resolver.ivyStylePatterns))
+}
+
+publishMavenStyle := false
