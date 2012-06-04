@@ -225,7 +225,7 @@ Now let's also add steps for [posterous-sbt](https://github.com/n8han/posterous-
     // ...
 
     val publishReleaseNotes = (ref: ProjectRef) => ReleaseStep(
-      check  = releaseTask(check in Posterous in ref,   // upfront check
+      check  = releaseTask(check in Posterous in ref),   // upfront check
       action = releaseTask(publish in Posterous in ref) // publish release notes
     )
 
