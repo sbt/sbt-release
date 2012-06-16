@@ -12,6 +12,8 @@ object ReleasePlugin extends Plugin {
     lazy val nextVersion = SettingKey[String => String]("release-next-version")
     lazy val tagName = SettingKey[String]("release-tag-name")
 
+    lazy val versionControlSystem = SettingKey[Option[Vcs]]("release-vcs")
+
     lazy val versions = AttributeKey[Versions]("release-versions")
     lazy val useDefaults = AttributeKey[Boolean]("release-use-defaults")
     lazy val skipTests = AttributeKey[Boolean]("release-skip-tests")
@@ -52,6 +54,8 @@ object ReleasePlugin extends Plugin {
 
     tagName <<= (version in ThisBuild) (v => "v" + v),
 
+    versionControlSystem <<= (baseDirectory)(Vcs.detect(_)),
+
     releaseProcess := Seq[ReleaseStep](
       checkSnapshotDependencies,
       inquireVersions,
@@ -77,7 +81,7 @@ object ReleasePlugin extends Plugin {
         inquireVersionsCommand,
         setReleaseVersionCommand,
         setNextVersionCommand,
-        initialGitChecksCommand,
+        initialVcsChecksCommand,
         commitReleaseVersionCommand,
         commitNextVersionCommand,
         tagReleaseCommand,
