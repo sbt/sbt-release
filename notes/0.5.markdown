@@ -1,0 +1,6 @@
+* `sbt-release` now adopts the sbt plugin best practices.
+* Add release step to run `git push && git push --tags` at the end of the release process.
+* Release steps can now contribute up-front sanity checks (eg. the git-push step checks if a remote repository is configured).
+* Added Mercurial support. Thanks [@espenhw](https://github.com/espenhw) for the contribution.
+* The appropriate VCS (Git or Mercurial, in that order) is automatically detected.
+* `sbt-release` is now published to the [scala-sbt community repository](http://scalasbt.artifactoryonline.com)
