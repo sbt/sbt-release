@@ -5,7 +5,6 @@ import sbt._
 import Keys._
 import sbt.Package.ManifestAttributes
 import annotation.tailrec
-import Utilities._
 
 object ReleaseStateTransformations {
   import ReleasePlugin.ReleaseKeys._
@@ -77,19 +76,19 @@ object ReleaseStateTransformations {
     ), st)
   }
 
-  lazy val commitReleaseVersion = ReleaseStep(commitReleaseVersionAction, initialGitChecks)
+  private def vcs(st: State): Vcs = {
+    st.extract.get(versionControlSystem).getOrElse(sys.error("Aborting release. Working directory is not a repository of a recognized VCS."))
+  }
 
-  private[sbtrelease] lazy val initialGitChecks = { st: State =>
-    if (!new File(".git").exists) {
-      sys.error("Aborting release. Working directory is not a git repository.")
-    }
+  lazy val commitReleaseVersion = ReleaseStep(commitReleaseVersionAction, initialVcsChecks)
 
-    val status = (Git.status !!).trim
+  private[sbtrelease] lazy val initialVcsChecks = { st: State =>
+    val status = (vcs(st).status !!).trim
     if (status.nonEmpty) {
       sys.error("Aborting release. Working directory is dirty.")
     }
 
-    st.log.info("Starting release process off git commit: " + Git.currentHash)
+    st.log.info("Starting release process off commit: " + vcs(st).currentHash)
     st
   }
 
@@ -97,7 +96,7 @@ object ReleaseStateTransformations {
     val newState = commitVersion("Releasing %s")(st)
     reapply(Seq[Setting[_]](
       packageOptions += ManifestAttributes(
-        "Git-Release-Hash" -> Git.currentHash
+        "Vcs-Release-Hash" -> vcs(st).currentHash
       )
     ), newState)
   }
@@ -106,11 +105,11 @@ object ReleaseStateTransformations {
   private[sbtrelease] def commitVersion(msgPattern: String) = { st: State =>
     val v = st.extract.get(version in ThisBuild)
 
-    Git.add("version.sbt") !! st.log
-    val status = (Git.status !!) trim
+    vcs(st).add("version.sbt") !! st.log
+    val status = (vcs(st).status !!) trim
 
     if (status.nonEmpty) {
-      Git.commit(msgPattern format v) ! st.log
+      vcs(st).commit(msgPattern format v) ! st.log
     } else {
       // nothing to commit. this happens if the version.sbt file hasn't changed.
     }
@@ -120,7 +119,7 @@ object ReleaseStateTransformations {
   lazy val tagRelease: ReleaseStep = { st: State =>
     @tailrec
     def findTag(tag: String): Option[String] = {
-      if (Git.existsTag(tag)) {
+      if (vcs(st).existsTag(tag)) {
         SimpleReader.readLine("Tag [%s] exists! Overwrite, keep or abort or enter a new tag (o/k/a)? [a] " format tag) match {
           case Some("" | "a" | "A") =>
             sys.error("Aborting release!")
@@ -130,7 +129,7 @@ object ReleaseStateTransformations {
             None
 
           case Some("o" | "O") =>
-            st.log.warn("Overwriting a tag can cause problems if others have already seen the tag (see `git help tag`)!")
+            st.log.warn("Overwriting a tag can cause problems if others have already seen the tag (see `%s help tag`)!" format vcs(st).commandName)
             Some(tag)
 
           case Some(newTag) =>
@@ -146,32 +145,31 @@ object ReleaseStateTransformations {
 
     val tag = st.extract.get(tagName)
     val tagToUse = findTag(tag)
-    tagToUse.foreach(Git.tag(_, force = true) !! st.log)
+    tagToUse.foreach(vcs(st).tag(_, force = true) !! st.log)
 
 
     tagToUse map (t =>
       reapply(Seq[Setting[_]](
-        packageOptions += ManifestAttributes("Git-Release-Tag" -> t)
+        packageOptions += ManifestAttributes("Vcs-Release-Tag" -> t)
       ), st)
     ) getOrElse st
   }
 
   lazy val pushChanges: ReleaseStep = ReleaseStep(pushChangesAction, checkUpstream)
   private[sbtrelease] lazy val checkUpstream = { st: State =>
-    if (!Git.hasUpstream) {
+    if (!vcs(st).hasUpstream) {
       sys.error("No tracking branch is set up. Either configure a remote tracking branch, or remove the pushChanges release part.")
     }
 
-    st.log.info("Fetching from remote [%s] ..." format Git.trackingRemote)
-    val result = Git.fetch(Git.trackingRemote) ! st.log
-    if (result != 0) {
-      SimpleReader.readLine("Error while fetching from remote. Still continue (y/n)? [n] ") match {
+    st.log.info("Checking remote [%s] ..." format vcs(st).trackingRemote)
+    if (vcs(st).checkRemote(vcs(st).trackingRemote) ! st.log != 0) {
+      SimpleReader.readLine("Error while checking remote. Still continue (y/n)? [n] ") match {
         case Yes() => // do nothing
         case _ => sys.error("Aborting the release!")
       }
     }
 
-    if (Git.isBehindRemote) {
+    if (vcs(st).isBehindRemote) {
       SimpleReader.readLine("The upstream branch has unmerged commits. A subsequent push will fail! Continue (y/n)? [n] ") match {
         case Yes() => // do nothing
         case _ => sys.error("Merge the upstream commits and run `release` again.")
@@ -181,15 +179,14 @@ object ReleaseStateTransformations {
   }
 
   private[sbtrelease] lazy val pushChangesAction = { st: State =>
-    if (Git.hasUpstream) {
+    if (vcs(st).hasUpstream) {
       SimpleReader.readLine("Push changes to the remote repository (y/n)? [y] ") match {
-        case Yes() =>
-          Git.pushCurrentBranch !! st.log
-          Git.pushTags !! st.log
+        case Yes() | Some("") =>
+          vcs(st).pushChanges !! st.log
         case _ => st.log.warn("Remember to push the changes yourself!")
       }
     } else {
-      st.log.info("Changes were NOT pushed, because no upstream branch is configured for the local branch [%s]" format Git.currentBranch)
+      st.log.info("Changes were NOT pushed, because no upstream branch is configured for the local branch [%s]" format vcs(st).currentBranch)
     }
     st
   }
@@ -236,8 +233,8 @@ object ReleaseStateTransformations {
 object ExtraReleaseCommands {
   import ReleaseStateTransformations._
 
-  private lazy val initialGitChecksCommandKey = "release-git-checks"
-  lazy val initialGitChecksCommand = Command.command(initialGitChecksCommandKey)(initialGitChecks)
+  private lazy val initialVcsChecksCommandKey = "release-vcs-checks"
+  lazy val initialVcsChecksCommand = Command.command(initialVcsChecksCommandKey)(initialVcsChecks)
 
   private lazy val checkSnapshotDependenciesCommandKey = "release-check-snapshot-dependencies"
   lazy val checkSnapshotDependenciesCommand = Command.command(checkSnapshotDependenciesCommandKey)(checkSnapshotDependencies)
