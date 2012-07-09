@@ -70,7 +70,7 @@ object Mercurial extends Vcs with GitLike {
 
   def trackingRemote = "default"
 
-  def isBehindRemote = cmd("incoming", "-q") ! devnull != 0
+  def isBehindRemote = cmd("incoming", "-q") ! devnull == 0
 
   def pushChanges = cmd("push", "-b", ".")
 
