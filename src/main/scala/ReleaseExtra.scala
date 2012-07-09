@@ -181,7 +181,7 @@ object ReleaseStateTransformations {
   private[sbtrelease] lazy val pushChangesAction = { st: State =>
     if (vcs(st).hasUpstream) {
       SimpleReader.readLine("Push changes to the remote repository (y/n)? [y] ") match {
-        case Yes() =>
+        case Yes() | Some("") =>
           vcs(st).pushChanges !! st.log
         case _ => st.log.warn("Remember to push the changes yourself!")
       }
