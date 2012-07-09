@@ -115,8 +115,8 @@ If you want to customize the versioning, keep the following in mind:
 ## Not all releases are created equal - Customizing the release process
 The release process can be customized to the project's needs.
 
-  * Not using Git? Then strip it out.
-  * Want to check for the existance of release notes at the start and then publish it with [posterous-sbt](https://github.com/n8han/posterous-sbt) at the end? Just add it.
+  * Not using Git? Then rip it out.
+  * Want to check for the existance of release notes at the start of the release and then publish it with [posterous-sbt](https://github.com/n8han/posterous-sbt) at the end? Just add the release step.
 
 
 The release process is defined by [State](http://harrah.github.com/xsbt/latest/api/sbt/State.html) transformation functions (`State => State`), for which *sbt-release* defines the this case class:
