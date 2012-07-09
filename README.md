@@ -249,4 +249,12 @@ The `check` part of the release step is run at the start, to make sure we have e
 After publishing the actual build artifacts, we also publish the release notes.
 
 ## Credits
-Thank you, [Jason](http://github.com/retronym) and [Mark](http://github.com/harrah), for your feedback and ideas.
+Thank you, [Jason](https://github.com/retronym) and [Mark](https://github.com/harrah), for your feedback and ideas.
+
+## Contributors
+[Johannes Rudolph](https://github.com/jrudolph), [Espen Wiborg](https://github.com/espenhw)
+
+## License
+Copyright (c) 2011, 2012 Gerolf Seitz
+
+Published under the [Apache License 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt)
