@@ -21,9 +21,7 @@ This sbt plugin provides a customizable release process that you can add to your
 ## Usage
 ### Adding the plugin dependency
 
-Add the following lines to `./project/build.sbt`. See the section [Using Plugins](https://github.com/harrah/xsbt/wiki/Getting-Started-Using-Plugins) in the xsbt wiki for more information.
-
-    resolvers += Resolver.url("artifactory", url("http://scalasbt.artifactoryonline.com/scalasbt/sbt-plugin-releases"))(Resolver.ivyStylePatterns)
+Add the following lines to `./project/build.sbt`. See the section [Using Plugins](https://github.com/harrah/xsbt/wiki/Getting-Started-Using-Plugins) in the xsbt wiki for more information.    
 
     addSbtPlugin("com.github.gseitz" % "sbt-release" % "0.5")
 
@@ -35,7 +33,7 @@ Setting/task keys are defined in `sbtrelease.ReleasePlugin.ReleaseKeys`.
 
 #### build.sbt (simple build definition)
 
-    seq(releaseSettings: _*)
+    releaseSettings
 
 #### build.scala (full build definition)
 
