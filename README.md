@@ -23,6 +23,12 @@ This sbt plugin provides a customizable release process that you can add to your
 
 Add the following lines to `./project/build.sbt`. See the section [Using Plugins](https://github.com/harrah/xsbt/wiki/Getting-Started-Using-Plugins) in the xsbt wiki for more information.    
 
+    // This resolver declaration is added by default in SBT 0.12.x
+    resolvers += Resolver.url(
+      "sbt-plugin-releases", 
+      new URL("http://scalasbt.artifactoryonline.com/scalasbt/sbt-plugin-releases/")
+    )(Resolver.ivyStylePatterns)
+    
     addSbtPlugin("com.github.gseitz" % "sbt-release" % "0.5")
 
 ### Including sbt-release settings
