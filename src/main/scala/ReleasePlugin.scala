@@ -11,6 +11,7 @@ object ReleasePlugin extends Plugin {
     lazy val releaseVersion = SettingKey[String => String]("release-release-version")
     lazy val nextVersion = SettingKey[String => String]("release-next-version")
     lazy val tagName = SettingKey[String]("release-tag-name")
+    lazy val tagComment = SettingKey[String]("release-tag-comment")
 
     lazy val versionControlSystem = SettingKey[Option[Vcs]]("release-vcs")
 
@@ -53,6 +54,7 @@ object ReleasePlugin extends Plugin {
     nextVersion := { ver => Version(ver).map(_.bumpMinor.asSnapshot.string).getOrElse(versionFormatError) },
 
     tagName <<= (version in ThisBuild) (v => "v" + v),
+    tagComment <<= (version in ThisBuild) (v => "Releasing %s".format(v)),
 
     versionControlSystem <<= (baseDirectory)(Vcs.detect(_)),
 
