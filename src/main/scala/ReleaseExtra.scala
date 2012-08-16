@@ -144,8 +144,9 @@ object ReleaseStateTransformations {
     }
 
     val tag = st.extract.get(tagName)
+    val comment = st.extract.get(tagComment)
     val tagToUse = findTag(tag)
-    tagToUse.foreach(vcs(st).tag(_, force = true) !! st.log)
+    tagToUse.foreach(vcs(st).tag(_, comment, force = true) !! st.log)
 
 
     tagToUse map (t =>
