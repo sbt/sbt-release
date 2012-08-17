@@ -2,7 +2,7 @@ organization := "com.github.gseitz"
 
 name := "sbt-release"
 
-version := "0.5"
+version := "0.6-SNAPSHOT"
 
 unmanagedSourceDirectories in Compile <+= (sbtVersion, sourceDirectory in Compile) ((sv, sd) => new File(sd, "scala-sbt-" + sv))
 

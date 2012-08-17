@@ -12,7 +12,7 @@ trait Vcs {
   def commit(message: String): ProcessBuilder
   def existsTag(name: String): Boolean
   def checkRemote(remote: String): ProcessBuilder
-  def tag(name: String, force: Boolean = false): ProcessBuilder
+  def tag(name: String, comment: String, force: Boolean = false): ProcessBuilder
   def hasUpstream: Boolean
   def trackingRemote: String
   def isBehindRemote: Boolean
@@ -64,7 +64,7 @@ object Mercurial extends Vcs with GitLike {
 
   def existsTag(name: String) = (cmd("tags") !!).linesIterator.exists(_.endsWith(" "+name))
 
-  def tag(name: String, force: Boolean) = cmd("tag", if(force) "-f" else "", "-m", "Releasing " + name, name)
+  def tag(name: String, comment: String, force: Boolean) = cmd("tag", if(force) "-f" else "", "-m", comment, name)
 
   def hasUpstream = cmd("paths", "default") ! devnull == 0
 
@@ -101,7 +101,7 @@ object Git extends Vcs with GitLike {
 
   def isBehindRemote = (cmd("rev-list", "%s..%s/%s".format(currentBranch, trackingRemote, trackingBranch)) !! devnull).trim.nonEmpty
 
-  def tag(name: String, force: Boolean = false) = cmd("tag", "-a", name, "-m", "Releasing " + name, if(force) "-f" else "")
+  def tag(name: String, comment: String, force: Boolean = false) = cmd("tag", "-a", name, "-m", comment, if(force) "-f" else "")
 
   def existsTag(name: String) = cmd("show-ref", "--quiet", "--tags", "--verify", "refs/tags/" + name) ! devnull == 0
 
