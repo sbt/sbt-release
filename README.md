@@ -256,7 +256,7 @@ After publishing the actual build artifacts, we also publish the release notes.
 Thank you, [Jason](https://github.com/retronym) and [Mark](https://github.com/harrah), for your feedback and ideas.
 
 ## Contributors
-[Johannes Rudolph](https://github.com/jrudolph), [Espen Wiborg](https://github.com/espenhw)
+[Johannes Rudolph](https://github.com/jrudolph), [Espen Wiborg](https://github.com/espenhw), [Eric Bowman](https://github.com/ebowman)
 
 ## License
 Copyright (c) 2011, 2012 Gerolf Seitz
