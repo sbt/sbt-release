@@ -81,8 +81,6 @@ object ReleaseStateTransformations {
     st.extract.get(versionControlSystem).getOrElse(sys.error("Aborting release. Working directory is not a repository of a recognized VCS."))
   }
 
-  lazy val commitReleaseVersion = ReleaseStep(commitReleaseVersionAction, initialVcsChecks)
-
   private[sbtrelease] lazy val initialVcsChecks = { st: State =>
     val status = (vcs(st).status !!).trim
     if (status.nonEmpty) {
@@ -93,8 +91,9 @@ object ReleaseStateTransformations {
     st
   }
 
+  lazy val commitReleaseVersion = ReleaseStep(commitReleaseVersionAction, initialVcsChecks)
   private[sbtrelease] lazy val commitReleaseVersionAction = { st: State =>
-    val newState = commitVersion("Releasing %s")(st)
+    val newState = commitVersion(st)
     reapply(Seq[Setting[_]](
       packageOptions += ManifestAttributes(
         "Vcs-Release-Hash" -> vcs(st).currentHash
@@ -102,15 +101,14 @@ object ReleaseStateTransformations {
     ), newState)
   }
 
-  lazy val commitNextVersion: ReleaseStep = ReleaseStep(commitVersion("Bump to %s"))
-  private[sbtrelease] def commitVersion(msgPattern: String) = { st: State =>
-    val v = st.extract.get(version in ThisBuild)
-
+  lazy val commitNextVersion = ReleaseStep(commitVersion)
+  private[sbtrelease] def commitVersion = { st: State =>
     vcs(st).add("version.sbt") !! st.log
     val status = (vcs(st).status !!) trim
 
     if (status.nonEmpty) {
-      vcs(st).commit(msgPattern format v) ! st.log
+      val msg = st.extract.get(commitMessage)
+      vcs(st).commit(msg) ! st.log
     } else {
       // nothing to commit. this happens if the version.sbt file hasn't changed.
     }
