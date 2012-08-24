@@ -1,0 +1,3 @@
+* Some release steps didn't properly use the default choice for non-interactive builds (`with-defaults`).
+* [#17](https://github.com/sbt/sbt-release/issues/17) Added setting for customizing the tag comment. Thanks [Eric Bowman](https://github.com/ebowman).
+* Added setting for customizing the commit message (defaults to `Setting version to x.y.z`).
