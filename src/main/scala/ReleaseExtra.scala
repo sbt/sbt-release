@@ -3,8 +3,13 @@ package sbtrelease
 import java.io.File
 import sbt._
 import Keys._
-import sbt.Package.ManifestAttributes
 import annotation.tailrec
+import sbtrelease.ReleasePlugin.ReleaseKeys._
+import sbt.Package.ManifestAttributes
+import scala.Some
+import sbt.Value
+import sbt.Inc
+import sbt.Extracted
 
 object ReleaseStateTransformations {
   import ReleasePlugin.ReleaseKeys._
@@ -117,10 +122,12 @@ object ReleaseStateTransformations {
   }
 
   lazy val tagRelease: ReleaseStep = { st: State =>
+    val defaultChoice = extractDefault(st, "a")
+
     @tailrec
     def findTag(tag: String): Option[String] = {
       if (vcs(st).existsTag(tag)) {
-        SimpleReader.readLine("Tag [%s] exists! Overwrite, keep or abort or enter a new tag (o/k/a)? [a] " format tag) match {
+        defaultChoice orElse SimpleReader.readLine("Tag [%s] exists! Overwrite, keep or abort or enter a new tag (o/k/a)? [a] " format tag) match {
           case Some("" | "a" | "A") =>
             sys.error("Aborting release!")
 
@@ -161,17 +168,18 @@ object ReleaseStateTransformations {
     if (!vcs(st).hasUpstream) {
       sys.error("No tracking branch is set up. Either configure a remote tracking branch, or remove the pushChanges release part.")
     }
+    val defaultChoice = extractDefault(st, "n")
 
     st.log.info("Checking remote [%s] ..." format vcs(st).trackingRemote)
     if (vcs(st).checkRemote(vcs(st).trackingRemote) ! st.log != 0) {
-      SimpleReader.readLine("Error while checking remote. Still continue (y/n)? [n] ") match {
+      defaultChoice orElse SimpleReader.readLine("Error while checking remote. Still continue (y/n)? [n] ") match {
         case Yes() => // do nothing
         case _ => sys.error("Aborting the release!")
       }
     }
 
     if (vcs(st).isBehindRemote) {
-      SimpleReader.readLine("The upstream branch has unmerged commits. A subsequent push will fail! Continue (y/n)? [n] ") match {
+      defaultChoice orElse SimpleReader.readLine("The upstream branch has unmerged commits. A subsequent push will fail! Continue (y/n)? [n] ") match {
         case Yes() => // do nothing
         case _ => sys.error("Merge the upstream commits and run `release` again.")
       }
@@ -180,8 +188,10 @@ object ReleaseStateTransformations {
   }
 
   private[sbtrelease] lazy val pushChangesAction = { st: State =>
+    val defaultChoice = extractDefault(st, "y")
+
     if (vcs(st).hasUpstream) {
-      SimpleReader.readLine("Push changes to the remote repository (y/n)? [y] ") match {
+      defaultChoice orElse SimpleReader.readLine("Push changes to the remote repository (y/n)? [y] ") match {
         case Yes() | Some("") =>
           vcs(st).pushChanges !! st.log
         case _ => st.log.warn("Remember to push the changes yourself!")
@@ -277,5 +287,12 @@ object Utilities {
   object Yes {
     def unapply(s: Option[String]) = s.exists(_.toLowerCase == "y")
   }
+
+  def extractDefault(st: State, default: String): Option[String] = {
+    val useDefs = st.get(useDefaults).getOrElse(false)
+    if (useDefs) Some(default)
+    else None
+  }
+
 }
 
