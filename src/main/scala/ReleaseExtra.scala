@@ -22,16 +22,12 @@ object ReleaseStateTransformations {
       case Value(value) => value.flatMap(_.value)
       case Inc(cause) => sys.error("Error checking for snapshot dependencies: " + cause)
     }
-    val useDefs = newSt.get(useDefaults).getOrElse(false)
     if (!snapshotDeps.isEmpty) {
-      if (useDefs) {
-        sys.error("Aborting release due to snapshot dependencies.")
-      } else {
-        st.log.warn("Snapshot dependencies detected:\n" + snapshotDeps.mkString("\n"))
-        SimpleReader.readLine("Do you want to continue (y/n)? [n] ") match {
-          case Yes() =>
-          case _ => sys.error("Aborting release due to snapshot dependencies.")
-        }
+      val useDefaults = extractDefault(newSt, "n")
+      st.log.warn("Snapshot dependencies detected:\n" + snapshotDeps.mkString("\n"))
+      useDefaults orElse SimpleReader.readLine("Do you want to continue (y/n)? [n] ") match {
+        case Yes() =>
+        case _ => sys.error("Aborting release due to snapshot dependencies.")
       }
     }
     newSt
