@@ -106,13 +106,15 @@ object ReleaseStateTransformations {
     vcs(st).add("version.sbt") !! st.log
     val status = (vcs(st).status !!) trim
 
-    if (status.nonEmpty) {
-      val msg = st.extract.runTask(commitMessage, st)._2
-      vcs(st).commit(msg) ! st.log
+    val newState = if (status.nonEmpty) {
+      val (state, msg) = st.extract.runTask(commitMessage, st)
+      vcs(state).commit(msg) ! st.log
+      state
     } else {
       // nothing to commit. this happens if the version.sbt file hasn't changed.
+      st
     }
-    st
+    newState
   }
 
   lazy val tagRelease: ReleaseStep = { st: State =>
@@ -144,17 +146,17 @@ object ReleaseStateTransformations {
       }
     }
 
-    val tag = st.extract.runTask(tagName, st)._2
-    val comment = st.extract.runTask(tagComment, st)._2
+    val (tagState, tag) = st.extract.runTask(tagName, st)
+    val (commentState, comment) = st.extract.runTask(tagComment, tagState)
     val tagToUse = findTag(tag)
-    tagToUse.foreach(vcs(st).tag(_, comment, force = true) !! st.log)
+    tagToUse.foreach(vcs(commentState).tag(_, comment, force = true) !! commentState.log)
 
 
     tagToUse map (t =>
       reapply(Seq[Setting[_]](
         packageOptions += ManifestAttributes("Vcs-Release-Tag" -> t)
-      ), st)
-    ) getOrElse st
+      ), commentState)
+    ) getOrElse commentState
   }
 
   lazy val pushChanges: ReleaseStep = ReleaseStep(pushChangesAction, checkUpstream)
