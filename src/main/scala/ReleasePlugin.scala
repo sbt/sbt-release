@@ -10,9 +10,9 @@ object ReleasePlugin extends Plugin {
     lazy val releaseProcess = SettingKey[Seq[ReleaseStep]]("release-process")
     lazy val releaseVersion = SettingKey[String => String]("release-release-version")
     lazy val nextVersion = SettingKey[String => String]("release-next-version")
-    lazy val tagName = SettingKey[() => String]("release-tag-name")
-    lazy val tagComment = SettingKey[() => String]("release-tag-comment")
-    lazy val commitMessage = SettingKey[() => String]("release-commit-message")
+    lazy val tagName = TaskKey[String]("release-tag-name")
+    lazy val tagComment = TaskKey[String]("release-tag-comment")
+    lazy val commitMessage = TaskKey[String]("release-commit-message")
 
     lazy val versionControlSystem = SettingKey[Option[Vcs]]("release-vcs")
 
@@ -54,9 +54,9 @@ object ReleasePlugin extends Plugin {
     releaseVersion := { ver => Version(ver).map(_.withoutQualifier.string).getOrElse(versionFormatError) },
     nextVersion := { ver => Version(ver).map(_.bumpMinor.asSnapshot.string).getOrElse(versionFormatError) },
 
-    tagName <<= (version in ThisBuild) (v => () => "v" + v),
-    tagComment <<= (version in ThisBuild) (v => () => "Releasing %s" format v),
-    commitMessage <<= (version in ThisBuild) (v => () => "Setting version to %s" format v),
+    tagName <<= (version in ThisBuild) map (v => "v" + v),
+    tagComment <<= (version in ThisBuild) map (v => "Releasing %s" format v),
+    commitMessage <<= (version in ThisBuild) map (v => "Setting version to %s" format v),
 
     versionControlSystem <<= (baseDirectory)(Vcs.detect(_)),
 
