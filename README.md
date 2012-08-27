@@ -123,12 +123,12 @@ If you want to customize the versioning, keep the following in mind:
 ### Custom VCS messages
 *sbt-release* has built in support to commit/push to Git and Mercurial repositories. The messages for the tag and the commits can be customized to your needs with these settings:
 
-    val tagComment    : SettingKey[String]
-    val commitMessage : SettingKey[String]
+    val tagComment    : TaskKey[String]
+    val commitMessage : TaskKey[String]
 
     // defaults
-    tagComment    <<= (version in ThisBuild) (v => "Releasing %s" format v),
-    commitMessage <<= (version in ThisBuild) (v => "Setting version to %s" format v)
+    tagComment    <<= (version in ThisBuild) map (v => "Releasing %s" format v),
+    commitMessage <<= (version in ThisBuild) map (v => "Setting version to %s" format v)
 
 
 ## Not all releases are created equal - Customizing the release process
