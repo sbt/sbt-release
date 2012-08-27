@@ -1,3 +1,5 @@
-* Some release steps didn't properly use the default choice for non-interactive builds (`with-defaults`).
 * [#17](https://github.com/sbt/sbt-release/issues/17) Added setting for customizing the tag comment. Thanks [Eric Bowman](https://github.com/ebowman).
+* [#18](https://github.com/sbt/sbt-release/issues/18) Some release steps didn't properly use the default choice for non-interactive builds (`with-defaults`).
 * Added setting for customizing the commit message (defaults to `Setting version to x.y.z`).
+* [#19](https://github.com/sbt/sbt-release/issues/19) Make `tagName`, `tagComment` and `commitMessage` a `TaskKey[String]`, so they are only evaluated when they're needed (i.e. during a release instead of everytime sbt is started). Thanks again, [Eric Bowman](https://github.com/ebowman).
+
