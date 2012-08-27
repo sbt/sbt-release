@@ -108,7 +108,7 @@ object ReleaseStateTransformations {
 
     if (status.nonEmpty) {
       val msg = st.extract.get(commitMessage)
-      vcs(st).commit(msg) ! st.log
+      vcs(st).commit(msg()) ! st.log
     } else {
       // nothing to commit. this happens if the version.sbt file hasn't changed.
     }
@@ -146,8 +146,8 @@ object ReleaseStateTransformations {
 
     val tag = st.extract.get(tagName)
     val comment = st.extract.get(tagComment)
-    val tagToUse = findTag(tag)
-    tagToUse.foreach(vcs(st).tag(_, comment, force = true) !! st.log)
+    val tagToUse = findTag(tag())
+    tagToUse.foreach(vcs(st).tag(_, comment(), force = true) !! st.log)
 
 
     tagToUse map (t =>
