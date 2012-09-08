@@ -186,9 +186,11 @@ object ReleaseStateTransformations {
   private[sbtrelease] lazy val pushChangesAction = { st: State =>
     val defaultChoice = extractDefault(st, "y")
 
-    if (vcs(st).hasUpstream) {
+    val vc = vcs(st)
+    if (vc.hasUpstream) {
       defaultChoice orElse SimpleReader.readLine("Push changes to the remote repository (y/n)? [y] ") match {
         case Yes() | Some("") =>
+          if (vc == Git) st.log.info("git push sends it's console output to standard error, which will cause the next few lines to be marked as [error].")
           vcs(st).pushChanges !! st.log
         case _ => st.log.warn("Remember to push the changes yourself!")
       }

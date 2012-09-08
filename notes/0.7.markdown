@@ -1,0 +1,1 @@
+* Print an informational message that `git push` writes to standard error. [#20](https://github.com/sbt/sbt-release/issues/20)
