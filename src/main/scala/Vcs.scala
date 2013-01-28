@@ -47,8 +47,7 @@ trait GitLike extends Vcs {
   protected def cmd(args: Any*): ProcessBuilder = Process(exec +: args.map(_.toString))
 
   def isRepository(dir: File): Boolean =
-    if (new File(dir, markerDirectory).isDirectory) true
-    else Option(dir.getParentFile).map(isRepository(_)).getOrElse(false)
+    new File(dir, markerDirectory).isDirectory || Option(dir.getParentFile).exists(isRepository)
 
   def add(files: String*) = cmd(("add" +: files): _*)
 
