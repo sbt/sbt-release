@@ -19,22 +19,29 @@ object ReleasePlugin extends Plugin {
     lazy val versions = AttributeKey[Versions]("release-versions")
     lazy val useDefaults = AttributeKey[Boolean]("release-use-defaults")
     lazy val skipTests = AttributeKey[Boolean]("release-skip-tests")
+    lazy val crossBuild = AttributeKey[Boolean]("release-cross-build")
 
     private lazy val releaseCommandKey = "release"
     private val WithDefaults = "with-defaults"
     private val SkipTests = "skip-tests"
-    private val releaseParser = (Space ~> WithDefaults | Space ~> SkipTests).*
+    private val CrossBuild = "cross"
+    private val releaseParser = (Space ~> WithDefaults | Space ~> SkipTests | Space ~> CrossBuild).*
 
     val releaseCommand: Command = Command(releaseCommandKey)(_ => releaseParser) { (st, args) =>
       val extracted = Project.extract(st)
       val releaseParts = extracted.get(releaseProcess)
-
+      val crossEnabled = args.contains(CrossBuild)
       val startState = st
         .put(useDefaults, args.contains(WithDefaults))
         .put(skipTests, args.contains(SkipTests))
+        .put(crossBuild, crossEnabled)
 
       val initialChecks = releaseParts.map(_.check)
-      val process = releaseParts.map(_.action)
+      val process = releaseParts.map { step =>
+        if (step.enableCrossBuild && crossEnabled) {
+          ReleaseStateTransformations.runCrossBuild(step.action)
+        } else step.action
+      }
 
       initialChecks.foreach(_(startState))
       Function.chain(process)(startState)
@@ -96,7 +103,7 @@ object ReleasePlugin extends Plugin {
 }
 
 
-case class ReleaseStep(action: State => State, check: State => State = identity)
+case class ReleaseStep(action: State => State, check: State => State = identity, enableCrossBuild: Boolean = false)
 
 object ReleaseStep {
   implicit def func2ReleasePart(f: State => State): ReleaseStep = ReleaseStep(f)

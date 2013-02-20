@@ -53,13 +53,16 @@ object ReleaseStateTransformations {
   }
 
 
-  lazy val runTest: ReleaseStep = {st: State =>
-    if (!st.get(skipTests).getOrElse(false)) {
-      val extracted = Project.extract(st)
-      val ref = extracted.get(thisProjectRef)
-      extracted.runAggregated(test in Test in ref, st)
-    } else st
-  }
+  lazy val runTest: ReleaseStep = ReleaseStep(
+    action = { st: State =>
+      if (!st.get(skipTests).getOrElse(false)) {
+        val extracted = Project.extract(st)
+        val ref = extracted.get(thisProjectRef)
+        extracted.runAggregated(test in Test in ref, st)
+      } else st
+    },
+    enableCrossBuild = true
+  )
 
   lazy val setReleaseVersion: ReleaseStep = setVersion(_._1)
   lazy val setNextVersion: ReleaseStep = setVersion(_._2)
@@ -208,7 +211,8 @@ object ReleaseStateTransformations {
       val ref = ex.get(thisProjectRef)
       Classpaths.getPublishTo(ex.get(publishTo in Global in ref))
       st
-    }
+    },
+    enableCrossBuild = true
   )
   private[sbtrelease] lazy val publishArtifactsAction = { st: State =>
     val extracted = st.extract
@@ -225,7 +229,7 @@ object ReleaseStateTransformations {
     }
   }
 
-  def reapply(settings: Seq[Setting[_]], state: State) = {
+  def reapply(settings: Seq[Setting[_]], state: State): State = {
     val extracted = state.extract
     import extracted._
 
@@ -236,8 +240,27 @@ object ReleaseStateTransformations {
 		val newSession = session.appendSettings( append map (a => (a, SbtCompat.EmptySetting)))
 		BuiltinCommands.reapply(newSession, structure, state)
   }
-}
 
+  def switchScalaVersion(state: State, version: String): State = {
+    val x = Project.extract(state)
+    import x._
+    state.log.info("Setting scala version to " + version)
+    val add = (scalaVersion := version) :: (scalaHome := None) :: Nil
+    val cleared = session.mergeSettings.filterNot(Cross.crossExclude)
+    reapply(add ++ cleared, state)
+  }
+
+  def runCrossBuild(func: State => State): State => State = { state =>
+    val x = Project.extract(state)
+    import x._
+    val versions = Cross.crossVersions(state)
+    val current = scalaVersion in currentRef get structure.data
+    val finalS = (state /: versions) {
+      case (s, v) => func(switchScalaVersion(s, v))
+    }
+    current.map(switchScalaVersion(finalS, _)).getOrElse(finalS)
+  }
+}
 
 object ExtraReleaseCommands {
   import ReleaseStateTransformations._
