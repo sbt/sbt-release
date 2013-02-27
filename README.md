@@ -21,14 +21,14 @@ This sbt plugin provides a customizable release process that you can add to your
 ## Usage
 ### Adding the plugin dependency
 
-Add the following lines to `./project/build.sbt`. See the section [Using Plugins](https://github.com/harrah/xsbt/wiki/Getting-Started-Using-Plugins) in the xsbt wiki for more information.    
+Add the following lines to `./project/build.sbt`. See the section [Using Plugins](https://github.com/harrah/xsbt/wiki/Getting-Started-Using-Plugins) in the xsbt wiki for more information.
 
     // This resolver declaration is added by default in SBT 0.12.x
     resolvers += Resolver.url(
-      "sbt-plugin-releases", 
+      "sbt-plugin-releases",
       new URL("http://scalasbt.artifactoryonline.com/scalasbt/sbt-plugin-releases/")
     )(Resolver.ivyStylePatterns)
-    
+
     addSbtPlugin("com.github.gseitz" % "sbt-release" % "0.6")
 
 ### Including sbt-release settings
@@ -93,6 +93,19 @@ For all interactions, the following default value will be chosen:
 ### Skipping tests
 For that emergency release at 2am on a Sunday, you can optionally avoid running any tests by providing the `skip-tests` argument to the `release` command.
 
+### Cross building during a release
+Since version 0.7, *sbt-release* comes with built-in support for [cross building](http://www.scala-sbt.org/release/docs/Detailed-Topics/Cross-Build.html) and cross publishing. A cross release is triggered by supplying the option `cross` to the `release` command:
+
+    > release cross with-defaults
+
+Of the predefined release steps, the `test` and `publish` release steps are set up for cross building.
+
+`release cross` behaves analogous to using the `+` command:
+ 1. If no `cross-scala-versions` are set, then running `release cross` does the same thing as just running `release` (i.e. run the release with the scala version specified in the setting `scala-version`).
+ 1. If `cross-scala-versions` are set, then only these scala versions will be used. Make sure to include the regular/default `scala-version` in the `cross-scala-version` setting as well.
+
+In the section *Customizing the release process* we take a look at how to define a `ReleaseStep` to participate in a cross build.
+
 ### Custom versioning
 *sbt-release* comes with two settings for deriving the release version and the next development version from a given version.
 These derived versions are used for the suggestions/defaults in the prompt and for non-interactive releases.
@@ -131,7 +144,8 @@ If you want to customize the versioning, keep the following in mind:
     commitMessage <<= (version in ThisBuild) map (v => "Setting version to %s" format v)
 
 
-## Not all releases are created equal - Customizing the release process
+## Customizing the release process
+### Not all releases are created equal
 The release process can be customized to the project's needs.
 
   * Not using Git? Then rip it out.
@@ -140,12 +154,17 @@ The release process can be customized to the project's needs.
 
 The release process is defined by [State](http://harrah.github.com/xsbt/latest/api/sbt/State.html) transformation functions (`State => State`), for which *sbt-release* defines the this case class:
 
-    case class ReleaseStep(action: State => State, check: State => State = identity)
+    case class ReleaseStep (
+      action: State => State,
+      check: State => State = identity,
+      enableCrossBuild: Boolean = false
+    )
 
 The function `action` is used to perform the actual release step. Additionally, each release step can provide a `check`
 function that is run at the beginning of the release and can be used to prevent the release from running because of an
 unsatisified invariant (i.e. the release step for publishing artifacts checks that publishTo is properly set up).
-    
+The property `enableCrossBuild` tells *sbt-release* whether or not a particular `ReleaseStep` needs to be executed for the specified `cross-scala-versions`.
+
 The sequence of `ReleaseStep`s that make up the release process is stored in the setting `releaseProcess: SettingKey[Seq[ReleaseStep]]`.
 
 The state transformations functions used in *sbt-release* are the same as the action/body part of a no-argument command.
@@ -162,23 +181,23 @@ You can define your own state tansformation functions, just like *sbt-release* d
       val extracted = Project.extract(st)
       // retrieve the value of the organization SettingKey
       val org = extracted.get(Keys.organization)
-      
+
       if (org.startsWith("com.acme")
         sys.error("Hey, no need to release a toy project!")
-      
+
       st
     })
-    
+
 We will later see how to let this release step participate in the release process.
 
 #### Reusing already defined  tasks
-Sometimes you just want to run an already existing task. 
+Sometimes you just want to run an already existing task.
 This is especially useful if the task raises an error in case something went wrong and therefore interrupts the release process.
 
 *sbt-release* comes with a [convenience function](https://github.com/sbt/sbt-release/blob/master/src/main/scala/package.scala)
 
     releaseTask[T](task: TaskKey[T]): ReleaseStep
-    
+
 that takes any scoped task and wraps it in a state transformation function, executing the task when an instance of `State` is applied to the function.
 
 
@@ -231,7 +250,7 @@ Let's modify the previous release process and remove the Git related steps, who 
     }
 
 Overall, the process stayed pretty much the same:
-  
+
   * The Git related steps were left out.
   * Our `checkOrganization` task was added in the beginning, just to be sure this is a serious project.
 
