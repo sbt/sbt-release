@@ -1,1 +1,3 @@
+* Recursively search parent directories for VCS marker directory. [#25](https://github.com/sbt/sbt-release/pull/25) (Thanks [pvalkone](https://github.com/pvalkone))
+* Add support for cross building/publishing. [#11](https://github.com/sbt/sbt-release/issues/11)
 * Print an informational message that `git push` writes to standard error. [#20](https://github.com/sbt/sbt-release/issues/20)
