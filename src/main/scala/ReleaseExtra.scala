@@ -241,16 +241,19 @@ object ReleaseStateTransformations {
 		BuiltinCommands.reapply(newSession, structure, state)
   }
 
-  def switchScalaVersion(state: State, version: String): State = {
+
+  // This is a copy of the state function for the command Cross.switchVersion
+  private[sbtrelease] def switchScalaVersion(state: State, version: String): State = {
     val x = Project.extract(state)
     import x._
     state.log.info("Setting scala version to " + version)
-    val add = (scalaVersion := version) :: (scalaHome := None) :: Nil
+    val add = (scalaVersion in GlobalScope := version) :: (scalaHome in GlobalScope := None) :: Nil
     val cleared = session.mergeSettings.filterNot(Cross.crossExclude)
-    reapply(add ++ cleared, state)
+    val newStructure = Load.reapply(add ++ cleared, structure)
+    Project.setProject(session, newStructure, state)
   }
 
-  def runCrossBuild(func: State => State): State => State = { state =>
+  private[sbtrelease] def runCrossBuild(func: State => State): State => State = { state =>
     val x = Project.extract(state)
     import x._
     val versions = Cross.crossVersions(state)
