@@ -6,6 +6,7 @@ import java.io.File
 trait Vcs {
   val commandName: String
 
+  def cmd(args: Any*): ProcessBuilder
   def status: ProcessBuilder
   def currentHash: String
   def add(files: String*): ProcessBuilder
@@ -44,7 +45,7 @@ trait GitLike extends Vcs {
 
   protected val markerDirectory: String
 
-  protected def cmd(args: Any*): ProcessBuilder = Process(exec +: args.map(_.toString))
+  def cmd(args: Any*): ProcessBuilder = Process(exec +: args.map(_.toString))
 
   def isRepository(dir: File): Boolean =
     new File(dir, markerDirectory).isDirectory || Option(dir.getParentFile).exists(isRepository)
