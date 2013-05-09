@@ -33,8 +33,23 @@ object ReleaseStateTransformations {
     newSt
   }
 
-
-  lazy val inquireVersions: ReleaseStep = { st: State =>
+  lazy val inquireVersions = ReleaseStep(inquireVersionsAction, homogeneousVersionsCheck)
+  private lazy val homogeneousVersionsCheck = { st: State =>
+    // as we set one global version for all projects (version in ThisBuild)
+    // we have to make sure versions are homogeneous across aggregated projects
+    // so that we don't publish aggregates with incorrect versions (for instance a SNAPSHOT)
+    val extracted = st.extract
+    val rootVersion = extracted.get(version)
+    for(aggregate <- extracted.currentProject.aggregate) {
+      val aggregateVersion = extracted.get(version.in(aggregate))
+      if( aggregateVersion != rootVersion ) {
+        sys.error("Aggregated project '%s' has version '%s' which differs from its root : '%s'" format (aggregate.project, aggregateVersion, rootVersion))
+        sys.error("You probably have multiple 'version.sbt' files. sbt-release only support one identical version for all aggregated projects.")
+      }
+    }
+    st
+  }
+  private lazy val inquireVersionsAction = { st: State =>
     val extracted = Project.extract(st)
 
     val useDefs = st.get(useDefaults).getOrElse(false)
@@ -70,6 +85,10 @@ object ReleaseStateTransformations {
     val vs = st.get(versions).getOrElse(sys.error("No versions are set! Was this release part executed before inquireVersions?"))
     val newVersion = selectVersion(vs)
 
+    // TODO check versions are homogeneous
+  val extracted = st.extract
+    st.extract.currentProject.aggregate.foreach( p => println("version for " + p + " : " + extracted.get(version.in(p))))
+
     val currentVersion = st.extract.get(version)
     if (newVersion == currentVersion) {
       st.log.info("No version update needed, version remains '%s'" format currentVersion)
@@ -79,9 +98,14 @@ object ReleaseStateTransformations {
 
       writeVersionToFile(newVersion, st)
 
-      reapply(Seq(
-        version in ThisBuild := newVersion
+      val newSt = reapply(Seq(
+        version in ThisBuild := newVersion,
+        version := newVersion // in case the previous version.sbt file had its version defined this way
+                              // it would override 'version in ThisBuild' so we could be releasing a
+                              // SNAPSHOT instead
       ), st)
+
+      homogeneousVersionsCheck(newSt)
     }
   }
 
