@@ -68,16 +68,26 @@ object ReleaseStateTransformations {
   lazy val setNextVersion: ReleaseStep = setVersion(_._2)
   private[sbtrelease] def setVersion(selectVersion: Versions => String): ReleaseStep =  { st: State =>
     val vs = st.get(versions).getOrElse(sys.error("No versions are set! Was this release part executed before inquireVersions?"))
-    val selected = selectVersion(vs)
+    val newVersion = selectVersion(vs)
 
-    st.log.info("Setting version to '%s'." format selected)
+    val currentVersion = Project.extract(st).get(version)
+    if (newVersion == currentVersion) {
+      st.log.info("No version update needed, version remains '%s'" format currentVersion)
+      st
+    } else {
+      st.log.info("Setting version to '%s'." format newVersion)
 
-    val versionString = "%sversion in ThisBuild := \"%s\"%s" format (lineSep, selected, lineSep)
+      writeVersionToFile(newVersion)
+    
+      reapply(Seq(
+        version in ThisBuild := newVersion
+      ), st)
+    }
+  }
+
+  private def writeVersionToFile(version: String) {
+    val versionString = "%sversion in ThisBuild := \"%s\"%s" format (lineSep, version, lineSep)
     IO.write(new File("version.sbt"), versionString)
-
-    reapply(Seq(
-      version in ThisBuild := selected
-    ), st)
   }
 
   private def vcs(st: State): Vcs = {
