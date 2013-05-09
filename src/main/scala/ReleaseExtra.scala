@@ -77,17 +77,19 @@ object ReleaseStateTransformations {
     } else {
       st.log.info("Setting version to '%s'." format newVersion)
 
-      writeVersionToFile(newVersion)
-    
+      writeVersionToFile(newVersion, st)
+
       reapply(Seq(
         version in ThisBuild := newVersion
       ), st)
     }
   }
 
-  private def writeVersionToFile(version: String) {
+  private def writeVersionToFile(version: String, st: State) {
     val versionString = "%sversion in ThisBuild := \"%s\"%s" format (lineSep, version, lineSep)
-    IO.write(new File("version.sbt"), versionString)
+    val file = new File("version.sbt")
+    st.log.info("Updating " + file.getAbsolutePath)
+    IO.write(file, versionString)
   }
 
   private def vcs(st: State): Vcs = {
