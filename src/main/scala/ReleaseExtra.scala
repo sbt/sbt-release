@@ -85,10 +85,6 @@ object ReleaseStateTransformations {
     val vs = st.get(versions).getOrElse(sys.error("No versions are set! Was this release part executed before inquireVersions?"))
     val newVersion = selectVersion(vs)
 
-    // TODO check versions are homogeneous
-  val extracted = st.extract
-    st.extract.currentProject.aggregate.foreach( p => println("version for " + p + " : " + extracted.get(version.in(p))))
-
     val currentVersion = st.extract.get(version)
     if (newVersion == currentVersion) {
       st.log.info("No version update needed, version remains '%s'" format currentVersion)
