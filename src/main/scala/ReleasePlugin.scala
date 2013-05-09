@@ -18,6 +18,7 @@ object ReleasePlugin extends Plugin {
 
     lazy val versions = AttributeKey[Versions]("release-versions")
     lazy val useDefaults = AttributeKey[Boolean]("release-use-defaults")
+    lazy val interactiveCommit = AttributeKey[Boolean]("release-interactive-commit", "If the repository is dirty, allow the user to commit within the SBT shell")
     lazy val skipTests = AttributeKey[Boolean]("release-skip-tests")
     lazy val crossBuild = AttributeKey[Boolean]("release-cross-build")
 

@@ -70,7 +70,7 @@ object ReleaseStateTransformations {
     val vs = st.get(versions).getOrElse(sys.error("No versions are set! Was this release part executed before inquireVersions?"))
     val newVersion = selectVersion(vs)
 
-    val currentVersion = Project.extract(st).get(version)
+    val currentVersion = st.extract.get(version)
     if (newVersion == currentVersion) {
       st.log.info("No version update needed, version remains '%s'" format currentVersion)
       st
@@ -99,7 +99,21 @@ object ReleaseStateTransformations {
   private[sbtrelease] lazy val initialVcsChecks = { st: State =>
     val status = (vcs(st).status !!).trim
     if (status.nonEmpty) {
-      sys.error("Aborting release. Working directory is dirty.")
+      if( st.get(interactiveCommit).getOrElse(true) ) {
+        st.log.info("Working directory is dirty:")
+        st.log.info("\n\t" + status.replaceAll("\\n","\n\t"))
+
+        SimpleReader.readLine("\nEnter a message to add everything and commit: ") match {
+          case Some(message) =>
+            vcs(st).addAll !! st.log
+            vcs(st).commit(message) !! st.log
+
+          case None =>
+            sys.error("No message entered. Aborting release!")
+        }
+      } else {
+        sys.error("Aborting release. Working directory is dirty.")
+      }
     }
 
     st.log.info("Starting release process off commit: " + vcs(st).currentHash)
