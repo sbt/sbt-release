@@ -10,6 +10,7 @@ trait Vcs {
   def status: ProcessBuilder
   def currentHash: String
   def add(files: String*): ProcessBuilder
+  def addAll: ProcessBuilder
   def commit(message: String): ProcessBuilder
   def existsTag(name: String): Boolean
   def checkRemote(remote: String): ProcessBuilder
@@ -60,6 +61,8 @@ object Mercurial extends Vcs with GitLike {
 
   protected val markerDirectory = ".hg"
 
+  def addAll = cmd("add")
+
   def status = cmd("status")
 
   def currentHash = (cmd("identify", "-i") !!) trim
@@ -92,6 +95,8 @@ object Git extends Vcs with GitLike {
 
   private lazy val trackingRemoteCmd: ProcessBuilder = cmd("config", "branch.%s.remote" format currentBranch)
   def trackingRemote: String = (trackingRemoteCmd !!) trim
+
+  def addAll = cmd("add","-A",".")
 
   def hasUpstream = trackingRemoteCmd ! devnull == 0 && trackingBranchCmd ! devnull == 0
 

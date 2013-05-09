@@ -33,8 +33,23 @@ object ReleaseStateTransformations {
     newSt
   }
 
-
-  lazy val inquireVersions: ReleaseStep = { st: State =>
+  lazy val inquireVersions = ReleaseStep(inquireVersionsAction, homogeneousVersionsCheck)
+  private lazy val homogeneousVersionsCheck = { st: State =>
+    // as we set one global version for all projects (version in ThisBuild)
+    // we have to make sure versions are homogeneous across aggregated projects
+    // so that we don't publish aggregates with incorrect versions (for instance a SNAPSHOT)
+    val extracted = st.extract
+    val rootVersion = extracted.get(version)
+    for(aggregate <- extracted.currentProject.aggregate) {
+      val aggregateVersion = extracted.get(version.in(aggregate))
+      if( aggregateVersion != rootVersion ) {
+        sys.error("Aggregated project '%s' has version '%s' which differs from its root : '%s'" format (aggregate.project, aggregateVersion, rootVersion))
+        sys.error("You probably have multiple 'version.sbt' files. sbt-release only support one identical version for all aggregated projects.")
+      }
+    }
+    st
+  }
+  private lazy val inquireVersionsAction = { st: State =>
     val extracted = Project.extract(st)
 
     val useDefs = st.get(useDefaults).getOrElse(false)
@@ -68,16 +83,33 @@ object ReleaseStateTransformations {
   lazy val setNextVersion: ReleaseStep = setVersion(_._2)
   private[sbtrelease] def setVersion(selectVersion: Versions => String): ReleaseStep =  { st: State =>
     val vs = st.get(versions).getOrElse(sys.error("No versions are set! Was this release part executed before inquireVersions?"))
-    val selected = selectVersion(vs)
+    val newVersion = selectVersion(vs)
 
-    st.log.info("Setting version to '%s'." format selected)
+    val currentVersion = st.extract.get(version)
+    if (newVersion == currentVersion) {
+      st.log.info("No version update needed, version remains '%s'" format currentVersion)
+      st
+    } else {
+      st.log.info("Setting version to '%s'." format newVersion)
 
-    val versionString = "%sversion in ThisBuild := \"%s\"%s" format (lineSep, selected, lineSep)
-    IO.write(new File("version.sbt"), versionString)
+      writeVersionToFile(newVersion, st)
 
-    reapply(Seq(
-      version in ThisBuild := selected
-    ), st)
+      val newSt = reapply(Seq(
+        version in ThisBuild := newVersion,
+        version := newVersion // in case the previous version.sbt file had its version defined this way
+                              // it would override 'version in ThisBuild' so we could be releasing a
+                              // SNAPSHOT instead
+      ), st)
+
+      homogeneousVersionsCheck(newSt)
+    }
+  }
+
+  private def writeVersionToFile(version: String, st: State) {
+    val versionString = "%sversion in ThisBuild := \"%s\"%s" format (lineSep, version, lineSep)
+    val file = new File("version.sbt")
+    st.log.info("Updating " + file.getAbsolutePath)
+    IO.write(file, versionString)
   }
 
   private def vcs(st: State): Vcs = {
@@ -87,7 +119,21 @@ object ReleaseStateTransformations {
   private[sbtrelease] lazy val initialVcsChecks = { st: State =>
     val status = (vcs(st).status !!).trim
     if (status.nonEmpty) {
-      sys.error("Aborting release. Working directory is dirty.")
+      if( st.get(interactiveCommit).getOrElse(true) ) {
+        st.log.info("Working directory is dirty:")
+        st.log.info("\n\t" + status.replaceAll("\\n","\n\t"))
+
+        SimpleReader.readLine("\nEnter a message to add everything and commit: ") match {
+          case Some(message) =>
+            vcs(st).addAll !! st.log
+            vcs(st).commit(message) !! st.log
+
+          case None =>
+            sys.error("No message entered. Aborting release!")
+        }
+      } else {
+        sys.error("Aborting release. Working directory is dirty.")
+      }
     }
 
     st.log.info("Starting release process off commit: " + vcs(st).currentHash)
