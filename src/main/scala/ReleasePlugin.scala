@@ -72,9 +72,9 @@ object ReleasePlugin extends Plugin {
     nextVersion := { ver => Version(ver).map(_.bumpMinor.asSnapshot.string).getOrElse(versionFormatError) },
 
     tagPrefix := "",
-    tagName <<= (version in ThisBuild, tagPrefix) map {(v,pref) => pref + "v" + v},
-    tagComment <<= (version in ThisBuild, tagPrefix) map ((v,pref) => "Releasing %s%s" format (pref,v)),
-    commitMessage <<= (version in ThisBuild, tagPrefix) map ((v,pref) => "Setting version to %s%s" format (pref,v)),
+    tagName <<= (version, tagPrefix) map {(v,pref) => pref + "v" + v},
+    tagComment <<= (version, tagPrefix) map ((v,pref) => "Releasing %s%s" format (pref,v)),
+    commitMessage <<= (version, tagPrefix) map ((v,pref) => "Setting version to %s%s" format (pref,v)),
 
     versionControlSystem <<= (baseDirectory)(Vcs.detect(_)),
 
