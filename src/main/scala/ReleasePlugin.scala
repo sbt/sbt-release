@@ -14,11 +14,16 @@ object ReleasePlugin extends Plugin {
     lazy val tagComment = TaskKey[String]("release-tag-comment")
     lazy val commitMessage = TaskKey[String]("release-commit-message")
 
+    // a non-global release will generate version.sbt file containing a version scoped to the current project, not to the build
+    lazy val globalRelease = SettingKey[Boolean]("global-release", "Release the current project and all its aggregated projects as one global project under " +
+      "a common version (i.e a version scoped to the build), otherwise release only the current project allowing a different version scheme than its parent " +
+      "(i.e a version scoped to the project only)")
+    lazy val interactiveCommit = SettingKey[Boolean]("release-interactive-commit", "If the repository is dirty, allow the user to commit within the SBT shell")
+
     lazy val versionControlSystem = SettingKey[Option[Vcs]]("release-vcs")
 
     lazy val versions = AttributeKey[Versions]("release-versions")
     lazy val useDefaults = AttributeKey[Boolean]("release-use-defaults")
-    lazy val interactiveCommit = AttributeKey[Boolean]("release-interactive-commit", "If the repository is dirty, allow the user to commit within the SBT shell")
     lazy val skipTests = AttributeKey[Boolean]("release-skip-tests")
     lazy val crossBuild = AttributeKey[Boolean]("release-cross-build")
 
@@ -58,6 +63,9 @@ object ReleasePlugin extends Plugin {
       val snapshots = moduleIds.filter(m => m.isChanging || m.revision.endsWith("-SNAPSHOT"))
       snapshots
     },
+
+    interactiveCommit := true,
+    globalRelease := true,
 
     releaseVersion := { ver => Version(ver).map(_.withoutQualifier.string).getOrElse(versionFormatError) },
     nextVersion := { ver => Version(ver).map(_.bumpMinor.asSnapshot.string).getOrElse(versionFormatError) },
