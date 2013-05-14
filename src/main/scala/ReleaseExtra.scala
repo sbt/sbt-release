@@ -122,9 +122,14 @@ object ReleaseStateTransformations {
   private def writeVersionToFile(version: String, st: State) {
     val scope = if( st.get(globalRelease) ) "in ThisBuild" else "" // scope to the current project
     val versionString = "%sversion %s := \"%s\"%s" format (lineSep, scope, version, lineSep)
-    val file = new File(st.extract.get(baseDirectory), "version.sbt")
+    val file = versionFile(st)
     st.log.info("Updating " + file.getAbsolutePath)
     IO.write(file, versionString)
+  }
+
+
+  private def versionFile(st: State): File = {
+    new File(st.extract.get(baseDirectory), "version.sbt")
   }
 
   private def vcs(st: State): Vcs = {
@@ -167,7 +172,7 @@ object ReleaseStateTransformations {
 
   lazy val commitNextVersion = ReleaseStep(commitVersion)
   private[sbtrelease] def commitVersion = { st: State =>
-    vcs(st).add("version.sbt") !! st.log
+    vcs(st).add(versionFile(st).getAbsolutePath) !! st.log
     val status = (vcs(st).status !!) trim
 
     val newState = if (status.nonEmpty) {
@@ -189,7 +194,7 @@ object ReleaseStateTransformations {
       if (vcs(st).existsTag(tag)) {
         defaultChoice orElse SimpleReader.readLine("Tag [%s] exists! Overwrite, keep or abort or enter a new tag (o/k/a)? [a] " format tag) match {
           case Some("" | "a" | "A") =>
-            sys.error("Aborting release!")
+            sys.error("Tag [%s] already exist. Aborting release!")
 
           case Some("k" | "K") =>
             st.log.warn("The current tag [%s] does not point to the commit for this release!" format tag)
