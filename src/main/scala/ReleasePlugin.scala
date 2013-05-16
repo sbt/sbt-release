@@ -10,9 +10,16 @@ object ReleasePlugin extends Plugin {
     lazy val releaseProcess = SettingKey[Seq[ReleaseStep]]("release-process")
     lazy val releaseVersion = SettingKey[String => String]("release-release-version")
     lazy val nextVersion = SettingKey[String => String]("release-next-version")
+    lazy val tagPrefix = SettingKey[String]("tag-prefix", "Allow to prefix tag-name, tag-comment and commit-message at once")
     lazy val tagName = TaskKey[String]("release-tag-name")
     lazy val tagComment = TaskKey[String]("release-tag-comment")
     lazy val commitMessage = TaskKey[String]("release-commit-message")
+
+    // a non-global release will generate version.sbt file containing a version scoped to the current project, not to the build
+    lazy val globalRelease = SettingKey[Boolean]("global-release", "Release the current project and all its aggregated projects as one global project under " +
+      "a common version (i.e a version scoped to the build), otherwise release only the current project allowing a different version scheme than its parent " +
+      "(i.e a version scoped to the project only)")
+    lazy val interactiveCommit = SettingKey[Boolean]("release-interactive-commit", "If the repository is dirty, allow the user to commit within the SBT shell")
 
     lazy val versionControlSystem = SettingKey[Option[Vcs]]("release-vcs")
 
@@ -58,12 +65,16 @@ object ReleasePlugin extends Plugin {
       snapshots
     },
 
+    interactiveCommit := true,
+    globalRelease := true,
+
     releaseVersion := { ver => Version(ver).map(_.withoutQualifier.string).getOrElse(versionFormatError) },
     nextVersion := { ver => Version(ver).map(_.bumpMinor.asSnapshot.string).getOrElse(versionFormatError) },
 
-    tagName <<= (version in ThisBuild) map (v => "v" + v),
-    tagComment <<= (version in ThisBuild) map (v => "Releasing %s" format v),
-    commitMessage <<= (version in ThisBuild) map (v => "Setting version to %s" format v),
+    tagPrefix := "",
+    tagName <<= (version, tagPrefix) map {(v,pref) => pref + "v" + v},
+    tagComment <<= (version, tagPrefix) map ((v,pref) => "Releasing %s%s" format (pref,v)),
+    commitMessage <<= (version, tagPrefix) map ((v,pref) => "Setting version to %s%s" format (pref,v)),
 
     versionControlSystem <<= (baseDirectory)(Vcs.detect(_)),
 
