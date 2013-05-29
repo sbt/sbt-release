@@ -4,8 +4,6 @@ name := "sbt-release"
 
 version := "0.8-SNAPSHOT"
 
-unmanagedSourceDirectories in Compile <+= (sbtVersion, sourceDirectory in Compile) ((sv, sd) => new File(sd, "scala-sbt-" + sv))
-
 sbtPlugin := true
 
 publishTo <<= (version) { version: String =>
