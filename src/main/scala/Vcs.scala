@@ -128,7 +128,7 @@ object Git extends Vcs with GitLike {
 
   private def pushTags = cmd("push", "--tags", trackingRemote)
   
-  def hasUntrackedFiles : Boolean = !( cmd("ls-files", "--other", "--exclude-standard") !! ).trim.isEmpty )
+  def hasUntrackedFiles : Boolean = !( cmd("ls-files", "--other", "--exclude-standard") !! ).trim.isEmpty
   
-  def hasModifiedFiles : Boolean = !( ( cmd("ls-files", "--modified", "--exclude-standard") !! ).trim.isEmpty )
+  def hasModifiedFiles : Boolean = !( cmd("ls-files", "--modified", "--exclude-standard") !! ).trim.isEmpty
 }

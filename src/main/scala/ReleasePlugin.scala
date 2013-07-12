@@ -20,6 +20,8 @@ object ReleasePlugin extends Plugin {
     lazy val useDefaults = AttributeKey[Boolean]("release-use-defaults")
     lazy val skipTests = AttributeKey[Boolean]("release-skip-tests")
     lazy val crossBuild = AttributeKey[Boolean]("release-cross-build")
+    
+    lazy val ignoreUntrackedFiles = SettingKey[Boolean]("release-ignore-untracked-files")
 
     private lazy val releaseCommandKey = "release"
     private val WithDefaults = "with-defaults"
@@ -66,6 +68,8 @@ object ReleasePlugin extends Plugin {
     commitMessage <<= (version in ThisBuild) map (v => "Setting version to %s" format v),
 
     versionControlSystem <<= (baseDirectory)(Vcs.detect(_)),
+    
+    ignoreUntrackedFiles := false,
 
     releaseProcess := Seq[ReleaseStep](
       checkSnapshotDependencies,
