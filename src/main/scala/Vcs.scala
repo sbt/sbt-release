@@ -21,6 +21,7 @@ trait Vcs {
   def currentBranch: String
   def isRepository(dir: File): Boolean
   def hasUntrackedFiles: Boolean
+  def hasModifiedFiles: Boolean
 
   protected def executableName(command: String) = {
     val maybeOsName = sys.props.get("os.name").map(_.toLowerCase)
@@ -54,7 +55,7 @@ trait GitLike extends Vcs {
   def add(files: String*) = cmd(("add" +: files): _*)
 
   def commit(message: String) = cmd("commit", "-m", message)
-}
+}  
 
 object Mercurial extends Vcs with GitLike {
   val commandName = "hg"
@@ -82,7 +83,9 @@ object Mercurial extends Vcs with GitLike {
   // FIXME: This is utterly bogus, but I cannot find a good way...
   def checkRemote(remote: String) = cmd("id", "-n")
   
-  def hasUntrackedFiles = cmd("ls-files", "--other", "--exclude-standard")
+  def hasUntrackedFiles = !( ( cmd("status", "-un") !! ).trim.isEmpty )
+  
+  def hasModifiedFiles = !( ( cmd("status", "-mn") !! ).trim.isEmpty )
 }
 
 object Git extends Vcs with GitLike {
@@ -125,5 +128,7 @@ object Git extends Vcs with GitLike {
 
   private def pushTags = cmd("push", "--tags", trackingRemote)
   
-  private def def hasUntrackedFiles = cmd("status", "-un")
+  def hasUntrackedFiles : Boolean = !( cmd("ls-files", "--other", "--exclude-standard") !! ).trim.isEmpty )
+  
+  def hasModifiedFiles : Boolean = !( ( cmd("ls-files", "--modified", "--exclude-standard") !! ).trim.isEmpty )
 }
