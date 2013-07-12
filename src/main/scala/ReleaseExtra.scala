@@ -73,7 +73,10 @@ object ReleaseStateTransformations {
     st.log.info("Setting version to '%s'." format selected)
 
     val versionString = "%sversion in ThisBuild := \"%s\"%s" format (lineSep, selected, lineSep)
-    IO.write(new File("version.sbt"), versionString)
+
+    val extracted = Project.extract( st )
+    val versionFile = extracted.get( versionFilePath )
+    IO.write(versionFile, versionString)
 
     reapply(Seq(
       version in ThisBuild := selected
@@ -106,7 +109,10 @@ object ReleaseStateTransformations {
 
   lazy val commitNextVersion = ReleaseStep(commitVersion)
   private[sbtrelease] def commitVersion = { st: State =>
-    vcs(st).add("version.sbt") !! st.log
+    val extracted = Project.extract( st )
+    
+    val versionFile = extracted.get( versionFilePath )
+    vcs(st).add( versionFile.getAbsolutePath ) !! st.log
     val status = (vcs(st).status !!) trim
 
     val newState = if (status.nonEmpty) {
@@ -193,7 +199,7 @@ object ReleaseStateTransformations {
     if (vc.hasUpstream) {
       defaultChoice orElse SimpleReader.readLine("Push changes to the remote repository (y/n)? [y] ") match {
         case Yes() | Some("") =>
-          if (vc == Git) st.log.info("git push sends it's console output to standard error, which will cause the next few lines to be marked as [error].")
+          if (vc == Git) st.log.info("git push sends its console output to standard error, which will cause the next few lines to be marked as [error].")
           vcs(st).pushChanges !! st.log
         case _ => st.log.warn("Remember to push the changes yourself!")
       }
