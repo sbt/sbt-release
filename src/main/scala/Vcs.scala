@@ -20,6 +20,7 @@ trait Vcs {
   def pushChanges: ProcessBuilder
   def currentBranch: String
   def isRepository(dir: File): Boolean
+  def hasUntrackedFiles: Boolean
 
   protected def executableName(command: String) = {
     val maybeOsName = sys.props.get("os.name").map(_.toLowerCase)
@@ -80,6 +81,8 @@ object Mercurial extends Vcs with GitLike {
 
   // FIXME: This is utterly bogus, but I cannot find a good way...
   def checkRemote(remote: String) = cmd("id", "-n")
+  
+  def hasUntrackedFiles = cmd("ls-files", "--other", "--exclude-standard")
 }
 
 object Git extends Vcs with GitLike {
@@ -121,4 +124,6 @@ object Git extends Vcs with GitLike {
   }
 
   private def pushTags = cmd("push", "--tags", trackingRemote)
+  
+  private def def hasUntrackedFiles = cmd("status", "-un")
 }
