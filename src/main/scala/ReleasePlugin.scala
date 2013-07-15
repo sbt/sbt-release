@@ -70,6 +70,7 @@ object ReleasePlugin extends Plugin {
     releaseProcess := Seq[ReleaseStep](
       checkSnapshotDependencies,
       inquireVersions,
+      runClean,
       runTest,
       setReleaseVersion,
       commitReleaseVersion,
