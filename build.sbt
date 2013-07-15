@@ -18,3 +18,5 @@ publishTo <<= (version) { version: String =>
 }
 
 publishMavenStyle := false
+
+scalacOptions += "-deprecation"
