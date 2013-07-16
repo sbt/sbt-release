@@ -58,7 +58,7 @@ Since the build definition is actual Scala code, it's not as straight forward to
 it as it is with an XML definition.
 
 For this reason, *sbt-release* won't ever touch your build definition files,
-but instead writes the new release or development version to a file called **`version.sbt`** in the root directory of the project.
+but instead writes the new release or development version to a file defined by the setting `release-version-file`, which is set to **`file("version.sbt")`** by default and points to `$PROJECT_ROOT/version.sbt`.
 
 
 ## Release Process
@@ -96,12 +96,12 @@ For that emergency release at 2am on a Sunday, you can optionally avoid running 
 ### Cross building during a release
 Since version 0.7, *sbt-release* comes with built-in support for [cross building](http://www.scala-sbt.org/release/docs/Detailed-Topics/Cross-Build.html) and cross publishing. A cross release can be triggered in two ways:
 
- 1. via the setting `release-cross-build`, which automatically triggers a cross release if `cross-scala-versions` contains at least 1 version different than `scala-version`.
+ 1. via the setting `release-cross-build` which by default automatically triggers a cross release if `cross-scala-versions` contains at least 1 version different than `scala-version`.
  1. by using the option `cross` for the `release` command
 
     > release cross with-defaults
 
-Combining both ways of steering the cross release, it is possible to generally disable automatic detection of cross release by using `ReleaseKeys.crossBuild := false` and running `release cross`.
+Combining both ways of steering a cross release, it is possible to generally disable automatic detection of cross release by using `ReleaseKeys.crossBuild := false` and running `release cross`.
 
 Of the predefined release steps, the `clean`, `test`, and `publish` release steps are set up for cross building.
 
