@@ -10,6 +10,7 @@ object ReleasePlugin extends Plugin {
     lazy val releaseProcess = SettingKey[Seq[ReleaseStep]]("release-process")
     lazy val releaseVersion = SettingKey[String => String]("release-release-version")
     lazy val nextVersion = SettingKey[String => String]("release-next-version")
+    lazy val autoCrossBuild = SettingKey[Boolean]("release-auto-cross-build")
     lazy val tagName = TaskKey[String]("release-tag-name")
     lazy val tagComment = TaskKey[String]("release-tag-comment")
     lazy val commitMessage = TaskKey[String]("release-commit-message")
@@ -30,7 +31,7 @@ object ReleasePlugin extends Plugin {
     val releaseCommand: Command = Command(releaseCommandKey)(_ => releaseParser) { (st, args) =>
       val extracted = Project.extract(st)
       val releaseParts = extracted.get(releaseProcess)
-      val crossEnabled = args.contains(CrossBuild)
+      val crossEnabled = extracted.get(autoCrossBuild) || args.contains(CrossBuild)
       val startState = st
         .put(useDefaults, args.contains(WithDefaults))
         .put(skipTests, args.contains(SkipTests))
@@ -60,6 +61,7 @@ object ReleasePlugin extends Plugin {
 
     releaseVersion := { ver => Version(ver).map(_.withoutQualifier.string).getOrElse(versionFormatError) },
     nextVersion := { ver => Version(ver).map(_.bumpMinor.asSnapshot.string).getOrElse(versionFormatError) },
+    autoCrossBuild := true,
 
     tagName <<= (version in ThisBuild) map (v => "v" + v),
     tagComment <<= (version in ThisBuild) map (v => "Releasing %s" format v),
