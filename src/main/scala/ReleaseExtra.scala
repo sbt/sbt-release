@@ -81,7 +81,7 @@ object ReleaseStateTransformations {
 
     st.log.info("Setting version to '%s'." format selected)
 
-    val versionString = "%sversion in ThisBuild := \"%s\"%s" format (lineSep, selected, lineSep)
+    val versionString = "version in ThisBuild := \"%s\"" format selected
     writeVersion(st, versionString)
 
     reapply(Seq(
@@ -313,7 +313,6 @@ object ExtraReleaseCommands {
 
 
 object Utilities {
-  val lineSep = sys.props.get("line.separator").getOrElse(sys.error("No line separator? Really?"))
 
   class StateW(st: State) {
     def extract = Project.extract(st)
