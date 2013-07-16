@@ -94,15 +94,20 @@ For all interactions, the following default value will be chosen:
 For that emergency release at 2am on a Sunday, you can optionally avoid running any tests by providing the `skip-tests` argument to the `release` command.
 
 ### Cross building during a release
-Since version 0.7, *sbt-release* comes with built-in support for [cross building](http://www.scala-sbt.org/release/docs/Detailed-Topics/Cross-Build.html) and cross publishing. A cross release is triggered by supplying the option `cross` to the `release` command:
+Since version 0.7, *sbt-release* comes with built-in support for [cross building](http://www.scala-sbt.org/release/docs/Detailed-Topics/Cross-Build.html) and cross publishing. A cross release can be triggered in two ways:
+
+ 1. via the setting `release-cross-build`, which automatically triggers a cross release if `cross-scala-versions` contains at least 1 version different than `scala-version`.
+ 1. by using the option `cross` for the `release` command
 
     > release cross with-defaults
 
-Of the predefined release steps, the `test` and `publish` release steps are set up for cross building.
+Combining both ways of steering the cross release, it is possible to generally disable automatic detection of cross release by using `ReleaseKeys.crossBuild := false` and running `release cross`.
 
-`release cross` behaves analogous to using the `+` command:
- 1. If no `cross-scala-versions` are set, then running `release cross` does the same thing as just running `release` (i.e. run the release with the scala version specified in the setting `scala-version`).
- 1. If `cross-scala-versions` are set, then only these scala versions will be used. Make sure to include the regular/default `scala-version` in the `cross-scala-version` setting as well.
+Of the predefined release steps, the `clean`, `test`, and `publish` release steps are set up for cross building.
+
+A cross release behaves analogous to using the `+` command:
+ 1. If no `cross-scala-versions` are set, then running `release` or `release cross` will not trigger a cross release (i.e. run the release with the scala version specified in the setting `scala-version`).
+ 1. If the `cross-scala-versions` setting is set, then only these scala versions will be used. Make sure to include the regular/default `scala-version` in the `cross-scala-version` setting as well.
 
 In the section *Customizing the release process* we take a look at how to define a `ReleaseStep` to participate in a cross build.
 

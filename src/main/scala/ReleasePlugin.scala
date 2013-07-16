@@ -13,13 +13,14 @@ object ReleasePlugin extends Plugin {
     lazy val tagName = TaskKey[String]("release-tag-name")
     lazy val tagComment = TaskKey[String]("release-tag-comment")
     lazy val commitMessage = TaskKey[String]("release-commit-message")
+    lazy val crossBuild = SettingKey[Boolean]("release-cross-build")
 
     lazy val versionControlSystem = SettingKey[Option[Vcs]]("release-vcs")
 
     lazy val versions = AttributeKey[Versions]("release-versions")
     lazy val useDefaults = AttributeKey[Boolean]("release-use-defaults")
     lazy val skipTests = AttributeKey[Boolean]("release-skip-tests")
-    lazy val crossBuild = AttributeKey[Boolean]("release-cross-build")
+    lazy val cross = AttributeKey[Boolean]("release-cross")
 
     private lazy val releaseCommandKey = "release"
     private val WithDefaults = "with-defaults"
@@ -30,11 +31,11 @@ object ReleasePlugin extends Plugin {
     val releaseCommand: Command = Command(releaseCommandKey)(_ => releaseParser) { (st, args) =>
       val extracted = Project.extract(st)
       val releaseParts = extracted.get(releaseProcess)
-      val crossEnabled = args.contains(CrossBuild)
+      val crossEnabled = extracted.get(crossBuild) || args.contains(CrossBuild)
       val startState = st
         .put(useDefaults, args.contains(WithDefaults))
         .put(skipTests, args.contains(SkipTests))
-        .put(crossBuild, crossEnabled)
+        .put(cross, crossEnabled)
 
       val initialChecks = releaseParts.map(_.check)
       val process = releaseParts.map { step =>
@@ -60,6 +61,7 @@ object ReleasePlugin extends Plugin {
 
     releaseVersion := { ver => Version(ver).map(_.withoutQualifier.string).getOrElse(versionFormatError) },
     nextVersion := { ver => Version(ver).map(_.bumpMinor.asSnapshot.string).getOrElse(versionFormatError) },
+    crossBuild <<= (scalaVersion, crossScalaVersions) { (sv, csv) => (csv.toSet - sv).nonEmpty },
 
     tagName <<= (version in ThisBuild) map (v => "v" + v),
     tagComment <<= (version in ThisBuild) map (v => "Releasing %s" format v),

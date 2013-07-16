@@ -1,0 +1,1 @@
+* [#29](https://github.com/sbt/sbt-release/issues/29) The `release` task automatically runs a cross release build depending on whether `crossScalaVersions` contains a scala version other than the one defined by the `scalaVersion` setting key.
