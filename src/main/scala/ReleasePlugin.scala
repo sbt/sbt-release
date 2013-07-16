@@ -14,6 +14,7 @@ object ReleasePlugin extends Plugin {
     lazy val tagComment = TaskKey[String]("release-tag-comment")
     lazy val commitMessage = TaskKey[String]("release-commit-message")
     lazy val crossBuild = SettingKey[Boolean]("release-cross-build")
+    lazy val versionFile = SettingKey[File]("release-version-file")
 
     lazy val versionControlSystem = SettingKey[Option[Vcs]]("release-vcs")
 
@@ -68,6 +69,8 @@ object ReleasePlugin extends Plugin {
     commitMessage <<= (version in ThisBuild) map (v => "Setting version to %s" format v),
 
     versionControlSystem <<= (baseDirectory)(Vcs.detect(_)),
+
+    versionFile := file("version.sbt"),
 
     releaseProcess := Seq[ReleaseStep](
       checkSnapshotDependencies,
