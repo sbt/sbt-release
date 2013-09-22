@@ -111,6 +111,18 @@ A cross release behaves analogous to using the `+` command:
 
 In the section *Customizing the release process* we take a look at how to define a `ReleaseStep` to participate in a cross build.
 
+### Convenient versioning
+As of version 0.8, *sbt-release* comes with four strategies for computing the next snapshot version via the `release-version-bump` setting. These strategies are, defined in `sbtrelease.Version.Bump`. By default, the `Next` strategy is used:
+
+ * `Major`: always bumps the *major* part of the version
+ * `Minor`: always bumps the *minor* part of the version
+ * `Bugfix`: always bumps the *bugfix* part of the version
+ * `Next`: bumps the last version part (e.g. `0.17` -> `0.18`, `0.11.7` -> `0.11.8`)
+
+Example:
+
+    ReleaseKeys.versionBump := Version.Bump.Major
+
 ### Custom versioning
 *sbt-release* comes with two settings for deriving the release version and the next development version from a given version.
 These derived versions are used for the suggestions/defaults in the prompt and for non-interactive releases.
