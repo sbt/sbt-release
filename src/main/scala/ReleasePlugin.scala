@@ -10,6 +10,7 @@ object ReleasePlugin extends Plugin {
     lazy val releaseProcess = SettingKey[Seq[ReleaseStep]]("release-process")
     lazy val releaseVersion = SettingKey[String => String]("release-release-version")
     lazy val nextVersion = SettingKey[String => String]("release-next-version")
+    lazy val versionBump = SettingKey[Version.Bump]("version-bump", "How the version should be incremented")
     lazy val tagName = TaskKey[String]("release-tag-name")
     lazy val tagComment = TaskKey[String]("release-tag-comment")
     lazy val commitMessage = TaskKey[String]("release-commit-message")
@@ -61,7 +62,10 @@ object ReleasePlugin extends Plugin {
     },
 
     releaseVersion := { ver => Version(ver).map(_.withoutQualifier.string).getOrElse(versionFormatError) },
-    nextVersion := { ver => Version(ver).map(_.bumpMinor.asSnapshot.string).getOrElse(versionFormatError) },
+    versionBump := Version.Bump.default,
+    nextVersion <<= (versionBump) { bumpType: Version.Bump =>
+      ver => Version(ver).map(_.bump(bumpType).asSnapshot.string).getOrElse(versionFormatError)
+    },
     crossBuild <<= (scalaVersion, crossScalaVersions) { (sv, csv) => (csv.toSet - sv).nonEmpty },
 
     tagName <<= (version in ThisBuild) map (v => "v" + v),
