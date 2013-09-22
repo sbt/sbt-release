@@ -10,7 +10,7 @@ object ReleasePlugin extends Plugin {
     lazy val releaseProcess = SettingKey[Seq[ReleaseStep]]("release-process")
     lazy val releaseVersion = SettingKey[String => String]("release-release-version")
     lazy val nextVersion = SettingKey[String => String]("release-next-version")
-    lazy val versionBump = SettingKey[Version.Bump]("version-bump", "How the version should be incremented")
+    lazy val versionBump = SettingKey[Version.Bump]("release-version-bump", "How the version should be incremented")
     lazy val tagName = TaskKey[String]("release-tag-name")
     lazy val tagComment = TaskKey[String]("release-tag-comment")
     lazy val commitMessage = TaskKey[String]("release-commit-message")

@@ -13,7 +13,7 @@ object Version {
     object Bugfix extends Bump { def bump = _.bumpBugfix }
     object Next extends Bump { def bump = _.bump }
 
-    val default = Minor
+    val default = Next
   }
 
   val VersionR = """([0-9]+)(?:(?:\.([0-9]+))?(?:\.([0-9]+))?)?([\-0-9a-zA-Z]*)?""".r
