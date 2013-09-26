@@ -2,9 +2,7 @@ organization := "com.github.gseitz"
 
 name := "sbt-release"
 
-version := "0.8-SNAPSHOT"
-
-unmanagedSourceDirectories in Compile <+= (sbtVersion, sourceDirectory in Compile) ((sv, sd) => new File(sd, "scala-sbt-" + sv))
+version := "0.8"
 
 sbtPlugin := true
 
@@ -20,3 +18,7 @@ publishTo <<= (version) { version: String =>
 publishMavenStyle := false
 
 scalacOptions += "-deprecation"
+
+crossBuildingSettings
+
+CrossBuilding.crossSbtVersions := Seq("0.11.3", "0.12", "0.13")
