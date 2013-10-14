@@ -121,7 +121,10 @@ object ReleaseStateTransformations {
   lazy val commitNextVersion = ReleaseStep(commitVersion)
   private[sbtrelease] def commitVersion = { st: State =>
     val file = st.extract.get(versionFile)
-    vcs(st).add(file.getAbsolutePath) !! st.log
+    val base = vcs(st).baseDir
+    val relativePath = IO.relativize(base, file).getOrElse("Version file [%s] is outside of this VCS repository with base directory [%s]!" format(file, base))
+
+    vcs(st).add(relativePath) !! st.log
     val status = (vcs(st).status !!) trim
 
     val newState = if (status.nonEmpty) {
