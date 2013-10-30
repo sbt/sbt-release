@@ -1,6 +1,5 @@
 package sbtrelease
 
-import java.io.File
 import sbt._
 import Keys._
 import annotation.tailrec
