@@ -1,0 +1,2 @@
+* Publish for sbt 0.13.
+* Run `clean` before running `test` to avoid stale artifacts (e.g. in case a source file has been deleted, but the class file is still in `target`)

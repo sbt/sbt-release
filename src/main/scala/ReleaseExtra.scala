@@ -53,6 +53,15 @@ object ReleaseStateTransformations {
   }
 
 
+  lazy val runClean : ReleaseStep = ReleaseStep(
+    action = { st: State =>
+      val extracted = Project.extract(st)
+      val ref = extracted.get(thisProjectRef)
+      extracted.runAggregated(clean in Global in ref, st)
+    }
+  )
+
+
   lazy val runTest: ReleaseStep = ReleaseStep(
     action = { st: State =>
       if (!st.get(skipTests).getOrElse(false)) {
@@ -72,8 +81,8 @@ object ReleaseStateTransformations {
 
     st.log.info("Setting version to '%s'." format selected)
 
-    val versionString = "%sversion in ThisBuild := \"%s\"%s" format (lineSep, selected, lineSep)
-    IO.write(new File("version.sbt"), versionString)
+    val versionString = "version in ThisBuild := \"%s\"" format selected
+    writeVersion(st, versionString)
 
     reapply(Seq(
       version in ThisBuild := selected
@@ -82,6 +91,11 @@ object ReleaseStateTransformations {
 
   private def vcs(st: State): Vcs = {
     st.extract.get(versionControlSystem).getOrElse(sys.error("Aborting release. Working directory is not a repository of a recognized VCS."))
+  }
+
+  private def writeVersion(st: State, versionString: String) {
+    val file = st.extract.get(versionFile)
+    IO.write(file, versionString)
   }
 
   private[sbtrelease] lazy val initialVcsChecks = { st: State =>
@@ -111,7 +125,11 @@ object ReleaseStateTransformations {
 
   lazy val commitNextVersion = ReleaseStep(commitVersion)
   private[sbtrelease] def commitVersion = { st: State =>
-    vcs(st).add("version.sbt") !! st.log
+    val file = st.extract.get(versionFile)
+    val base = vcs(st).baseDir
+    val relativePath = IO.relativize(base, file).getOrElse("Version file [%s] is outside of this VCS repository with base directory [%s]!" format(file, base))
+
+    vcs(st).add(relativePath) !! st.log
     val status = (vcs(st).status !!) trim
 
     val newState = if (status.nonEmpty) {
@@ -198,7 +216,7 @@ object ReleaseStateTransformations {
     if (vc.hasUpstream) {
       defaultChoice orElse SimpleReader.readLine("Push changes to the remote repository (y/n)? [y] ") match {
         case Yes() | Some("") =>
-          if (vc == Git) st.log.info("git push sends it's console output to standard error, which will cause the next few lines to be marked as [error].")
+          if (vc == Git) st.log.info("git push sends its console output to standard error, which will cause the next few lines to be marked as [error].")
           vcs(st).pushChanges !! st.log
         case _ => st.log.warn("Remember to push the changes yourself!")
       }
@@ -303,7 +321,6 @@ object ExtraReleaseCommands {
 
 
 object Utilities {
-  val lineSep = sys.props.get("line.separator").getOrElse(sys.error("No line separator? Really?"))
 
   class StateW(st: State) {
     def extract = Project.extract(st)

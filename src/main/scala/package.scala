@@ -10,5 +10,5 @@ package object sbtrelease {
     Project.extract(st).runAggregated(key, st)
   }
 
-  def versionFormatError = sys.error("Version format is not compatible with [0-9]+([0-9]+)?([0-9]+)?(-.*)?")
+  def versionFormatError = sys.error("Version format is not compatible with " + Version.VersionR.pattern.toString)
 }

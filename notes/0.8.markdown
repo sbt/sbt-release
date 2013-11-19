@@ -1,0 +1,3 @@
+* [#29](https://github.com/sbt/sbt-release/issues/29) The `release` task automatically runs a cross release build depending on whether `crossScalaVersions` contains a scala version other than the one defined by the `scalaVersion` setting key.
+* [#46](https://github.com/sbt/sbt-release/pull/46) Added a setting to more conveniently control the next version. (See [Convenient versioning](https://github.com/sbt/sbt-release#convenient-versioning))
+* [#48](https://github.com/sbt/sbt-release/issues/48) Show the appropriate version pattern in the version format error message.
