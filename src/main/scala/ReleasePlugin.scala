@@ -24,14 +24,16 @@ object ReleasePlugin extends Plugin {
     lazy val versions = AttributeKey[Versions]("release-versions")
     lazy val useDefaults = AttributeKey[Boolean]("release-use-defaults")
     lazy val skipTests = AttributeKey[Boolean]("release-skip-tests")
+    lazy val skipCheckSnapshotDependencies = AttributeKey[Boolean]("release-skip-check-snapshot-dependencies")
     lazy val cross = AttributeKey[Boolean]("release-cross")
 
     private lazy val releaseCommandKey = "release"
     private val WithDefaults = "with-defaults"
     private val SkipTests = "skip-tests"
+    private val SkipCheckSnapshotDependencies = "skip-check-snapshot-dependencies"
     private val CrossBuild = "cross"
     private val FailureCommand = "--failure--"
-    private val releaseParser = (Space ~> WithDefaults | Space ~> SkipTests | Space ~> CrossBuild).*
+    private val releaseParser = (Space ~> WithDefaults | Space ~> SkipTests | Space ~> SkipCheckSnapshotDependencies | Space ~> CrossBuild).*
 
     val releaseCommand: Command = Command(releaseCommandKey)(_ => releaseParser) { (st, args) =>
       val extracted = Project.extract(st)
@@ -41,6 +43,7 @@ object ReleasePlugin extends Plugin {
         .copy(onFailure = Some(FailureCommand))
         .put(useDefaults, args.contains(WithDefaults))
         .put(skipTests, args.contains(SkipTests))
+        .put(skipCheckSnapshotDependencies, args.contains(SkipCheckSnapshotDependencies))
         .put(cross, crossEnabled)
 
       val initialChecks = releaseParts.map(_.check)

@@ -24,10 +24,16 @@ object ReleaseStateTransformations {
     }
     if (!snapshotDeps.isEmpty) {
       val useDefaults = extractDefault(newSt, "n")
+      val executeCheck = !newSt.get(skipCheckSnapshotDependencies).getOrElse(false)
       st.log.warn("Snapshot dependencies detected:\n" + snapshotDeps.mkString("\n"))
-      useDefaults orElse SimpleReader.readLine("Do you want to continue (y/n)? [n] ") match {
-        case Yes() =>
-        case _ => sys.error("Aborting release due to snapshot dependencies.")
+      // do not execute check if skipCheck is defined
+      if (executeCheck) {
+        useDefaults orElse SimpleReader.readLine("Do you want to continue (y/n)? [n] ") match {
+          case Yes() =>
+          case _ => sys.error("Aborting release due to snapshot dependencies.")
+        }
+      } else {
+        st.log.warn("Snapshot dependencies detected but ignored")
       }
     }
     newSt
@@ -337,6 +343,5 @@ object Utilities {
     if (useDefs) Some(default)
     else None
   }
-
 }
 
