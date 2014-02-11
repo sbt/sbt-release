@@ -146,7 +146,7 @@ object ReleaseStateTransformations {
       if (vcs(st).existsTag(tag)) {
         defaultChoice orElse SimpleReader.readLine("Tag [%s] exists! Overwrite, keep or abort or enter a new tag (o/k/a)? [a] " format tag) match {
           case Some("" | "a" | "A") =>
-            sys.error("Aborting release!")
+            sys.error("Tag [%s] already exists. Aborting release!" format tag)
 
           case Some("k" | "K") =>
             st.log.warn("The current tag [%s] does not point to the commit for this release!" format tag)

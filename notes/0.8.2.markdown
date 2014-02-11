@@ -1,0 +1,1 @@
+* [#61](https://github.com/sbt/sbt-release/issues/61) Clearer error message when `release with-defaults` fails due to an already existing tag.
