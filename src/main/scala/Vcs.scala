@@ -6,6 +6,8 @@ import java.io.File
 trait Vcs {
   val commandName: String
 
+  val baseDir: File
+
   def cmd(args: Any*): ProcessBuilder
   def status: ProcessBuilder
   def currentHash: String
@@ -19,7 +21,6 @@ trait Vcs {
   def isBehindRemote: Boolean
   def pushChanges: ProcessBuilder
   def currentBranch: String
-  def isRepository(dir: File): Boolean
 
   protected def executableName(command: String) = {
     val maybeOsName = sys.props.get("os.name").map(_.toLowerCase)
@@ -36,29 +37,39 @@ trait Vcs {
 
 object Vcs {
   def detect(dir: File): Option[Vcs] = {
-    Seq(Git, Mercurial).find(_.isRepository(dir))
+    Stream(Git, Mercurial).flatMap(comp => comp.isRepository(dir).map(comp.mkVcs(_))).headOption
   }
 }
 
 trait GitLike extends Vcs {
   private lazy val exec = executableName(commandName)
 
-  protected val markerDirectory: String
-
   def cmd(args: Any*): ProcessBuilder = Process(exec +: args.map(_.toString))
-
-  def isRepository(dir: File): Boolean =
-    new File(dir, markerDirectory).isDirectory || Option(dir.getParentFile).exists(isRepository)
 
   def add(files: String*) = cmd(("add" +: files): _*)
 
   def commit(message: String) = cmd("commit", "-m", message)
 }
 
-object Mercurial extends Vcs with GitLike {
-  val commandName = "hg"
+trait VcsCompanion {
+  protected val markerDirectory: String
 
+  def isRepository(dir: File): Option[File] =
+    if (new File(dir, markerDirectory).isDirectory) Some(dir)
+    else Option(dir.getParentFile).flatMap(isRepository)
+
+  def mkVcs(baseDir: File): Vcs
+}
+
+
+object Mercurial extends VcsCompanion {
   protected val markerDirectory = ".hg"
+
+  def mkVcs(baseDir: File) = new Mercurial(baseDir)
+}
+
+class Mercurial(val baseDir: File) extends Vcs with GitLike {
+  val commandName = "hg"
 
   def status = cmd("status")
 
@@ -82,10 +93,15 @@ object Mercurial extends Vcs with GitLike {
   def checkRemote(remote: String) = cmd("id", "-n")
 }
 
-object Git extends Vcs with GitLike {
+object Git extends VcsCompanion {
+  protected val markerDirectory = ".git"
+
+  def mkVcs(baseDir: File) = new Git(baseDir)
+}
+
+class Git(val baseDir: File) extends Vcs with GitLike {
   val commandName = "git"
 
-  protected val markerDirectory = ".git"
 
   private lazy val trackingBranchCmd = cmd("config", "branch.%s.merge" format currentBranch)
   private def trackingBranch: String = (trackingBranchCmd !!).trim.stripPrefix("refs/heads/")

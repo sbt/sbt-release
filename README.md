@@ -29,7 +29,7 @@ Add the following lines to `./project/build.sbt`. See the section [Using Plugins
       new URL("http://scalasbt.artifactoryonline.com/scalasbt/sbt-plugin-releases/")
     )(Resolver.ivyStylePatterns)
 
-    addSbtPlugin("com.github.gseitz" % "sbt-release" % "0.8")
+    addSbtPlugin("com.github.gseitz" % "sbt-release" % "0.8.2")
 
 ### Including sbt-release settings
 **Important:** The settings `releaseSettings` need to be mixed into every sub-projects `settings`.

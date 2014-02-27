@@ -1,0 +1,1 @@
+* [#53](https://github.com/sbt/sbt-release/pull/53) Fix for git complaining about version.sbt being out of repository
