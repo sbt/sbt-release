@@ -44,7 +44,7 @@ object Vcs {
 trait GitLike extends Vcs {
   private lazy val exec = executableName(commandName)
 
-  def cmd(args: Any*): ProcessBuilder = Process(exec +: args.map(_.toString))
+  def cmd(args: Any*): ProcessBuilder = Process(exec +: args.map(_.toString), baseDir)
 
   def add(files: String*) = cmd(("add" +: files): _*)
 
