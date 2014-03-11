@@ -81,7 +81,7 @@ object ReleaseStateTransformations {
 
     st.log.info("Setting version to '%s'." format selected)
 
-    val versionString = "version in ThisBuild := \"%s\"" format selected
+    val versionString = "version in ThisBuild := \"%s\"\n" format selected
     writeVersion(st, versionString)
 
     reapply(Seq(
