@@ -22,3 +22,11 @@ scalacOptions += "-deprecation"
 crossBuildingSettings
 
 CrossBuilding.crossSbtVersions := Seq("0.11.3", "0.12", "0.13")
+
+CrossBuilding.scriptedSettings
+
+scriptedLaunchOpts := { scriptedLaunchOpts.value ++
+  Seq("-Xmx1024M", "-XX:MaxPermSize=256M", "-Dplugin.version=" + version.value)
+}
+
+scriptedBufferLog := false
