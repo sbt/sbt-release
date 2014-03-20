@@ -29,6 +29,7 @@ object ReleasePlugin extends Plugin {
     private val WithDefaults = "with-defaults"
     private val SkipTests = "skip-tests"
     private val CrossBuild = "cross"
+    private val FailureCommand = "--failure--"
     private val releaseParser = (Space ~> WithDefaults | Space ~> SkipTests | Space ~> CrossBuild).*
 
     val releaseCommand: Command = Command(releaseCommandKey)(_ => releaseParser) { (st, args) =>
@@ -36,19 +37,35 @@ object ReleasePlugin extends Plugin {
       val releaseParts = extracted.get(releaseProcess)
       val crossEnabled = extracted.get(crossBuild) || args.contains(CrossBuild)
       val startState = st
+        .copy(onFailure = Some(FailureCommand))
         .put(useDefaults, args.contains(WithDefaults))
         .put(skipTests, args.contains(SkipTests))
         .put(cross, crossEnabled)
 
       val initialChecks = releaseParts.map(_.check)
+
+      def filterFailure(f: State => State)(s: State): State = {
+        s.remainingCommands match {
+          case FailureCommand :: tail => s
+          case _ => f(s)
+        }
+      }
+
+      val removeFailureCommand = { s: State =>
+        s.remainingCommands match {
+          case FailureCommand :: tail => s.copy(remainingCommands = tail)
+          case _ => s
+        }
+      }
+
       val process = releaseParts.map { step =>
         if (step.enableCrossBuild && crossEnabled) {
-          ReleaseStateTransformations.runCrossBuild(step.action)
-        } else step.action
+          filterFailure(ReleaseStateTransformations.runCrossBuild(step.action)) _
+        } else filterFailure(step.action) _
       }
 
       initialChecks.foreach(_(startState))
-      Function.chain(process)(startState)
+      Function.chain(process :+ removeFailureCommand)(startState)
     }
   }
 
