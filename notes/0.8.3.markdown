@@ -1,1 +1,3 @@
+* [#55](https://github.com/sbt/sbt-release/issues/55) sbt `0.13.x` doesn't throw an exception after failed tests, thus the release would still go ahead. Thanks [@garycoady](https://github.com/garycoady)!
+* [#62](https://github.com/sbt/sbt-release/issues/62) Fix current working directory for VCS commands. Thanks [@laughedelic](https://github.com/laughedelic)!
 * [#64](https://github.com/sbt/sbt-release/issues/64) Allow writing the version string without `in ThisBuild`. This can be controlled via the setting `release-use-global-version`.
