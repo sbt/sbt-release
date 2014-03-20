@@ -4,7 +4,7 @@ This sbt plugin provides a customizable release process that you can add to your
 **Notice:** This README contains information for the latest release. Please refer to the documents for a specific version by looking up the respective [tag](https://github.com/sbt/sbt-release/tags).
 
 ## Requirements
- * sbt >= 0.11.1 for *sbt-release* 0.4; sbt 0.11.3 or 0.12.0 for *sbt-release* >= 0.5
+ * sbt 0.11.3, 0.12.x, 0.13.x for *sbt-release* >= 0.5
  * The version of the project should follow the semantic versioning scheme on [semver.org](http://www.semver.org) with the following additions:
    * The minor and bugfix part of the version are optional.
    * The appendix after the bugfix part must be alphanumeric (`[0-9a-zA-Z]`) but may also contain dash characters `-`.
@@ -29,7 +29,7 @@ Add the following lines to `./project/build.sbt`. See the section [Using Plugins
       new URL("http://scalasbt.artifactoryonline.com/scalasbt/sbt-plugin-releases/")
     )(Resolver.ivyStylePatterns)
 
-    addSbtPlugin("com.github.gseitz" % "sbt-release" % "0.8.2")
+    addSbtPlugin("com.github.gseitz" % "sbt-release" % "0.8.3")
 
 ### Including sbt-release settings
 **Important:** The settings `releaseSettings` need to be mixed into every sub-projects `settings`.
