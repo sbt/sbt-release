@@ -1,0 +1,1 @@
+* [#64](https://github.com/sbt/sbt-release/issues/64) Allow writing the version string without `in ThisBuild`. This can be controlled via the setting `release-use-global-version`.

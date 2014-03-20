@@ -16,6 +16,7 @@ object ReleasePlugin extends Plugin {
     lazy val commitMessage = TaskKey[String]("release-commit-message")
     lazy val crossBuild = SettingKey[Boolean]("release-cross-build")
     lazy val versionFile = SettingKey[File]("release-version-file")
+    lazy val useGlobalVersion = SettingKey[Boolean]("release-use-global-version")
 
     lazy val versionControlSystem = SettingKey[Option[Vcs]]("release-vcs")
 
@@ -66,6 +67,7 @@ object ReleasePlugin extends Plugin {
     nextVersion <<= (versionBump) { bumpType: Version.Bump =>
       ver => Version(ver).map(_.bump(bumpType).asSnapshot.string).getOrElse(versionFormatError)
     },
+    useGlobalVersion := true,
     crossBuild <<= (scalaVersion, crossScalaVersions) { (sv, csv) => (csv.toSet - sv).nonEmpty },
 
     tagName <<= (version in ThisBuild) map (v => "v" + v),
