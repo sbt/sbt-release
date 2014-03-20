@@ -313,6 +313,6 @@ Thank you, [Jason](https://github.com/retronym) and [Mark](https://github.com/ha
 [Gary Coady](https://github.com/garycoady), [Alexey Alekhin](https://github.com/laughedelic), [Andrew Gustafson](https://github.com/agustafson), [Paul Davies](https://github.com/paulmdavies)
 
 ## License
-Copyright (c) 2011, 2012 Gerolf Seitz
+Copyright (c) 2011-2014 Gerolf Seitz
 
 Published under the [Apache License 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt)
