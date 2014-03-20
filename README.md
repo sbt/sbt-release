@@ -309,7 +309,8 @@ After publishing the actual build artifacts, we also publish the release notes.
 Thank you, [Jason](https://github.com/retronym) and [Mark](https://github.com/harrah), for your feedback and ideas.
 
 ## Contributors
-[Johannes Rudolph](https://github.com/jrudolph), [Espen Wiborg](https://github.com/espenhw), [Eric Bowman](https://github.com/ebowman), [Petteri Valkonen](https://github.com/pvalkone)
+[Johannes Rudolph](https://github.com/jrudolph), [Espen Wiborg](https://github.com/espenhw), [Eric Bowman](https://github.com/ebowman), [Petteri Valkonen](https://github.com/pvalkone),
+[Gary Coady](https://github.com/garycoady), [Alexey Alekhin](https://github.com/laughedelic), [Andrew Gustafson](https://github.com/agustafson), [Paul Davies](https://github.com/paulmdavies)
 
 ## License
 Copyright (c) 2011, 2012 Gerolf Seitz
