@@ -171,7 +171,7 @@ The release process can be customized to the project's needs.
   * Want to check for the existance of release notes at the start of the release and then publish it with [posterous-sbt](https://github.com/n8han/posterous-sbt) at the end? Just add the release step.
 
 
-The release process is defined by [State](http://harrah.github.com/xsbt/latest/api/sbt/State.html) transformation functions (`State => State`), for which *sbt-release* defines the this case class:
+The release process is defined by [State](http://harrah.github.com/xsbt/latest/api/sbt/State.html) transformation functions (`State => State`), for which *sbt-release* defines this case class:
 
     case class ReleaseStep (
       action: State => State,
@@ -264,7 +264,7 @@ Let's modify the previous release process and remove the Git related steps, who 
       runTest,
       setReleaseVersion,
       publishArtifacts,
-      setNextVersion,
+      setNextVersion
       )
     }
 
@@ -298,7 +298,7 @@ Now let's also add steps for [posterous-sbt](https://github.com/n8han/posterous-
         setReleaseVersion,
         publishArtifacts,
         publishReleaseNotes(ref) // we need to forward `thisProjectRef` for proper scoping of the underlying tasks
-        setNextVersion,
+        setNextVersion
       )
     }
 
