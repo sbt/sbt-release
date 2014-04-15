@@ -2,6 +2,7 @@ package sbtrelease
 
 import sbt._
 import java.io.File
+import scala.util.Try
 
 trait Vcs {
   val commandName: String
@@ -149,19 +150,18 @@ class Subversion(val baseDir: File) extends Vcs {
   override val commandName = "svn"
   private lazy val exec = executableName(commandName)
 
-  var addedFiles:Set[String] = Set()
-
   override def cmd(args: Any*): ProcessBuilder = Process(exec +: args.map(_.toString), baseDir)
 
   override def add(files: String*) = {
-    val filesThatAreNotAddedYet = files.filter(f => addedFiles.contains(f))
-    if(!filesThatAreNotAddedYet.isEmpty) {      
-      addedFiles ++= filesThatAreNotAddedYet
-      cmd(("add" +: filesThatAreNotAddedYet): _*)
-    } else noop
+    var filesToAdd:Set[String] = Set()
+    files.foreach(f => {
+      val fileIsVersionControlled = Try(cmd("info", f).!!).isSuccess
+      if(!fileIsVersionControlled) filesToAdd += f
+    })
+    if(!filesToAdd.isEmpty) cmd(("add" +: filesToAdd.toSeq): _*) else noop
   }
 
-  override def commit(message: String) = cmd("commit", "-m", message)
+  override def commit(message: String) = cmd("commit", "-m", wrap(message))
 
   override def currentBranch: String = "trunk" //TODO get it from "svn info"
 
@@ -171,10 +171,13 @@ class Subversion(val baseDir: File) extends Vcs {
 
   override def trackingRemote: String = ""
 
-  override def hasUpstream: Boolean = true //TODO check if versions.sbt already exists?
+  override def hasUpstream: Boolean = true
 
-  override def tag(name: String, comment: String, force: Boolean): ProcessBuilder =
-    cmd("copy", getWorkingDirSvnUrl, getRepoRoot + "tags/" + name, "-m", comment)
+  override def tag(name: String, comment: String, force: Boolean): ProcessBuilder = {
+    val tagUrl = getRepoRoot + "tags/" + name
+    if(force) Try(cmd("del", tagUrl, "-m", wrap("delete tag " + name + " to create a new one.")).!!)
+    cmd("copy", getWorkingDirSvnUrl, tagUrl, "-m", wrap(comment))
+  }
 
   private def getWorkingDirSvnUrl:String = {
     val svnInfo = cmd("info").!!
@@ -193,11 +196,16 @@ class Subversion(val baseDir: File) extends Vcs {
 
   override def checkRemote(remote: String): ProcessBuilder = status
 
-  override def existsTag(name: String): Boolean = false //TODO check if tag exists
+  override def existsTag(name: String): Boolean = {
+    val tagUrl = getRepoRoot + "tags/" + name
+    Try(cmd("info", tagUrl).!!).isSuccess
+  }
 
   override def currentHash: String = ""
 
   override def status: ProcessBuilder = cmd("status", "-q")
 
-  def noop:ProcessBuilder = status
+  private def noop:ProcessBuilder = status //TODO real noOp?
+
+  private def wrap(message: String) = "[sbt-release] " + message + ""
 }
