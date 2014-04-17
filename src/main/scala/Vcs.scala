@@ -175,7 +175,7 @@ class Subversion(val baseDir: File) extends Vcs {
 
   override def tag(name: String, comment: String, force: Boolean): ProcessBuilder = {
     val tagUrl = getRepoRoot + "tags/" + name
-    if(force) {
+    if(force && existsTag(name)) {
       val deleteTagComment = comment + ", \ndelete tag " + name + " to create a new one."
       cmd("del", tagUrl, "-m", deleteTagComment).!!
     }
