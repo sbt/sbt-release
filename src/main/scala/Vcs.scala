@@ -155,15 +155,15 @@ class Subversion(val baseDir: File) extends Vcs {
   override def add(files: String*) = {
     var filesToAdd:Set[String] = Set()
     files.foreach(f => {
-      val fileIsVersionControlled = Try(cmd("info", f).!!).isSuccess
-      if(!fileIsVersionControlled) filesToAdd += f
+      val isFileUnderVersionControl = Try(cmd("info", f).!!).isSuccess
+      if(!isFileUnderVersionControl) filesToAdd += f
     })
     if(!filesToAdd.isEmpty) cmd(("add" +: filesToAdd.toSeq): _*) else noop
   }
 
-  override def commit(message: String) = cmd("commit", "-m", wrap(message))
+  override def commit(message: String) = cmd("commit", "-m", message)
 
-  override def currentBranch: String = "trunk" //TODO get it from "svn info"
+  override def currentBranch: String = getWorkingDirSvnUrl.substring(getWorkingDirSvnUrl.lastIndexOf("/") + 1)
 
   override def pushChanges: ProcessBuilder = commit("push changes")
 
@@ -175,26 +175,14 @@ class Subversion(val baseDir: File) extends Vcs {
 
   override def tag(name: String, comment: String, force: Boolean): ProcessBuilder = {
     val tagUrl = getRepoRoot + "tags/" + name
-    if(force) Try(cmd("del", tagUrl, "-m", wrap("delete tag " + name + " to create a new one.")).!!)
-    cmd("copy", getWorkingDirSvnUrl, tagUrl, "-m", wrap(comment))
+    if(force) {
+      val deleteTagComment = comment + ", \ndelete tag " + name + " to create a new one."
+      cmd("del", tagUrl, "-m", deleteTagComment).!!
+    }
+    cmd("copy", getWorkingDirSvnUrl, tagUrl, "-m", comment)
   }
 
-  private def getWorkingDirSvnUrl:String = {
-    val svnInfo = cmd("info").!!
-    val urlStartIdx = svnInfo.indexOf("URL: ") + 5
-    svnInfo.substring(urlStartIdx, svnInfo.indexOf('\n', urlStartIdx)-1)
-  }
-
-  private def getRepoRoot:String = {
-    val svnPart = List(
-      getWorkingDirSvnUrl.indexOf("/trunk"),
-      getWorkingDirSvnUrl.indexOf("/branches"),
-      getWorkingDirSvnUrl.indexOf("/tags")
-    ).filter(_ >= 0).head
-    getWorkingDirSvnUrl.substring(0, svnPart + 1)
-  }
-
-  override def checkRemote(remote: String): ProcessBuilder = status
+  override def checkRemote(remote: String): ProcessBuilder = noop
 
   override def existsTag(name: String): Boolean = {
     val tagUrl = getRepoRoot + "tags/" + name
@@ -205,7 +193,22 @@ class Subversion(val baseDir: File) extends Vcs {
 
   override def status: ProcessBuilder = cmd("status", "-q")
 
-  private def noop:ProcessBuilder = status //TODO real noOp?
+  private def getWorkingDirSvnUrl:String = {
+    val svnInfo = cmd("info").!!
+    val urlStartIdx = svnInfo.indexOf("URL: ") + 5
+    svnInfo.substring(urlStartIdx, svnInfo.indexOf('\n', urlStartIdx)-1)
+  }
 
-  private def wrap(message: String) = "[sbt-release] " + message + ""
+  private def getRepoRoot:String = {
+    val svnBaseUrlEndIdxOptions = List(
+      getWorkingDirSvnUrl.indexOf("/trunk"),
+      getWorkingDirSvnUrl.indexOf("/branches"),
+      getWorkingDirSvnUrl.indexOf("/tags")
+    ).filter(_ >= 0)
+    require(!svnBaseUrlEndIdxOptions.isEmpty, "No /trunk, /branches or /tags part found in svn url. Base url cannot be extracted.")
+    val svnBaseUrlEndIdx = svnBaseUrlEndIdxOptions.head
+    getWorkingDirSvnUrl.substring(0, svnBaseUrlEndIdx + 1)
+  }
+
+  private def noop:ProcessBuilder = status
 }
