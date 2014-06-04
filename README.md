@@ -15,13 +15,13 @@ This sbt plugin provides a customizable release process that you can add to your
      * 1.2
      * 1
      * 1-BETA17
- * A [publish repository](https://github.com/harrah/xsbt/wiki/Publishing) configured. (Required only for the default release process. See further below for release process customizations.)
+ * A [publish repository](http://www.scala-sbt.org/release/docs/Publishing.html) configured. (Required only for the default release process. See further below for release process customizations.)
  * git [optional]
 
 ## Usage
 ### Adding the plugin dependency
 
-Add the following lines to `./project/build.sbt`. See the section [Using Plugins](https://github.com/harrah/xsbt/wiki/Getting-Started-Using-Plugins) in the xsbt wiki for more information.
+Add the following lines to `./project/build.sbt`. See the section [Using Plugins](http://www.scala-sbt.org/release/tutorial/Using-Plugins.html) in the sbt wiki for more information.
 
     // This resolver declaration is added by default in SBT 0.12.x
     resolvers += Resolver.url(
@@ -70,7 +70,7 @@ The default release process consists of the following tasks:
  1. If there are any snapshot dependencies, ask the user whether to continue or not (default: no).
  1. Ask the user for the `release version` and the `next development version`. Sensible defaults are provided.
  1. Run `test:test`, if any test fails, the release process is aborted.
- 1. Write `version in ThisBuild := "$releaseVersion"` to the file `version.sbt` and also apply this setting to the current [build state](https://github.com/harrah/xsbt/wiki/Build-State).
+ 1. Write `version in ThisBuild := "$releaseVersion"` to the file `version.sbt` and also apply this setting to the current [build state](http://www.scala-sbt.org/release/docs/Build-State.html).
  1. Commit the changes in `version.sbt`.
  1. Tag the previous commit with `v$version` (eg. `v1.2`, `v1.2.3`).
  1. Run `publish`.
@@ -187,7 +187,7 @@ The property `enableCrossBuild` tells *sbt-release* whether or not a particular 
 The sequence of `ReleaseStep`s that make up the release process is stored in the setting `releaseProcess: SettingKey[Seq[ReleaseStep]]`.
 
 The state transformations functions used in *sbt-release* are the same as the action/body part of a no-argument command.
-You can read more about [building commands](https://github.com/harrah/xsbt/wiki/Commands) in the sbt wiki.
+You can read more about [building commands](http://www.scala-sbt.org/release/docs/Commands.html) in the sbt wiki.
 
 ### Release Steps
 There are basically 2 ways to creating a new `ReleaseStep`:
