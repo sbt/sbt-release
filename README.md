@@ -171,7 +171,7 @@ The release process can be customized to the project's needs.
   * Want to check for the existance of release notes at the start of the release and then publish it with [posterous-sbt](https://github.com/n8han/posterous-sbt) at the end? Just add the release step.
 
 
-The release process is defined by [State](http://harrah.github.com/xsbt/latest/api/sbt/State.html) transformation functions (`State => State`), for which *sbt-release* defines this case class:
+The release process is defined by [State](http://www.scala-sbt.org/release/api/sbt/State.html) transformation functions (`State => State`), for which *sbt-release* defines this case class:
 
     case class ReleaseStep (
       action: State => State,
@@ -220,7 +220,7 @@ This is especially useful if the task raises an error in case something went wro
 that takes any scoped task and wraps it in a state transformation function, executing the task when an instance of `State` is applied to the function.
 
 
-I highly recommend to make yourself familiar with the [State API](http://harrah.github.com/xsbt/latest/api/sbt/State.html) before you continue your journey to a fully customized release process.
+I highly recommend to make yourself familiar with the [State API](http://www.scala-sbt.org/release/api/sbt/State.html) before you continue your journey to a fully customized release process.
 
 ### Can we finally customize that release process, please?
 Yes, and as a start, let's take a look at the [default definition](https://github.com/sbt/sbt-release/blob/master/src/main/scala/ReleasePlugin.scala#L49) of `releaseProcess`:
