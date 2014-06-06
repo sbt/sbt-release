@@ -232,7 +232,7 @@ Yes, and as a start, let's take a look at the [default definition](https://githu
 
     // ...
 
-    releaseProcess := Seq[ReleaseStep](
+    ReleaseKeys.releaseProcess := Seq[ReleaseStep](
       checkSnapshotDependencies,              // : ReleaseStep
       inquireVersions,                        // : ReleaseStep
       runTest,                                // : ReleaseStep
@@ -257,7 +257,7 @@ Let's modify the previous release process and remove the Git related steps, who 
 
     // ...
 
-    releaseProcess := Seq[ReleaseStep](
+    ReleaseKeys.releaseProcess := Seq[ReleaseStep](
       checkOrganization,                // Look Ma', my own release step!
       checkSnapshotDependencies,
       inquireVersions,
@@ -288,7 +288,7 @@ Now let's also add steps for [posterous-sbt](https://github.com/n8han/posterous-
 
     // ...
 
-    releaseProcess <<= thisProjectRef apply { ref =>
+    ReleaseKeys.releaseProcess <<= thisProjectRef apply { ref =>
       import ReleaseStateTransformations._
       Seq[ReleaseStep](
         checkOrganization,
