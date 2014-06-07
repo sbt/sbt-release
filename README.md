@@ -21,7 +21,7 @@ This sbt plugin provides a customizable release process that you can add to your
 ## Usage
 ### Adding the plugin dependency
 
-Add the following lines to `./project/build.sbt`. See the section [Using Plugins](http://www.scala-sbt.org/release/tutorial/Using-Plugins.html) in the sbt wiki for more information.
+Add the following lines to `./project/plugins.sbt`. See the section [Using Plugins](http://www.scala-sbt.org/release/tutorial/Using-Plugins.html) in the sbt wiki for more information.
 
     // This resolver declaration is added by default in SBT 0.12.x
     resolvers += Resolver.url(
