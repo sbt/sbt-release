@@ -46,7 +46,7 @@ Setting/task keys are defined in `sbtrelease.ReleasePlugin.ReleaseKeys`.
     import sbtrelease.ReleasePlugin._
 
     object MyBuild extends Build {
-      lazy val MyProject(
+      lazy val myProject = Project(
         id = "myproject",
         base = file("."),
         settings = Defaults.defaultSettings ++ releaseSettings ++ Seq( /* custom settings here */ )
