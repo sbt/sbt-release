@@ -21,7 +21,7 @@ This sbt plugin provides a customizable release process that you can add to your
 ## Usage
 ### Adding the plugin dependency
 
-Add the following lines to `./project/build.sbt`. See the section [Using Plugins](http://www.scala-sbt.org/release/tutorial/Using-Plugins.html) in the sbt wiki for more information.
+Add the following lines to `./project/plugins.sbt`. See the section [Using Plugins](http://www.scala-sbt.org/release/tutorial/Using-Plugins.html) in the sbt wiki for more information.
 
     // This resolver declaration is added by default in SBT 0.12.x
     resolvers += Resolver.url(
@@ -46,7 +46,7 @@ Setting/task keys are defined in `sbtrelease.ReleasePlugin.ReleaseKeys`.
     import sbtrelease.ReleasePlugin._
 
     object MyBuild extends Build {
-      lazy val MyProject(
+      lazy val myProject = Project(
         id = "myproject",
         base = file("."),
         settings = Defaults.defaultSettings ++ releaseSettings ++ Seq( /* custom settings here */ )
@@ -232,7 +232,7 @@ Yes, and as a start, let's take a look at the [default definition](https://githu
 
     // ...
 
-    releaseProcess := Seq[ReleaseStep](
+    ReleaseKeys.releaseProcess := Seq[ReleaseStep](
       checkSnapshotDependencies,              // : ReleaseStep
       inquireVersions,                        // : ReleaseStep
       runTest,                                // : ReleaseStep
@@ -257,7 +257,7 @@ Let's modify the previous release process and remove the Git related steps, who 
 
     // ...
 
-    releaseProcess := Seq[ReleaseStep](
+    ReleaseKeys.releaseProcess := Seq[ReleaseStep](
       checkOrganization,                // Look Ma', my own release step!
       checkSnapshotDependencies,
       inquireVersions,
@@ -288,7 +288,7 @@ Now let's also add steps for [posterous-sbt](https://github.com/n8han/posterous-
 
     // ...
 
-    releaseProcess <<= thisProjectRef apply { ref =>
+    ReleaseKeys.releaseProcess <<= thisProjectRef apply { ref =>
       import ReleaseStateTransformations._
       Seq[ReleaseStep](
         checkOrganization,
