@@ -168,7 +168,7 @@ If you want to customize the versioning, keep the following in mind:
 The release process can be customized to the project's needs.
 
   * Not using Git? Then rip it out.
-  * Want to check for the existance of release notes at the start of the release and then publish it with [posterous-sbt](https://github.com/n8han/posterous-sbt) at the end? Just add the release step.
+  * Want to check for the existence of release notes at the start of the release and then publish it with [posterous-sbt](https://github.com/n8han/posterous-sbt) at the end? Just add the release step.
 
 
 The release process is defined by [State](http://www.scala-sbt.org/release/api/sbt/State.html) transformation functions (`State => State`), for which *sbt-release* defines this case class:
