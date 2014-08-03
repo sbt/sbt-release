@@ -113,7 +113,7 @@ class Git(val baseDir: File) extends Vcs with GitLike {
 
   def currentBranch =  (cmd("symbolic-ref", "HEAD") !!).trim.stripPrefix("refs/heads/")
 
-  def currentHash = revParse(currentBranch)
+  def currentHash = revParse("HEAD")
 
   private def revParse(name: String) = (cmd("rev-parse", name) !!) trim
 
