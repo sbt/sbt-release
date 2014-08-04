@@ -2,6 +2,7 @@ package sbtrelease
 
 import sbt._
 import java.io.File
+import scala.util.Try
 
 trait Vcs {
   val commandName: String
@@ -37,7 +38,7 @@ trait Vcs {
 
 object Vcs {
   def detect(dir: File): Option[Vcs] = {
-    Stream(Git, Mercurial).flatMap(comp => comp.isRepository(dir).map(comp.mkVcs(_))).headOption
+    Stream(Git, Mercurial, Subversion).flatMap(comp => comp.isRepository(dir).map(comp.mkVcs(_))).headOption
   }
 }
 
@@ -137,4 +138,77 @@ class Git(val baseDir: File) extends Vcs with GitLike {
   }
 
   private def pushTags = cmd("push", "--tags", trackingRemote)
+}
+
+object Subversion extends VcsCompanion {
+  override def mkVcs(baseDir: File): Vcs = new Subversion(baseDir)
+
+  override protected val markerDirectory: String = ".svn"
+}
+
+class Subversion(val baseDir: File) extends Vcs {
+  override val commandName = "svn"
+  private lazy val exec = executableName(commandName)
+
+  override def cmd(args: Any*): ProcessBuilder = Process(exec +: args.map(_.toString), baseDir)
+
+  override def add(files: String*) = {
+    val filesToAdd = files.filterNot(isFileUnderVersionControl)
+    if(!filesToAdd.isEmpty) cmd(("add" +: filesToAdd): _*) else noop
+  }
+
+  override def commit(message: String) = cmd("commit", "-m", message)
+
+  override def currentBranch: String = workingDirSvnUrl.substring(workingDirSvnUrl.lastIndexOf("/") + 1)
+
+  override def pushChanges: ProcessBuilder = commit("push changes")
+
+  override def isBehindRemote: Boolean = false
+
+  override def trackingRemote: String = ""
+
+  override def hasUpstream: Boolean = true
+
+  override def tag(name: String, comment: String, force: Boolean): ProcessBuilder = {
+    val tagUrl = getSvnTagUrl(name)
+    if(force && existsTag(name)) {
+      val deleteTagComment = comment + ", \ndelete tag " + name + " to create a new one."
+      cmd("del", tagUrl, "-m", deleteTagComment).!!
+    }
+    cmd("copy", workingDirSvnUrl, tagUrl, "-m", comment)
+  }
+
+  override def checkRemote(remote: String): ProcessBuilder = noop
+
+  override def existsTag(name: String): Boolean = {
+    Try(cmd("info", getSvnTagUrl(name)).!!).isSuccess
+  }
+
+  override def currentHash: String = ""
+
+  override def status: ProcessBuilder = cmd("status", "-q")
+
+  lazy val workingDirSvnUrl:String = {
+    val svnInfo = cmd("info").!!
+    val svnInfoUrlKey = "URL: "
+    val urlStartIdx = svnInfo.indexOf(svnInfoUrlKey) + svnInfoUrlKey.length
+    svnInfo.substring(urlStartIdx, svnInfo.indexOf('\n', urlStartIdx)-1)
+  }
+
+  lazy val repoRoot:String = {
+    val svnBaseUrlEndIdxOptions = List(
+      workingDirSvnUrl.indexOf("/trunk"),
+      workingDirSvnUrl.indexOf("/branches"),
+      workingDirSvnUrl.indexOf("/tags")
+    ).filter(_ >= 0)
+    require(!svnBaseUrlEndIdxOptions.isEmpty, "No /trunk, /branches or /tags part found in svn url. Base url cannot be extracted.")
+    val svnBaseUrlEndIdx = svnBaseUrlEndIdxOptions.head
+    workingDirSvnUrl.substring(0, svnBaseUrlEndIdx + 1)
+  }
+
+  private def getSvnTagUrl(name: String): String = repoRoot + "tags/" + name
+
+  private def isFileUnderVersionControl(file: String): Boolean = Try(cmd("info", file).!!).isSuccess
+
+  private def noop:ProcessBuilder = status
 }
