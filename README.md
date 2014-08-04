@@ -29,7 +29,7 @@ Add the following lines to `./project/plugins.sbt`. See the section [Using Plugi
       new URL("http://scalasbt.artifactoryonline.com/scalasbt/sbt-plugin-releases/")
     )(Resolver.ivyStylePatterns)
 
-    addSbtPlugin("com.github.gseitz" % "sbt-release" % "0.8.3")
+    addSbtPlugin("com.github.gseitz" % "sbt-release" % "0.8.4")
 
 ### Including sbt-release settings
 **Important:** The settings `releaseSettings` need to be mixed into every sub-projects `settings`.
@@ -98,7 +98,7 @@ For that emergency release at 2am on a Sunday, you can optionally avoid running 
 ### Cross building during a release
 Since version 0.7, *sbt-release* comes with built-in support for [cross building](http://www.scala-sbt.org/release/docs/Detailed-Topics/Cross-Build.html) and cross publishing. A cross release can be triggered in two ways:
 
- 1. via the setting `release-cross-build` which by default automatically triggers a cross release if `cross-scala-versions` contains at least 1 version different than `scala-version`.
+ 1. via the setting `release-cross-build` (by default set to `false`)
  1. by using the option `cross` for the `release` command
 
     > release cross with-defaults
@@ -153,7 +153,7 @@ If you want to customize the versioning, keep the following in mind:
    * output: the next development version
 
 ### Custom VCS messages
-*sbt-release* has built in support to commit/push to Git and Mercurial repositories. The messages for the tag and the commits can be customized to your needs with these settings:
+*sbt-release* has built in support to commit/push to Git, Mercurial and Subversion repositories. The messages for the tag and the commits can be customized to your needs with these settings:
 
     val tagComment    : TaskKey[String]
     val commitMessage : TaskKey[String]
@@ -310,7 +310,8 @@ Thank you, [Jason](https://github.com/retronym) and [Mark](https://github.com/ha
 
 ## Contributors
 [Johannes Rudolph](https://github.com/jrudolph), [Espen Wiborg](https://github.com/espenhw), [Eric Bowman](https://github.com/ebowman), [Petteri Valkonen](https://github.com/pvalkone),
-[Gary Coady](https://github.com/garycoady), [Alexey Alekhin](https://github.com/laughedelic), [Andrew Gustafson](https://github.com/agustafson), [Paul Davies](https://github.com/paulmdavies)
+[Gary Coady](https://github.com/garycoady), [Alexey Alekhin](https://github.com/laughedelic), [Andrew Gustafson](https://github.com/agustafson), [Paul Davies](https://github.com/paulmdavies),
+[Stanislav Savulchik](https://github.com/savulchik), [Tim Van Laer](https://github.com/timvlaer), [Lars Hupel](https://github.com/larsrh)
 
 ## License
 Copyright (c) 2011-2014 Gerolf Seitz
