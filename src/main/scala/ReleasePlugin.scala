@@ -85,7 +85,7 @@ object ReleasePlugin extends Plugin {
       ver => Version(ver).map(_.bump(bumpType).asSnapshot.string).getOrElse(versionFormatError)
     },
     useGlobalVersion := true,
-    crossBuild <<= (scalaVersion, crossScalaVersions) { (sv, csv) => (csv.toSet - sv).nonEmpty },
+    crossBuild := false,
 
     tagName <<= (version in ThisBuild) map (v => "v" + v),
     tagComment <<= (version in ThisBuild) map (v => "Releasing %s" format v),
