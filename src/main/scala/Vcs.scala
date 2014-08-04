@@ -2,7 +2,6 @@ package sbtrelease
 
 import sbt._
 import java.io.File
-import scala.util.Try
 
 trait Vcs {
   val commandName: String
@@ -181,7 +180,7 @@ class Subversion(val baseDir: File) extends Vcs {
   override def checkRemote(remote: String): ProcessBuilder = noop
 
   override def existsTag(name: String): Boolean = {
-    Try(cmd("info", getSvnTagUrl(name)).!!).isSuccess
+    Try(cmd("info", getSvnTagUrl(name)).!!).nonEmpty
   }
 
   override def currentHash: String = ""
@@ -208,7 +207,11 @@ class Subversion(val baseDir: File) extends Vcs {
 
   private def getSvnTagUrl(name: String): String = repoRoot + "tags/" + name
 
-  private def isFileUnderVersionControl(file: String): Boolean = Try(cmd("info", file).!!).isSuccess
+  private def isFileUnderVersionControl(file: String): Boolean = Try(cmd("info", file).!!).nonEmpty
 
   private def noop:ProcessBuilder = status
+}
+
+private[sbtrelease] object Try {
+  def apply[A](f: => A): Option[A] = scala.util.control.Exception.allCatch.opt(f)
 }
