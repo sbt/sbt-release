@@ -46,7 +46,7 @@ object ReleasePlugin extends Plugin {
 
       def filterFailure(f: State => State)(s: State): State = {
         s.remainingCommands match {
-          case FailureCommand :: tail => s
+          case FailureCommand :: tail => s.fail
           case _ => f(s)
         }
       }
