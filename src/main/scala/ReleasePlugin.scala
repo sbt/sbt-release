@@ -19,6 +19,7 @@ object ReleasePlugin extends Plugin {
     lazy val useGlobalVersion = SettingKey[Boolean]("release-use-global-version")
 
     lazy val versionControlSystem = SettingKey[Option[Vcs]]("release-vcs")
+    lazy val publishArtifactsAction = TaskKey[Unit]("release-publish-artifacts-action", "The action that should be performed to publish artifacts")
 
     lazy val versions = AttributeKey[Versions]("release-versions")
     lazy val useDefaults = AttributeKey[Boolean]("release-use-defaults")
@@ -94,6 +95,8 @@ object ReleasePlugin extends Plugin {
     versionControlSystem <<= (baseDirectory)(Vcs.detect(_)),
 
     versionFile := file("version.sbt"),
+
+    publishArtifactsAction <<= publish.map(identity),
 
     releaseProcess := Seq[ReleaseStep](
       checkSnapshotDependencies,

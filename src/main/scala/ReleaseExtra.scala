@@ -225,7 +225,7 @@ object ReleaseStateTransformations {
   }
 
   lazy val publishArtifacts = ReleaseStep(
-    action = publishArtifactsAction,
+    action = runPublishArtifactsAction,
     check = st => {
       // getPublishTo fails if no publish repository is set up.
       val ex = st.extract
@@ -235,10 +235,10 @@ object ReleaseStateTransformations {
     },
     enableCrossBuild = true
   )
-  private[sbtrelease] lazy val publishArtifactsAction = { st: State =>
+  private[sbtrelease] lazy val runPublishArtifactsAction = { st: State =>
     val extracted = st.extract
     val ref = extracted.get(thisProjectRef)
-    extracted.runAggregated(publish in Global in ref, st)
+    extracted.runAggregated(publishArtifactsAction in Global in ref, st)
   }
 
   private def readVersion(ver: String, prompt: String, useDef: Boolean): String = {
