@@ -2,7 +2,7 @@ organization := "com.github.gseitz"
 
 name := "sbt-release"
 
-version := "0.8.5"
+version := "0.8.6-SNAPSHOT"
 
 sbtPlugin := true
 
