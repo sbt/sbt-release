@@ -162,6 +162,12 @@ If you want to customize the versioning, keep the following in mind:
     tagComment    <<= (version in ThisBuild) map (v => "Releasing %s" format v),
     commitMessage <<= (version in ThisBuild) map (v => "Setting version to %s" format v)
 
+### Publishing signed releases
+SBT is able to publish signed releases using the [sbt-pgp plugin](https://github.com/sbt/sbt-pgp).
+
+After setting that up for your project, you can then tell *sbt-release* to use it by setting the `publishArtifactsAction` key:
+
+    publishArtifactsAction := PgpKeys.publishSigned.value
 
 ## Customizing the release process
 ### Not all releases are created equal
