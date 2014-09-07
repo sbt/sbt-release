@@ -93,6 +93,8 @@ object ReleasePlugin extends Plugin {
     commitMessage <<= (version in ThisBuild) map (v => "Setting version to %s" format v),
 
     versionControlSystem <<= (baseDirectory)(Vcs.detect(_)),
+    
+    ignoreUntrackedFiles := false,
 
     versionFile := file("version.sbt"),
 

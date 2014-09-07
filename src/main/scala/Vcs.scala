@@ -49,7 +49,7 @@ trait GitLike extends Vcs {
   def add(files: String*) = cmd(("add" +: files): _*)
 
   def commit(message: String) = cmd("commit", "-m", message)
-}
+}  
 
 trait VcsCompanion {
   protected val markerDirectory: String
@@ -91,6 +91,10 @@ class Mercurial(val baseDir: File) extends Vcs with GitLike {
 
   // FIXME: This is utterly bogus, but I cannot find a good way...
   def checkRemote(remote: String) = cmd("id", "-n")
+  
+  def hasUntrackedFiles = !( ( cmd("status", "-un") !! ).trim.isEmpty )
+  
+  def hasModifiedFiles = !( ( cmd("status", "-mn") !! ).trim.isEmpty )
 }
 
 object Git extends VcsCompanion {
@@ -137,6 +141,10 @@ class Git(val baseDir: File) extends Vcs with GitLike {
   }
 
   private def pushTags = cmd("push", "--tags", trackingRemote)
+  
+  def hasUntrackedFiles : Boolean = !( cmd("ls-files", "--other", "--exclude-standard") !! ).trim.isEmpty
+  
+  def hasModifiedFiles : Boolean = !( cmd("ls-files", "--modified", "--exclude-standard") !! ).trim.isEmpty
 }
 
 object Subversion extends VcsCompanion {
