@@ -136,7 +136,12 @@ class Git(val baseDir: File) extends Vcs with GitLike {
     cmd("push", trackingRemote, "%s:%s" format (localBranch, trackingBranch))
   }
 
-  private def pushTags = cmd("push", "--tags", trackingRemote)
+  private def pushTags = {
+    val lastTag = (cmd("for-each-ref", "--count=1", "--sort=-taggerdate", "--format", "%(tag)", "refs/tags") !!).
+      linesIterator.next()
+    cmd("push", trackingRemote, lastTag)
+  }
+
 }
 
 object Subversion extends VcsCompanion {
