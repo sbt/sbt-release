@@ -1,8 +1,4 @@
-import sbtrelease._
-import ReleaseKeys._
-import ReleaseStateTransformations._
-
-releaseSettings
+import ReleaseTransformations._
 
 releaseProcess := Seq[ReleaseStep](runTest, FailTest.createFile)
 

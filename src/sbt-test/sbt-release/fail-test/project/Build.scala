@@ -1,5 +1,5 @@
 import sbt._
-import sbtrelease._
+import sbtrelease.ReleasePlugin.autoImport._
 
 object FailTest {
   val createFile: ReleaseStep = { st: State =>

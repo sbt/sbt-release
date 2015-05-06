@@ -1,28 +1,46 @@
 package sbtrelease
 
-import java.io.File
 import sbt._
-import Keys._
-import annotation.tailrec
-import sbtrelease.ReleasePlugin.ReleaseKeys._
+import sbt.Aggregation.KeyValue
+import sbt.std.Transform.DummyTaskMap
+import sbt.Keys._
 import sbt.Package.ManifestAttributes
-import scala.Some
-import sbt.Value
-import sbt.Inc
-import sbt.Extracted
+import annotation.tailrec
+import ReleasePlugin.autoImport._
+import ReleaseKeys._
 
 object ReleaseStateTransformations {
-  import ReleasePlugin.ReleaseKeys._
   import Utilities._
+
+  private def runTaskAggregated[T](taskKey: TaskKey[T], state: State): (State, Result[Seq[KeyValue[T]]]) = {
+    import EvaluateTask._
+    val extra = DummyTaskMap(Nil)
+    val extracted = state.extract
+    val config = extractedTaskConfig(extracted, extracted.structure, state)
+
+    val rkey = Utilities.resolve(taskKey.scopedKey, extracted)
+    val keys = Aggregation.aggregate(rkey, ScopeMask(), extracted.structure.extra)
+    val tasks = Act.keyValues(extracted.structure)(keys)
+    val toRun = tasks map { case KeyValue(k,t) => t.map(v => KeyValue(k,v)) } join
+    val roots = tasks map { case KeyValue(k,_) => k }
+
+
+    val (newS, result) = withStreams(extracted.structure, state){ str =>
+      val transform = nodeView(state, str, roots, extra)
+      runTask(toRun, state,str, extracted.structure.index.triggers, config)(transform)
+    }
+    (newS, result)
+  }
+
 
   lazy val checkSnapshotDependencies: ReleaseStep = { st: State =>
     val thisRef = st.extract.get(thisProjectRef)
-    val (newSt, result) = SbtCompat.runTaskAggregated(snapshotDependencies in thisRef, st)
+    val (newSt, result) = runTaskAggregated(releaseSnapshotDependencies in thisRef, st)
     val snapshotDeps = result match {
       case Value(value) => value.flatMap(_.value)
       case Inc(cause) => sys.error("Error checking for snapshot dependencies: " + cause)
     }
-    if (!snapshotDeps.isEmpty) {
+    if (snapshotDeps.nonEmpty) {
       val useDefaults = extractDefault(newSt, "n")
       st.log.warn("Snapshot dependencies detected:\n" + snapshotDeps.mkString("\n"))
       useDefaults orElse SimpleReader.readLine("Do you want to continue (y/n)? [n] ") match {
@@ -45,7 +63,7 @@ object ReleaseStateTransformations {
 
     val releaseV = readVersion(suggestedReleaseV, "Release version [%s] : ", useDefs)
 
-    val nextFunc = extracted.get(nextVersion)
+    val nextFunc = extracted.get(releaseNextVersion)
     val suggestedNextV = nextFunc(releaseV)
     val nextV = readVersion(suggestedNextV, "Next version [%s] : ", useDefs)
 
@@ -82,7 +100,7 @@ object ReleaseStateTransformations {
     val selected = selectVersion(vs)
 
     st.log.info("Setting version to '%s'." format selected)
-    val useGlobal = st.extract.get(useGlobalVersion)
+    val useGlobal = st.extract.get(releaseUseGlobalVersion)
     val versionStr = (if (useGlobal) globalVersionString else versionString) format selected
     writeVersion(st, versionStr)
 
@@ -93,11 +111,11 @@ object ReleaseStateTransformations {
   }
 
   private def vcs(st: State): Vcs = {
-    st.extract.get(versionControlSystem).getOrElse(sys.error("Aborting release. Working directory is not a repository of a recognized VCS."))
+    st.extract.get(releaseVcs).getOrElse(sys.error("Aborting release. Working directory is not a repository of a recognized VCS."))
   }
 
   private def writeVersion(st: State, versionString: String) {
-    val file = st.extract.get(versionFile)
+    val file = st.extract.get(releaseVersionFile)
     IO.write(file, versionString)
   }
 
@@ -123,7 +141,7 @@ object ReleaseStateTransformations {
 
   lazy val commitNextVersion = ReleaseStep(commitVersion)
   private[sbtrelease] def commitVersion = { st: State =>
-    val file = st.extract.get(versionFile)
+    val file = st.extract.get(releaseVersionFile)
     val base = vcs(st).baseDir
     val relativePath = IO.relativize(base, file).getOrElse("Version file [%s] is outside of this VCS repository with base directory [%s]!" format(file, base))
 
@@ -131,7 +149,7 @@ object ReleaseStateTransformations {
     val status = (vcs(st).status !!) trim
 
     val newState = if (status.nonEmpty) {
-      val (state, msg) = st.extract.runTask(commitMessage, st)
+      val (state, msg) = st.extract.runTask(releaseCommitMessage, st)
       vcs(state).commit(msg) ! st.log
       state
     } else {
@@ -170,8 +188,8 @@ object ReleaseStateTransformations {
       }
     }
 
-    val (tagState, tag) = st.extract.runTask(tagName, st)
-    val (commentState, comment) = st.extract.runTask(tagComment, tagState)
+    val (tagState, tag) = st.extract.runTask(releaseTagName, st)
+    val (commentState, comment) = st.extract.runTask(releaseTagComment, tagState)
     val tagToUse = findTag(tag)
     tagToUse.foreach(vcs(commentState).tag(_, comment, force = true) !! commentState.log)
 
@@ -238,7 +256,7 @@ object ReleaseStateTransformations {
   private[sbtrelease] lazy val runPublishArtifactsAction = { st: State =>
     val extracted = st.extract
     val ref = extracted.get(thisProjectRef)
-    extracted.runAggregated(publishArtifactsAction in Global in ref, st)
+    extracted.runAggregated(releasePublishArtifactsAction in Global in ref, st)
   }
 
   private def readVersion(ver: String, prompt: String, useDef: Boolean): String = {
@@ -258,7 +276,7 @@ object ReleaseStateTransformations {
 
     // We don't want even want to be able to save the settings that are applied to the session during the release cycle.
     // Just using an empty string works fine and in case the user calls `session save`, empty lines will be generated.
-		val newSession = session.appendSettings( append map (a => (a, SbtCompat.EmptySetting)))
+		val newSession = session.appendSettings( append map (a => (a, List.empty[String])))
 		BuiltinCommands.reapply(newSession, structure, state)
   }
 

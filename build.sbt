@@ -2,7 +2,7 @@ organization := "com.github.gseitz"
 
 name := "sbt-release"
 
-version := "0.8.6-SNAPSHOT"
+version := "1.0.0-SNAPSHOT"
 
 sbtPlugin := true
 
@@ -19,11 +19,7 @@ publishMavenStyle := false
 
 scalacOptions += "-deprecation"
 
-crossBuildingSettings
-
-CrossBuilding.crossSbtVersions := Seq("0.11.3", "0.12", "0.13")
-
-CrossBuilding.scriptedSettings
+scriptedSettings
 
 scriptedLaunchOpts <<= (scriptedLaunchOpts, version) { case (s,v) => s ++
   Seq("-Xmx1024M", "-XX:MaxPermSize=256M", "-Dplugin.version=" + v)
