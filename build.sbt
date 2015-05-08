@@ -1,28 +1,42 @@
-organization := "com.github.gseitz"
+lazy val `sbt-release` = project in file(".")
 
+organization := "com.github.gseitz"
 name := "sbt-release"
 
-version := "1.0.0-SNAPSHOT"
+homepage := Some(url("https://github.com/sbt/sbt-release"))
+licenses := Seq("Apache-2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0"))
 
 sbtPlugin := true
-
-publishTo <<= (version) { version: String =>
-   val scalasbt = "http://scalasbt.artifactoryonline.com/scalasbt/"
-   val (name, url) = if (version.contains("-SNAPSHOT"))
-                       ("sbt-plugin-snapshots-publish", scalasbt+"sbt-plugin-snapshots")
-                     else
-                       ("sbt-plugin-releases-publish", scalasbt+"sbt-plugin-releases")
-   Some(Resolver.url(name, new URL(url))(Resolver.ivyStylePatterns))
-}
-
 publishMavenStyle := false
-
 scalacOptions += "-deprecation"
 
+// Scripted
 scriptedSettings
-
 scriptedLaunchOpts <<= (scriptedLaunchOpts, version) { case (s,v) => s ++
   Seq("-Xmx1024M", "-XX:MaxPermSize=256M", "-Dplugin.version=" + v)
 }
-
 scriptedBufferLog := false
+
+// Bintray
+bintrayOrganization := Some("sbt")
+bintrayRepository := "sbt-plugin-releases"
+bintrayPackage := "sbt-release"
+bintrayReleaseOnPublish := false
+
+// Release
+import ReleaseTransformations._
+releasePublishArtifactsAction := PgpKeys.publishSigned.value
+releaseProcess := Seq[ReleaseStep](
+  checkSnapshotDependencies,
+  inquireVersions,
+  runClean,
+  runTest,
+  setReleaseVersion,
+  commitReleaseVersion,
+  tagRelease,
+  publishArtifacts,
+  releaseStepTask(bintrayRelease in `sbt-release`),
+  setNextVersion,
+  commitNextVersion,
+  pushChanges
+)
