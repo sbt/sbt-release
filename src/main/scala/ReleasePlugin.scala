@@ -4,99 +4,120 @@ import sbt._
 import Keys._
 import complete.DefaultParsers._
 
-object ReleasePlugin extends Plugin {
-  object ReleaseKeys {
-    lazy val snapshotDependencies = TaskKey[Seq[ModuleID]]("release-snapshot-dependencies")
-    lazy val releaseProcess = SettingKey[Seq[ReleaseStep]]("release-process")
-    lazy val releaseVersion = SettingKey[String => String]("release-release-version")
-    lazy val nextVersion = SettingKey[String => String]("release-next-version")
-    lazy val versionBump = SettingKey[Version.Bump]("release-version-bump", "How the version should be incremented")
-    lazy val tagName = TaskKey[String]("release-tag-name")
-    lazy val tagComment = TaskKey[String]("release-tag-comment")
-    lazy val commitMessage = TaskKey[String]("release-commit-message")
-    lazy val crossBuild = SettingKey[Boolean]("release-cross-build")
-    lazy val versionFile = SettingKey[File]("release-version-file")
-    lazy val useGlobalVersion = SettingKey[Boolean]("release-use-global-version")
+object ReleasePlugin extends AutoPlugin {
 
-    lazy val versionControlSystem = SettingKey[Option[Vcs]]("release-vcs")
-    lazy val publishArtifactsAction = TaskKey[Unit]("release-publish-artifacts-action", "The action that should be performed to publish artifacts")
+  object autoImport {
+    val releaseSnapshotDependencies = taskKey[Seq[ModuleID]]("Calculate the snapshot dependencies for a build")
+    val releaseProcess = settingKey[Seq[ReleaseStep]]("The release process")
+    val releaseVersion = settingKey[String => String]("The release version")
+    val releaseNextVersion = settingKey[String => String]("The next release version")
+    val releaseVersionBump = settingKey[Version.Bump]("How the version should be incremented")
+    val releaseTagName = taskKey[String]("The name of the tag")
+    val releaseTagComment = taskKey[String]("The comment to use when tagging")
+    val releaseCommitMessage = taskKey[String]("The commit message to use when tagging")
+    val releaseCrossBuild = settingKey[Boolean]("Whether the release should be cross built")
+    val releaseVersionFile = settingKey[File]("The file to write the version to")
+    val releaseUseGlobalVersion = settingKey[Boolean]("Whether to use a global version")
 
-    lazy val versions = AttributeKey[Versions]("release-versions")
-    lazy val useDefaults = AttributeKey[Boolean]("release-use-defaults")
-    lazy val skipTests = AttributeKey[Boolean]("release-skip-tests")
-    lazy val cross = AttributeKey[Boolean]("release-cross")
+    val releaseVcs = settingKey[Option[Vcs]]("The VCS to use")
+    val releasePublishArtifactsAction = taskKey[Unit]("The action that should be performed to publish artifacts")
 
-    private lazy val releaseCommandKey = "release"
-    private val WithDefaults = "with-defaults"
-    private val SkipTests = "skip-tests"
-    private val CrossBuild = "cross"
-    private val FailureCommand = "--failure--"
-    private val releaseParser = (Space ~> WithDefaults | Space ~> SkipTests | Space ~> CrossBuild).*
+    lazy val ReleaseTransformations = sbtrelease.ReleaseStateTransformations
 
-    val releaseCommand: Command = Command(releaseCommandKey)(_ => releaseParser) { (st, args) =>
-      val extracted = Project.extract(st)
-      val releaseParts = extracted.get(releaseProcess)
-      val crossEnabled = extracted.get(crossBuild) || args.contains(CrossBuild)
-      val startState = st
-        .copy(onFailure = Some(FailureCommand))
-        .put(useDefaults, args.contains(WithDefaults))
-        .put(skipTests, args.contains(SkipTests))
-        .put(cross, crossEnabled)
+    case class ReleaseStep(action: State => State, check: State => State = identity, enableCrossBuild: Boolean = false)
 
-      val initialChecks = releaseParts.map(_.check)
+    object ReleaseStep {
+      implicit def func2ReleasePart(f: State => State): ReleaseStep = ReleaseStep(f)
 
-      def filterFailure(f: State => State)(s: State): State = {
-        s.remainingCommands match {
-          case FailureCommand :: tail => s.fail
-          case _ => f(s)
+      implicit def releasePart2Func(rp: ReleaseStep): State=>State = rp.action
+    }
+
+    def releaseTask[T](key: TaskKey[T]) = { st: State =>
+      Project.extract(st).runAggregated(key, st)
+    }
+
+    object ReleaseKeys {
+
+      val versions = AttributeKey[Versions]("releaseVersions")
+      val useDefaults = AttributeKey[Boolean]("releaseUseDefaults")
+      val skipTests = AttributeKey[Boolean]("releaseSkipTests")
+      val cross = AttributeKey[Boolean]("releaseCross")
+
+      private lazy val releaseCommandKey = "release"
+      private val WithDefaults = "with-defaults"
+      private val SkipTests = "skip-tests"
+      private val CrossBuild = "cross"
+      private val FailureCommand = "--failure--"
+      private val releaseParser = (Space ~> WithDefaults | Space ~> SkipTests | Space ~> CrossBuild).*
+
+      val releaseCommand: Command = Command(releaseCommandKey)(_ => releaseParser) { (st, args) =>
+        val extracted = Project.extract(st)
+        val releaseParts = extracted.get(releaseProcess)
+        val crossEnabled = extracted.get(releaseCrossBuild) || args.contains(CrossBuild)
+        val startState = st
+          .copy(onFailure = Some(FailureCommand))
+          .put(useDefaults, args.contains(WithDefaults))
+          .put(skipTests, args.contains(SkipTests))
+          .put(cross, crossEnabled)
+
+        val initialChecks = releaseParts.map(_.check)
+
+        def filterFailure(f: State => State)(s: State): State = {
+          s.remainingCommands match {
+            case FailureCommand :: tail => s.fail
+            case _ => f(s)
+          }
         }
-      }
 
-      val removeFailureCommand = { s: State =>
-        s.remainingCommands match {
-          case FailureCommand :: tail => s.copy(remainingCommands = tail)
-          case _ => s
+        val removeFailureCommand = { s: State =>
+          s.remainingCommands match {
+            case FailureCommand :: tail => s.copy(remainingCommands = tail)
+            case _ => s
+          }
         }
-      }
 
-      val process = releaseParts.map { step =>
-        if (step.enableCrossBuild && crossEnabled) {
-          filterFailure(ReleaseStateTransformations.runCrossBuild(step.action)) _
-        } else filterFailure(step.action) _
-      }
+        val process = releaseParts.map { step =>
+          if (step.enableCrossBuild && crossEnabled) {
+            filterFailure(ReleaseStateTransformations.runCrossBuild(step.action)) _
+          } else filterFailure(step.action) _
+        }
 
-      initialChecks.foreach(_(startState))
-      Function.chain(process :+ removeFailureCommand)(startState)
+        initialChecks.foreach(_(startState))
+        Function.chain(process :+ removeFailureCommand)(startState)
+      }
     }
   }
 
-  import ReleaseKeys._
+  import autoImport._
+  import autoImport.ReleaseKeys._
   import ReleaseStateTransformations._
 
-  lazy val releaseSettings = Seq[Setting[_]](
-    snapshotDependencies <<= (managedClasspath in Runtime) map { cp: Classpath =>
-      val moduleIds = cp.flatMap(_.get(moduleID.key))
+  override def trigger = allRequirements
+
+  override def projectSettings = Seq[Setting[_]](
+    releaseSnapshotDependencies := {
+      val moduleIds = (managedClasspath in Runtime).value.flatMap(_.get(moduleID.key))
       val snapshots = moduleIds.filter(m => m.isChanging || m.revision.endsWith("-SNAPSHOT"))
       snapshots
     },
 
     releaseVersion := { ver => Version(ver).map(_.withoutQualifier.string).getOrElse(versionFormatError) },
-    versionBump := Version.Bump.default,
-    nextVersion <<= (versionBump) { bumpType: Version.Bump =>
-      ver => Version(ver).map(_.bump(bumpType).asSnapshot.string).getOrElse(versionFormatError)
+    releaseVersionBump := Version.Bump.default,
+    releaseNextVersion := {
+      ver => Version(ver).map(_.bump(releaseVersionBump.value).asSnapshot.string).getOrElse(versionFormatError)
     },
-    useGlobalVersion := true,
-    crossBuild := false,
+    releaseUseGlobalVersion := true,
+    releaseCrossBuild := false,
 
-    tagName <<= (version in ThisBuild) map (v => "v" + v),
-    tagComment <<= (version in ThisBuild) map (v => "Releasing %s" format v),
-    commitMessage <<= (version in ThisBuild) map (v => "Setting version to %s" format v),
+    releaseTagName := s"v${(version in ThisBuild).value}",
+    releaseTagComment := s"Releasing ${(version in ThisBuild).value}",
+    releaseCommitMessage := s"Setting version to ${(version in ThisBuild).value}",
 
-    versionControlSystem <<= (baseDirectory)(Vcs.detect(_)),
+    releaseVcs := Vcs.detect(baseDirectory.value),
 
-    versionFile := file("version.sbt"),
+    releaseVersionFile := file("version.sbt"),
 
-    publishArtifactsAction <<= publish.map(identity),
+    releasePublishArtifactsAction := publish.value,
 
     releaseProcess := Seq[ReleaseStep](
       checkSnapshotDependencies,
@@ -132,13 +153,4 @@ object ReleasePlugin extends Plugin {
       )
     )
   }
-}
-
-
-case class ReleaseStep(action: State => State, check: State => State = identity, enableCrossBuild: Boolean = false)
-
-object ReleaseStep {
-  implicit def func2ReleasePart(f: State => State): ReleaseStep = ReleaseStep(f)
-
-  implicit def releasePart2Func(rp: ReleaseStep): State=>State = rp.action
 }
