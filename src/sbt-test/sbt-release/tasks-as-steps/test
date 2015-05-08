@@ -1,0 +1,12 @@
+> release
+$ exists target/mytask
+$ exists target/myaggregatedtask
+$ exists sub/target/myaggregatedtask
+$ exists target/myinputtask
+$ exists target/custominputtask
+$ exists target/mycommand
+$ exists target/myinputcommand
+$ exists target/custominputcommand
+$ exists target/mycommand2
+$ exists target/myinputcommand2
+$ exists target/custominputcommand2

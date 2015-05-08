@@ -3,6 +3,7 @@ package sbtrelease
 import sbt._
 import Keys._
 import complete.DefaultParsers._
+import sbt.complete.Parser
 
 object ReleasePlugin extends AutoPlugin {
 
@@ -32,8 +33,62 @@ object ReleasePlugin extends AutoPlugin {
       implicit def releasePart2Func(rp: ReleaseStep): State=>State = rp.action
     }
 
+    @deprecated("Use releaseTaskAggregatedAction", "1.0.0")
     def releaseTask[T](key: TaskKey[T]) = { st: State =>
       Project.extract(st).runAggregated(key, st)
+    }
+
+    /**
+     * Convert the given task key to a release step action.
+     */
+    def releaseStepTask[T](key: TaskKey[T]) = { st: State =>
+      Project.extract(st).runTask(key, st)._1
+    }
+
+    /**
+     * Convert the given task key to a release step action that gets run aggregated.
+     */
+    def releaseStepTaskAggregated[T](key: TaskKey[T]): State => State = { st: State =>
+      Project.extract(st).runAggregated(key, st)
+    }
+
+    /**
+     * Convert the given input task key and input to a release step action.
+     */
+    def releaseStepInputTask[T](key: InputKey[T], input: String = ""): State => State = { st: State =>
+      import EvaluateTask._
+      val extracted = Project.extract(st)
+      val inputTask = extracted.get(Scoped.scopedSetting(key.scope, key.key))
+      val task = Parser.parse(input, inputTask.parser(st)) match {
+        case Right(t) => t
+        case Left(msg) => sys.error(s"Invalid programmatic input:\n$msg")
+      }
+      val config = extractedTaskConfig(extracted, extracted.structure, st)
+      withStreams(extracted.structure, st) { str =>
+        val nv = nodeView(st, str, key :: Nil)
+        val (newS, result) = runTask(task, st, str, extracted.structure.index.triggers, config)(nv)
+        (newS, processResult(result, newS.log))
+      }._1
+    }
+
+    /**
+     * Convert the given command and input to a release step action
+     */
+    def releaseStepCommand(command: Command, input: String = ""): State => State = { st: State =>
+      Parser.parse(input, command.parser(st)) match {
+        case Right(cmd) => cmd()
+        case Left(msg) => throw sys.error(s"Invalid programmatic input:\n$msg")
+      }
+    }
+
+    /**
+     * Convert the given command string to a release step action
+     */
+    def releaseStepCommand(command: String): State => State = { st: State =>
+      Parser.parse(command, st.combinedParser) match {
+        case Right(cmd) => cmd()
+        case Left(msg) => throw sys.error(s"Invalid programmatic input:\n$msg")
+      }
     }
 
     object ReleaseKeys {

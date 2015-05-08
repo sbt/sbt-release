@@ -194,17 +194,27 @@ You can define your own state tansformation functions, just like *sbt-release* d
 
 We will later see how to let this release step participate in the release process.
 
-#### Reusing already defined  tasks
-Sometimes you just want to run an already existing task. This is especially useful if the task raises an error in case something went wrong and therefore interrupts the release process.
+#### Reusing already defined tasks
 
-*sbt-release* comes with a convenience function:
+Sometimes you just want to run an existing task or command. This is especially useful if the task raises an error in case something went wrong and therefore interrupts the release process.
 
-    releaseTask[T](task: TaskKey[T]): ReleaseStep
+*sbt-release* comes with a few convenience functions for converting tasks and commands to release steps:
 
-that takes any scoped task and wraps it in a state transformation function, executing the task when an instance of `State` is applied to the function.  When using this, make sure you specify the project from which to run the task, for example:
+* `releaseStepTask` - Run an individual task. Does not aggregate builds.
+* `releaseStepTaskAggregated` - Run an aggregated task.
+* `releaseStepInputTask` - Run an input task, optionally taking the input to pass to it.
+* `releaseStepCommand` - Run a command.
 
-    releaseTask(myTask in myProject)
+For example:
 
+```scala
+releaseProcess := Seq[ReleaseStep](
+  releaseStepInputTask(testOnly, " com.example.MyTest"),
+  releaseStepInputTask(scripted),
+  releaseStepTask(publish in subproject),
+  releaseStepCommand("sonatypeRelease")
+)
+```
 
 I highly recommend to make yourself familiar with the [State API](http://www.scala-sbt.org/release/api/sbt/State.html) before you continue your journey to a fully customized release process.
 
@@ -267,8 +277,8 @@ Now let's also add steps for [posterous-sbt](https://github.com/n8han/posterous-
     // ...
 
     val publishReleaseNotes = (ref: ProjectRef) => ReleaseStep(
-      check  = releaseTask(check in Posterous in ref),   // upfront check
-      action = releaseTask(publish in Posterous in ref) // publish release notes
+      check  = releaseStepTaskAggregated(check in Posterous in ref),   // upfront check
+      action = releaseStepTaskAggregated(publish in Posterous in ref) // publish release notes
     )
 
     // ...
