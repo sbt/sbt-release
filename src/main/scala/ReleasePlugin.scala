@@ -179,6 +179,7 @@ object ReleasePlugin extends AutoPlugin {
       inquireVersions,
       runClean,
       runTest,
+      runIntegrationTest,
       setReleaseVersion,
       commitReleaseVersion,
       tagRelease,
