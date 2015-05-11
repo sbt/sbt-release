@@ -1,5 +1,6 @@
 package sbtrelease
 
+import sbt.Keys._
 import sbt._
 import sbt.Aggregation.KeyValue
 import sbt.std.Transform.DummyTaskMap
@@ -53,6 +54,7 @@ object ReleaseStateTransformations {
 
 
   lazy val inquireVersions: ReleaseStep = { st: State =>
+
     val extracted = Project.extract(st)
 
     val useDefs = st.get(useDefaults).getOrElse(false)
@@ -61,13 +63,15 @@ object ReleaseStateTransformations {
     val releaseFunc = extracted.get(releaseVersion)
     val suggestedReleaseV = releaseFunc(currentV)
 
-    val releaseV = readVersion(suggestedReleaseV, "Release version [%s] : ", useDefs)
+    //flatten the Option[Option[String]] as the get returns an Option, and the value inside is an Option
+    val releaseV = readVersion(suggestedReleaseV, "Release version [%s] : ", useDefs, st.get(commandLineReleaseVersion).flatten)
 
     val nextFunc = extracted.get(releaseNextVersion)
     val suggestedNextV = nextFunc(releaseV)
-    val nextV = readVersion(suggestedNextV, "Next version [%s] : ", useDefs)
-
+    //flatten the Option[Option[String]] as the get returns an Option, and the value inside is an Option
+    val nextV = readVersion(suggestedNextV, "Next version [%s] : ", useDefs, st.get(commandLineNextVersion).flatten)
     st.put(versions, (releaseV, nextV))
+
   }
 
 
@@ -259,8 +263,9 @@ object ReleaseStateTransformations {
     extracted.runAggregated(releasePublishArtifactsAction in Global in ref, st)
   }
 
-  private def readVersion(ver: String, prompt: String, useDef: Boolean): String = {
-    if (useDef) ver
+  def readVersion(ver: String, prompt: String, useDef: Boolean, commandLineVersion: Option[String]): String = {
+    if (commandLineVersion.isDefined) commandLineVersion.get
+    else if (useDef) ver
     else SimpleReader.readLine(prompt format ver) match {
       case Some("") => ver
       case Some(input) => Version(input).map(_.string).getOrElse(versionFormatError)

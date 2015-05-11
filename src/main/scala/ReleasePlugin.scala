@@ -1,8 +1,11 @@
 package sbtrelease
 
+import java.io.Serializable
+
 import sbt._
 import Keys._
-import complete.DefaultParsers._
+import _root_.sbt.complete.DefaultParsers._
+import sbt.complete.DefaultParsers._
 import sbt.complete.Parser
 
 object ReleasePlugin extends AutoPlugin {
@@ -94,6 +97,8 @@ object ReleasePlugin extends AutoPlugin {
     object ReleaseKeys {
 
       val versions = AttributeKey[Versions]("releaseVersions")
+      val commandLineReleaseVersion = AttributeKey[Option[String]]("release-input-release-version")
+      val commandLineNextVersion = AttributeKey[Option[String]]("release-input-next-version")
       val useDefaults = AttributeKey[Boolean]("releaseUseDefaults")
       val skipTests = AttributeKey[Boolean]("releaseSkipTests")
       val cross = AttributeKey[Boolean]("releaseCross")
@@ -103,17 +108,35 @@ object ReleasePlugin extends AutoPlugin {
       private val SkipTests = "skip-tests"
       private val CrossBuild = "cross"
       private val FailureCommand = "--failure--"
-      private val releaseParser = (Space ~> WithDefaults | Space ~> SkipTests | Space ~> CrossBuild).*
 
-      val releaseCommand: Command = Command(releaseCommandKey)(_ => releaseParser) { (st, args) =>
+      private val ReleaseVersion = "release-version"
+      private val releaseVersionStringParser: Parser[String] = ReleaseVersion
+      private val NextVersion = "next-version"
+      private val nextVersionStringParser: Parser[String] = NextVersion
+
+      private val releaseVersionParser = Space ~> releaseVersionStringParser ~ Space ~ StringBasic
+      private val nextVersionParser = Space ~> nextVersionStringParser ~ Space ~ StringBasic
+      private val releaseParser = (releaseVersionParser | nextVersionParser | Space ~> WithDefaults | Space ~> SkipTests | Space ~> CrossBuild).*
+
+      val releaseCommand: Command = Command(releaseCommandKey)(_ => releaseParser) { (st, args: Seq[Serializable]) =>
         val extracted = Project.extract(st)
         val releaseParts = extracted.get(releaseProcess)
         val crossEnabled = extracted.get(releaseCrossBuild) || args.contains(CrossBuild)
+
+        //args is a Seq[Serializable], the elements are  either ((String, List[String]),String) or String
+        def releaseVersionFor(args: Seq[Serializable], name: String): Option[String] = {
+          args.collect {
+            case version: ((String, _), String)@unchecked if (version._1._1 == name) => version._2
+          }.headOption
+        }
+
         val startState = st
           .copy(onFailure = Some(FailureCommand))
           .put(useDefaults, args.contains(WithDefaults))
           .put(skipTests, args.contains(SkipTests))
           .put(cross, crossEnabled)
+          .put(commandLineReleaseVersion, releaseVersionFor(args, ReleaseVersion))
+          .put(commandLineNextVersion, releaseVersionFor(args, NextVersion))
 
         val initialChecks = releaseParts.map(_.check)
 
