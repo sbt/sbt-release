@@ -10,6 +10,9 @@ sbtPlugin := true
 publishMavenStyle := false
 scalacOptions += "-deprecation"
 
+libraryDependencies ++= Seq("org.specs2" %% "specs2-core" % "3.6" % "test")
+resolvers += "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases"
+
 // Scripted
 scriptedSettings
 scriptedLaunchOpts <<= (scriptedLaunchOpts, version) { case (s,v) => s ++
