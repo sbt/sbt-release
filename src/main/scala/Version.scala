@@ -17,6 +17,7 @@ object Version {
   }
 
   val VersionR = """([0-9]+)(?:(?:\.([0-9]+))?(?:\.([0-9]+))?)?([\-0-9a-zA-Z]*)?""".r
+  val PreReleaseQualifierR = """[\.-](?i:rc|m|alpha|beta)[\.-]?[0-9]*""".r
 
   def apply(s: String): Option[Version] = {
     allCatch opt {
@@ -28,11 +29,17 @@ object Version {
 
 case class Version(major: Int, minor: Option[Int], bugfix: Option[Int], qualifier: Option[String]) {
   def bump = {
-    val maybeBumpedBugfix = bugfix.map(m => copy(bugfix = Some(m + 1)))
-    val maybeBumpedMinor = minor.map(m => copy(minor = Some(m + 1)))
-    lazy val bumpedMajor = copy(major = major + 1)
+    val maybeBumpedPrerelease = qualifier.collect {
+      case Version.PreReleaseQualifierR() => withoutQualifier
+    }
+    def maybeBumpedBugfix = bugfix.map(m => copy(bugfix = Some(m + 1)))
+    def maybeBumpedMinor = minor.map(m => copy(minor = Some(m + 1)))
+    def bumpedMajor = copy(major = major + 1)
 
-    maybeBumpedBugfix.orElse(maybeBumpedMinor).getOrElse(bumpedMajor)
+    maybeBumpedPrerelease
+      .orElse(maybeBumpedBugfix)
+      .orElse(maybeBumpedMinor)
+      .getOrElse(bumpedMajor)
   }
 
   def bumpMajor = copy(major = major + 1, minor = minor.map(_ => 0), bugfix = bugfix.map(_ => 0))
