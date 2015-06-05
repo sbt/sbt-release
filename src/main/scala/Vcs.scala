@@ -133,10 +133,10 @@ class Git(val baseDir: File) extends Vcs with GitLike {
 
   private def pushCurrentBranch = {
     val localBranch = currentBranch
-    cmd("push", trackingRemote, "%s:%s" format (localBranch, trackingBranch))
+    cmd("push", "--porcelain", trackingRemote, "%s:%s" format (localBranch, trackingBranch))
   }
 
-  private def pushTags = cmd("push", "--tags", trackingRemote)
+  private def pushTags = cmd("push", "--porcelain", "--tags", trackingRemote)
 }
 
 object Subversion extends VcsCompanion {
