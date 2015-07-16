@@ -164,9 +164,9 @@ object ReleasePlugin extends AutoPlugin {
     releaseUseGlobalVersion := true,
     releaseCrossBuild := false,
 
-    releaseTagName := s"v${(version in ThisBuild).value}",
-    releaseTagComment := s"Releasing ${(version in ThisBuild).value}",
-    releaseCommitMessage := s"Setting version to ${(version in ThisBuild).value}",
+    releaseTagName := s"v${if (releaseUseGlobalVersion.value) (version in ThisBuild).value else version.value}",
+    releaseTagComment := s"Releasing ${if (releaseUseGlobalVersion.value) (version in ThisBuild).value else version.value}",
+    releaseCommitMessage := s"Setting version to ${if (releaseUseGlobalVersion.value) (version in ThisBuild).value else version.value}",
 
     releaseVcs := Vcs.detect(baseDirectory.value),
 
