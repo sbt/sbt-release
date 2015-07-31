@@ -6,7 +6,8 @@ This sbt plugin provides a customizable release process that you can add to your
 ## Requirements
  * sbt 0.13.5+
  * The version of the project should follow the semantic versioning scheme on [semver.org](http://www.semver.org) with the following additions:
-   * The minor and bugfix part of the version are optional.
+   * The minor and bugfix (and beyond) part of the version are optional.
+   * There is no limit to the number of subverions you may have.
    * The appendix after the bugfix part must be alphanumeric (`[0-9a-zA-Z]`) but may also contain dash characters `-`.
    * These are all valid version numbers:
      * 1.2.3
@@ -15,6 +16,8 @@ This sbt plugin provides a customizable release process that you can add to your
      * 1.2
      * 1
      * 1-BETA17
+     * 1.2.3.4.5
+     * 1.2.3.4.5-SNAPSHOT
  * A [publish repository](http://www.scala-sbt.org/release/docs/Publishing.html) configured. (Required only for the default release process. See further below for release process customizations.)
  * git [optional]
 
@@ -95,7 +98,8 @@ As of version 0.8, *sbt-release* comes with four strategies for computing the ne
  * `Major`: always bumps the *major* part of the version
  * `Minor`: always bumps the *minor* part of the version
  * `Bugfix`: always bumps the *bugfix* part of the version
- * `Next`: bumps the last version part (e.g. `0.17` -> `0.18`, `0.11.7` -> `0.11.8`)
+ * `Nano`: always bumps the *nano* part of the version
+ * `Next`: bumps the last version part (e.g. `0.17` -> `0.18`, `0.11.7` -> `0.11.8`, `3.22.3.4.91` -> `3.22.3.4.92`)
 
 Example:
 
