@@ -33,12 +33,12 @@ object Version {
   }
 }
 
-case class Version(major: Int, subVersions: Seq[Int], qualifier: Option[String]) {
+case class Version(major: Int, subversions: Seq[Int], qualifier: Option[String]) {
   def bump = {
     val maybeBumpedPrerelease = qualifier.collect {
       case Version.PreReleaseQualifierR() => withoutQualifier
     }
-    def maybeBumpedLastSubversion = bumpSubversionOpt(subVersions.length-1)
+    def maybeBumpedLastSubversion = bumpSubversionOpt(subversions.length-1)
     def bumpedMajor = copy(major = major + 1)
 
     maybeBumpedPrerelease
@@ -46,19 +46,19 @@ case class Version(major: Int, subVersions: Seq[Int], qualifier: Option[String])
       .getOrElse(bumpedMajor)
   }
 
-  def bumpMajor  = copy(major = major + 1, subVersions = Seq.fill(subVersions.length)(0))
-  def bumpMinor  = bumpSubversion(0)
-  def bumpBugfix = bumpSubversion(1)
-  def bumpNano   = bumpSubversion(2)
+  def bumpMajor  = copy(major = major + 1, subversions = Seq.fill(subversions.length)(0))
+  def bumpMinor  = maybeBumpSubversion(0)
+  def bumpBugfix = maybeBumpSubversion(1)
+  def bumpNano   = maybeBumpSubversion(2)
 
-  def bumpSubversion(idx: Int) = bumpSubversionOpt(idx) getOrElse this
+  def maybeBumpSubversion(idx: Int) = bumpSubversionOpt(idx) getOrElse this
 
   private def bumpSubversionOpt(idx: Int) = {
-    val bumped = subVersions.drop(idx)
+    val bumped = subversions.drop(idx)
     val reset = bumped.drop(1).length
     bumped.headOption map { head =>
       val patch = (head+1) +: Seq.fill(reset)(0)
-      copy(subVersions = subVersions.patch(idx, patch, patch.length))
+      copy(subversions = subversions.patch(idx, patch, patch.length))
     }
   }
 
@@ -67,7 +67,7 @@ case class Version(major: Int, subVersions: Seq[Int], qualifier: Option[String])
   def withoutQualifier = copy(qualifier = None)
   def asSnapshot = copy(qualifier = Some("-SNAPSHOT"))
 
-  def string = "" + major + mkString(subVersions) + qualifier.getOrElse("")
+  def string = "" + major + mkString(subversions) + qualifier.getOrElse("")
 
   private def mkString(parts: Seq[Int]) = parts.map("."+_).mkString
 }

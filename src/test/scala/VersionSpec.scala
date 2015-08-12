@@ -74,7 +74,7 @@ object VersionSpec extends Specification {
   }
 
   "Subversion bumping" should {
-    def bumpSubversion(v: String)(i: Int) = version(v).bumpSubversion(i).string
+    def bumpSubversion(v: String)(i: Int) = version(v).maybeBumpSubversion(i).string
 
     "bump the subversion" in {
       bumpSubversion("1.2")(0) must_== "1.3"
