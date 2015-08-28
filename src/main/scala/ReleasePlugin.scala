@@ -103,7 +103,15 @@ object ReleasePlugin extends AutoPlugin {
       private val SkipTests = "skip-tests"
       private val CrossBuild = "cross"
       private val FailureCommand = "--failure--"
-      private val releaseParser = (Space ~> WithDefaults | Space ~> SkipTests | Space ~> CrossBuild).*
+      private val releaseParser = distinctParser(Set(WithDefaults, SkipTests, CrossBuild))
+
+      private[this] def distinctParser(exs: Set[String]): Parser[Seq[String]] = {
+        val base = token(Space) ~> token(NotSpace examples exs)
+        base.flatMap { ex =>
+          val (_, notMatching) = exs.partition(GlobFilter(ex).accept)
+          distinctParser(notMatching).map { result => ex +: result }
+        } ?? Nil
+      }
 
       val releaseCommand: Command = Command(releaseCommandKey)(_ => releaseParser) { (st, args) =>
         val extracted = Project.extract(st)
