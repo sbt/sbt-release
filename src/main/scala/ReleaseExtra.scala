@@ -116,7 +116,7 @@ object ReleaseStateTransformations {
 
   private def writeVersion(st: State, versionString: String) {
     val file = st.extract.get(releaseVersionFile)
-    IO.write(file, versionString)
+    IO.writeLines(file, Seq(versionString))
   }
 
   private[sbtrelease] lazy val initialVcsChecks = { st: State =>
