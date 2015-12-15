@@ -1,0 +1,3 @@
+> 'release release-version 36.14.3 next-version 36.14.4-SNAPSHOT'
+$ exists target/scala-2.10/command-line-version-numbers_2.10-36.14.3.jar
+> checkContentsOfVersionSbt 36.14.4-SNAPSHOT
