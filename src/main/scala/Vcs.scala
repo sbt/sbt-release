@@ -54,8 +54,9 @@ trait GitLike extends Vcs {
 trait VcsCompanion {
   protected val markerDirectory: String
 
+  // Using the new git worktree feature the dir is now a file, so checking for exists should be enough
   def isRepository(dir: File): Option[File] =
-    if (new File(dir, markerDirectory).isDirectory) Some(dir)
+    if (new File(dir, markerDirectory).exists) Some(dir)
     else Option(dir.getParentFile).flatMap(isRepository)
 
   def mkVcs(baseDir: File): Vcs
