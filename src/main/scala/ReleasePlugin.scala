@@ -36,7 +36,7 @@ object ReleasePlugin extends AutoPlugin {
       implicit def releasePart2Func(rp: ReleaseStep): State=>State = rp.action
     }
 
-    @deprecated("Use releaseTaskAggregatedAction", "1.0.0")
+    @deprecated("Use releaseStepTaskAggregated", "1.0.0")
     def releaseTask[T](key: TaskKey[T]) = { st: State =>
       Project.extract(st).runAggregated(key, st)
     }
