@@ -104,18 +104,18 @@ object ReleasePlugin extends AutoPlugin {
       val cross = AttributeKey[Boolean]("releaseCross")
 
       private lazy val releaseCommandKey = "release"
-      private val WithDefaults = "with-defaults"
-      private val SkipTests = "skip-tests"
-      private val CrossBuild = "cross"
+      private val WithDefaults = token("with-defaults")
+      private val SkipTests = token("skip-tests")
+      private val CrossBuild = token("cross")
       private val FailureCommand = "--failure--"
 
       private val ReleaseVersion = "release-version"
-      private val releaseVersionStringParser: Parser[String] = ReleaseVersion
+      private val releaseVersionStringParser: Parser[String] = token(ReleaseVersion)
       private val NextVersion = "next-version"
-      private val nextVersionStringParser: Parser[String] = NextVersion
+      private val nextVersionStringParser: Parser[String] = token(NextVersion)
 
-      private val releaseVersionParser = Space ~> releaseVersionStringParser ~ Space ~ StringBasic
-      private val nextVersionParser = Space ~> nextVersionStringParser ~ Space ~ StringBasic
+      private val releaseVersionParser = Space ~> releaseVersionStringParser ~ Space ~ token(StringBasic, "<release version>")
+      private val nextVersionParser = Space ~> nextVersionStringParser ~ Space ~ token(StringBasic, "<next version>")
       private val releaseParser = (releaseVersionParser | nextVersionParser | Space ~> WithDefaults | Space ~> SkipTests | Space ~> CrossBuild).*
 
       val releaseCommand: Command = Command(releaseCommandKey)(_ => releaseParser) { (st, args: Seq[Serializable]) =>
