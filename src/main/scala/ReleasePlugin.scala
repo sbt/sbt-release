@@ -104,39 +104,42 @@ object ReleasePlugin extends AutoPlugin {
       val cross = AttributeKey[Boolean]("releaseCross")
 
       private lazy val releaseCommandKey = "release"
-      private val WithDefaults = token("with-defaults")
-      private val SkipTests = token("skip-tests")
-      private val CrossBuild = token("cross")
       private val FailureCommand = "--failure--"
 
-      private val ReleaseVersion = "release-version"
-      private val releaseVersionStringParser: Parser[String] = token(ReleaseVersion)
-      private val NextVersion = "next-version"
-      private val nextVersionStringParser: Parser[String] = token(NextVersion)
+      private[this] val WithDefaults: Parser[ParseResult] =
+        (Space ~> token("with-defaults")) ^^^ ParseResult.WithDefaults
+      private[this] val SkipTests: Parser[ParseResult] =
+        (Space ~> token("skip-tests")) ^^^ ParseResult.SkipTests
+      private[this] val CrossBuild: Parser[ParseResult] =
+        (Space ~> token("cross")) ^^^ ParseResult.CrossBuild
+      private[this] val ReleaseVersion: Parser[ParseResult] =
+        (Space ~> token("release-version") ~> Space ~> token(StringBasic, "<release version>")) map ParseResult.ReleaseVersion
+      private[this] val NextVersion: Parser[ParseResult] =
+        (Space ~> token("next-version") ~> Space ~> token(StringBasic, "<next version>")) map ParseResult.NextVersion
 
-      private val releaseVersionParser = Space ~> releaseVersionStringParser ~ Space ~ token(StringBasic, "<release version>")
-      private val nextVersionParser = Space ~> nextVersionStringParser ~ Space ~ token(StringBasic, "<next version>")
-      private val releaseParser = (releaseVersionParser | nextVersionParser | Space ~> WithDefaults | Space ~> SkipTests | Space ~> CrossBuild).*
+      private[this] sealed abstract class ParseResult extends Product with Serializable
+      private[this] object ParseResult {
+        final case class ReleaseVersion(value: String) extends ParseResult
+        final case class NextVersion(value: String) extends ParseResult
+        case object WithDefaults extends ParseResult
+        case object SkipTests extends ParseResult
+        case object CrossBuild extends ParseResult
+      }
 
-      val releaseCommand: Command = Command(releaseCommandKey)(_ => releaseParser) { (st, args: Seq[Serializable]) =>
+      private[this] val releaseParser: Parser[Seq[ParseResult]] = (ReleaseVersion | NextVersion | WithDefaults | SkipTests | CrossBuild).*
+
+      val releaseCommand: Command = Command(releaseCommandKey)(_ => releaseParser) { (st, args) =>
         val extracted = Project.extract(st)
         val releaseParts = extracted.get(releaseProcess)
-        val crossEnabled = extracted.get(releaseCrossBuild) || args.contains(CrossBuild)
-
-        //args is a Seq[Serializable], the elements are  either ((String, List[String]),String) or String
-        def releaseVersionFor(args: Seq[Serializable], name: String): Option[String] = {
-          args.collect {
-            case version: ((String, _), String)@unchecked if (version._1._1 == name) => version._2
-          }.headOption
-        }
+        val crossEnabled = extracted.get(releaseCrossBuild) || args.contains(ParseResult.CrossBuild)
 
         val startState = st
           .copy(onFailure = Some(FailureCommand))
-          .put(useDefaults, args.contains(WithDefaults))
-          .put(skipTests, args.contains(SkipTests))
+          .put(useDefaults, args.contains(ParseResult.WithDefaults))
+          .put(skipTests, args.contains(ParseResult.SkipTests))
           .put(cross, crossEnabled)
-          .put(commandLineReleaseVersion, releaseVersionFor(args, ReleaseVersion))
-          .put(commandLineNextVersion, releaseVersionFor(args, NextVersion))
+          .put(commandLineReleaseVersion, args.collectFirst{case ParseResult.ReleaseVersion(value) => value})
+          .put(commandLineNextVersion, args.collectFirst{case ParseResult.NextVersion(value) => value})
 
         val initialChecks = releaseParts.map(_.check)
 
