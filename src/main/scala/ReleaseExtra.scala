@@ -123,15 +123,14 @@ object ReleaseStateTransformations {
     IO.writeLines(file, Seq(versionString))
   }
 
-  private[sbtrelease] lazy val initialVcsChecks = { st: State =>
-    val status = (vcs(st).status !!).trim
-    if (status.nonEmpty) {
-      sys.error("Aborting release. Working directory is dirty.")
+  lazy val initialVcsChecks = (st: State) =>
+    if ((vcs(st).status !!).trim.nonEmpty)
+      sys.error("Aborting release. Working directory has uncommitted changes, " +
+        "please commit your changes before running this command.")
+    else {
+      st.log.info("Starting release process off commit: " + vcs(st).currentHash)
+      st
     }
-
-    st.log.info("Starting release process off commit: " + vcs(st).currentHash)
-    st
-  }
 
   lazy val commitReleaseVersion = ReleaseStep(commitReleaseVersionAction, initialVcsChecks)
   private[sbtrelease] lazy val commitReleaseVersionAction = { st: State =>
