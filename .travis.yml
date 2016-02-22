@@ -1,5 +1,8 @@
 language: scala
-script: sbt publish-local scripted
+script:
+ - git config --global user.email "example@example.com"
+ - git config --global user.name "example"
+ - sbt publish-local scripted
 sudo: false
 cache:
   directories:
