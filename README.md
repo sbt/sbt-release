@@ -13,6 +13,7 @@ This sbt plugin provides a customizable release process that you can add to your
      * 1.2.3
      * 1.2.3-SNAPSHOT
      * 1.2beta1
+     * 1.2-beta.1
      * 1.2
      * 1
      * 1-BETA17

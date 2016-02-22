@@ -33,8 +33,10 @@ object VersionSpec extends Specification {
       bump("1-RC1") must_== "1"
       bump("1-M1") must_== "1"
       bump("1-rc-1") must_== "1"
+      bump("1-rc.1") must_== "1"
       bump("1-beta") must_== "1"
       bump("1-beta-1") must_== "1"
+      bump("1-beta.1") must_== "1"
       bump("1-alpha") must_== "1"
     }
     "not drop the qualifier if it's not a pre release" in {
