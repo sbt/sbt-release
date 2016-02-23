@@ -1,0 +1,6 @@
+$ exec git init .
+$ exec git add .
+$ exec git commit -m init
+
+-> release
+> release with-defaults
