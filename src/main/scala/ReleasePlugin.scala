@@ -22,6 +22,7 @@ object ReleasePlugin extends AutoPlugin {
     val releaseCrossBuild = settingKey[Boolean]("Whether the release should be cross built")
     val releaseVersionFile = settingKey[File]("The file to write the version to")
     val releaseUseGlobalVersion = settingKey[Boolean]("Whether to use a global version")
+    val releaseIgnoreUntrackedFiles = settingKey[Boolean]("Whether to ignore untracked files")
 
     val releaseVcs = settingKey[Option[Vcs]]("The VCS to use")
     val releasePublishArtifactsAction = taskKey[Unit]("The action that should be performed to publish artifacts")
@@ -199,6 +200,8 @@ object ReleasePlugin extends AutoPlugin {
     releaseVersionFile := file("version.sbt"),
 
     releasePublishArtifactsAction := publish.value,
+
+    releaseIgnoreUntrackedFiles := false,
 
     releaseProcess := Seq[ReleaseStep](
       checkSnapshotDependencies,

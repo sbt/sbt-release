@@ -249,6 +249,9 @@ The names of the individual steps of the release process are pretty much self-de
 Notice how we can just reuse the `publish` task by utilizing the `releaseTask` helper function,
 but keep in mind that it needs to be properly scoped (more info on [scoping and settings](https://github.com/harrah/xsbt/wiki/Settings)).
 
+Note, the `commitReleaseVersion` step requires that the working directory has no untracked files by default. It will abort the release in this case. You may disable this check
+by setting the `releaseIgnoreUntrackedFiles` key to `true`.
+
 #### No Git, and no toy projects!
 
 Let's modify the previous release process and remove the Git related steps, who uses that anyway.

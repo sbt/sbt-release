@@ -124,9 +124,14 @@ object ReleaseStateTransformations {
   }
 
   private[sbtrelease] lazy val initialVcsChecks = { st: State =>
-    val status = (vcs(st).status !!).trim
-    if (status.nonEmpty) {
-      sys.error("Aborting release. Working directory is dirty.")
+    val extracted = Project.extract( st )
+
+    val hasUntrackedFiles = vcs(st).hasUntrackedFiles
+    val hasModifiedFiles = vcs(st).hasModifiedFiles
+    if ( hasModifiedFiles ) sys.error( "Aborting release: unstaged modified files" )
+    if ( hasUntrackedFiles && !extracted.get( releaseIgnoreUntrackedFiles ) )
+    {
+        sys.error( "Aborting release: untracked files. Remove them or specify 'releaseIgnoreUntrackedFiles := true' in settings" )
     }
 
     st.log.info("Starting release process off commit: " + vcs(st).currentHash)
