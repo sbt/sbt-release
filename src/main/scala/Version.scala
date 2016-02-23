@@ -17,7 +17,7 @@ object Version {
     val default = Next
   }
 
-  val VersionR = """([0-9]+)((?:\.[0-9]+)+)?([\-0-9a-zA-Z]*)?""".r
+  val VersionR = """([0-9]+)((?:\.[0-9]+)+)?([\.\-0-9a-zA-Z]*)?""".r
   val PreReleaseQualifierR = """[\.-](?i:rc|m|alpha|beta)[\.-]?[0-9]*""".r
 
   def apply(s: String): Option[Version] = {
