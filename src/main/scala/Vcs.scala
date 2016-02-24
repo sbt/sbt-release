@@ -30,10 +30,16 @@ trait Vcs {
     maybeIsWindows.map(_ => command+".exe").getOrElse(command)
   }
 
-  protected val devnull = new ProcessLogger {
-    def info(s: => String) {}
-    def error(s: => String) {}
+  protected val devnull: ProcessLogger = new ProcessLogger {
+    def info(s: => String): Unit = {}
+    def error(s: => String): Unit = {}
     def buffer[T](f: => T): T = f
+  }
+
+  def stdErrorToStdOut(delegate: ProcessLogger): ProcessLogger = new ProcessLogger {
+    def info(s: => String) = delegate.info(s)
+    def error(s: => String) = delegate.info(s)
+    def buffer[T](f: => T): T = delegate.buffer(f)
   }
 }
 

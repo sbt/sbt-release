@@ -241,8 +241,11 @@ object ReleaseStateTransformations {
     if (vc.hasUpstream) {
       defaultChoice orElse SimpleReader.readLine("Push changes to the remote repository (y/n)? [y] ") match {
         case Yes() | Some("") =>
-          if (vc.isInstanceOf[Git]) st.log.info("git push sends its console output to standard error, which will cause the next few lines to be marked as [error].")
-          vcs(st).pushChanges !! st.log
+          val processLogger: ProcessLogger = if (vc.isInstanceOf[Git]) {
+            // Git outputs to standard error, so use a logger that redirects stderr to info
+            vc.stdErrorToStdOut(st.log)
+          } else st.log
+          vc.pushChanges !! processLogger
         case _ => st.log.warn("Remember to push the changes yourself!")
       }
     } else {
