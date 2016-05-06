@@ -197,7 +197,7 @@ object ReleasePlugin extends AutoPlugin {
 
     releaseVcs := Vcs.detect(baseDirectory.value),
 
-    releaseVersionFile := file("version.sbt"),
+    releaseVersionFile := baseDirectory.value / "version.sbt",
 
     releasePublishArtifactsAction := publish.value,
 
