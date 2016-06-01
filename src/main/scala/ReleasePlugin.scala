@@ -3,6 +3,7 @@ package sbtrelease
 import java.io.Serializable
 
 import sbt._
+import sbt.plugins._
 import Keys._
 import _root_.sbt.complete.DefaultParsers._
 import sbt.complete.DefaultParsers._
@@ -175,6 +176,8 @@ object ReleasePlugin extends AutoPlugin {
   import ReleaseStateTransformations._
 
   override def trigger = allRequirements
+  
+  override def requires = JvmPlugin
 
   override def projectSettings = Seq[Setting[_]](
     releaseSnapshotDependencies := {
