@@ -152,6 +152,7 @@ object ReleaseStateTransformations {
   private[sbtrelease] def commitVersion = { st: State =>
     val file = st.extract.get(releaseVersionFile)
     val base = vcs(st).baseDir
+    val sign = st.extract.get(releaseVcsSign)
     val relativePath = IO.relativize(base, file).getOrElse("Version file [%s] is outside of this VCS repository with base directory [%s]!" format(file, base))
 
     vcs(st).add(relativePath) !! st.log
@@ -159,7 +160,7 @@ object ReleaseStateTransformations {
 
     val newState = if (status.nonEmpty) {
       val (state, msg) = st.extract.runTask(releaseCommitMessage, st)
-      vcs(state).commit(msg) ! st.log
+      vcs(state).commit(msg, sign) ! st.log
       state
     } else {
       // nothing to commit. this happens if the version.sbt file hasn't changed.
@@ -200,7 +201,8 @@ object ReleaseStateTransformations {
     val (tagState, tag) = st.extract.runTask(releaseTagName, st)
     val (commentState, comment) = st.extract.runTask(releaseTagComment, tagState)
     val tagToUse = findTag(tag)
-    tagToUse.foreach(vcs(commentState).tag(_, comment, force = true) !! commentState.log)
+    val sign = st.extract.get(releaseVcsSign)
+    tagToUse.foreach(vcs(commentState).tag(_, comment, sign) !! commentState.log)
 
 
     tagToUse map (t =>

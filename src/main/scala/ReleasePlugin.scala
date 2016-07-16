@@ -23,6 +23,7 @@ object ReleasePlugin extends AutoPlugin {
     val releaseVersionFile = settingKey[File]("The file to write the version to")
     val releaseUseGlobalVersion = settingKey[Boolean]("Whether to use a global version")
     val releaseIgnoreUntrackedFiles = settingKey[Boolean]("Whether to ignore untracked files")
+    val releaseVcsSign = settingKey[Boolean]("Whether to sign VCS commits and tags")
 
     val releaseVcs = settingKey[Option[Vcs]]("The VCS to use")
     val releasePublishArtifactsAction = taskKey[Unit]("The action that should be performed to publish artifacts")
@@ -196,6 +197,7 @@ object ReleasePlugin extends AutoPlugin {
     releaseCommitMessage := s"Setting version to ${if (releaseUseGlobalVersion.value) (version in ThisBuild).value else version.value}",
 
     releaseVcs := Vcs.detect(baseDirectory.value),
+    releaseVcsSign := false,
 
     releaseVersionFile := baseDirectory.value / "version.sbt",
 
