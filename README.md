@@ -69,6 +69,14 @@ For all interactions, the following default value will be chosen:
     * Abort if remote tracking branch cannot be checked (eg. via `git fetch`).
     * Abort if the remote tracking branch has unmerged commits.
 
+### Set release version and next version as command arguments
+
+You can set the release version using the argument `release-version` and next version with `next-version`.
+
+Example:
+    
+    release release-version 1.0.99 next-version 1.2.0-SNAPSHOT
+
 ### Skipping tests
 
 For that emergency release at 2am on a Sunday, you can optionally avoid running any tests by providing the `skip-tests` argument to the `release` command.
