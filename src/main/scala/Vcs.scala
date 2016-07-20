@@ -140,17 +140,17 @@ class Git(val baseDir: File) extends Vcs with GitLike {
 
   def isBehindRemote = (cmd("rev-list", "%s..%s/%s".format(currentBranch, trackingRemote, trackingBranch)) !! devnull).trim.nonEmpty
 
-  private def withSignFlag(sign: Boolean)(args: String*) =
+  private def withSignFlag(sign: Boolean, flag: String)(args: String*) =
     if (sign)
-      args :+ "-s"
+      args :+ s"-$flag"
     else
       args
 
   def commit(message: String, sign: Boolean) =
-    cmd(withSignFlag(sign)("commit", "-m", message): _*)
+    cmd(withSignFlag(sign, "S")("commit", "-m", message): _*)
 
   def tag(name: String, comment: String, sign: Boolean) =
-    cmd(withSignFlag(sign)("tag", "-f", "-a", name, "-m", comment): _*)
+    cmd(withSignFlag(sign, "s")("tag", "-f", "-a", name, "-m", comment): _*)
 
   def existsTag(name: String) = cmd("show-ref", "--quiet", "--tags", "--verify", "refs/tags/" + name) ! devnull == 0
 
