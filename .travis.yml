@@ -2,6 +2,8 @@ language: scala
 script:
  - git config --global user.email "example@example.com"
  - git config --global user.name "example"
+ - echo '[ui]' > "$HOME/.hgrc"
+ - echo 'username = example <example@example.com>' >> "$HOME/.hgrc"
  - sbt publishLocal
  - sbt scripted
 sudo: false
