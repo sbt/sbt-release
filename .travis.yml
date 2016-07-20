@@ -2,13 +2,6 @@ language: scala
 script:
  - git config --global user.email "example@example.com"
  - git config --global user.name "example"
- - sbt publish-local scripted
+ - sbt publishLocal
+ - sbt scripted
 sudo: false
-cache:
-  directories:
-    - $HOME/.ivy2/cache
-before_cache:
-  # Delete the cached artifacts
-  - rm -rf $HOME/.ivy2/cache/scala_*/sbt_*/com.github.gseitz
-  # Delete all ivydata files
-  - find $HOME/.ivy2/cache -name "ivydata-*.properties" | xargs rm
