@@ -13,7 +13,7 @@ val commonSettings = Seq(
   releaseCrossBuild := false,
   releaseIgnoreUntrackedFiles := true,
   releaseProcess := Seq[ReleaseStep](
-    releaseStepCommand("+publish")
+    releaseStepCommandAndRemaining("+publish")
   )
 )
 
