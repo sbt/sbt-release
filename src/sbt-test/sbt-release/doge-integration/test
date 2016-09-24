@@ -1,0 +1,5 @@
+> release
+> assertArtifactExists library 2.10
+> assertArtifactExists library 2.11
+> assertPluginArtifactExists plugin 2.10 0.13
+-> assertPluginArtifactExists plugin 2.11 0.13
