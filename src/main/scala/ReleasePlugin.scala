@@ -96,6 +96,24 @@ object ReleasePlugin extends AutoPlugin {
       }
     }
 
+    /**
+     * Convert the given command string to a release step action, preserving and invoking remaining commands
+     */
+    def releaseStepCommandAndRemaining(command: String): State => State = { st: State =>
+      @annotation.tailrec
+      def runCommand(command: String, state: State): State = {
+        val nextState = Parser.parse(command, state.combinedParser) match {
+          case Right(cmd) => cmd()
+          case Left(msg) => throw sys.error(s"Invalid programmatic input:\n$msg")
+        }
+        nextState.remainingCommands.toList match {
+          case Nil => nextState
+          case head :: tail => runCommand(head, nextState.copy(remainingCommands = tail))
+        }
+      }
+      runCommand(command, st.copy(remainingCommands = Nil)).copy(remainingCommands = st.remainingCommands)
+    }
+
     object ReleaseKeys {
 
       val versions = AttributeKey[Versions]("releaseVersions")
