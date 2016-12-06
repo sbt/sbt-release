@@ -13,7 +13,7 @@ import ReleaseKeys._
 object ReleaseStateTransformations {
   import Utilities._
 
-  private def runTaskAggregated[T](taskKey: TaskKey[T], state: State): (State, Result[Seq[KeyValue[T]]]) = {
+  def runTaskAggregated[T](taskKey: TaskKey[T], state: State): (State, Result[Seq[KeyValue[T]]]) = {
     import EvaluateTask._
     val extra = DummyTaskMap(Nil)
     val extracted = state.extract
