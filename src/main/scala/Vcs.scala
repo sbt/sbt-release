@@ -78,6 +78,11 @@ object Mercurial extends VcsCompanion {
 class Mercurial(val baseDir: File) extends Vcs with GitLike {
   val commandName = "hg"
 
+  override def add(files: String*) = {
+    val filesToAdd = files.filterNot(isFileUnderVersionControl)
+    if(!filesToAdd.isEmpty) cmd(("add" +: filesToAdd): _*) else noop
+  }
+
   private def andSign(sign: Boolean, proc: ProcessBuilder) =
     if (sign)
       proc #&& cmd("sign")
@@ -112,6 +117,11 @@ class Mercurial(val baseDir: File) extends Vcs with GitLike {
   def hasUntrackedFiles = cmd("status", "-un").!!.trim.nonEmpty
 
   def hasModifiedFiles = cmd("status", "-mn").!!.trim.nonEmpty
+
+  private def isFileUnderVersionControl(file: String): Boolean = Try(cmd("status", "-nmardc", file).!!).nonEmpty
+
+  private def noop:ProcessBuilder = status
+
 }
 
 object Git extends VcsCompanion {
