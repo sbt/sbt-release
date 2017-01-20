@@ -78,6 +78,10 @@ object Mercurial extends VcsCompanion {
 class Mercurial(val baseDir: File) extends Vcs with GitLike {
   val commandName = "hg"
 
+  override def add(files: String*) = {
+    super.add(files: _*) !! devnull
+  }
+
   private def andSign(sign: Boolean, proc: ProcessBuilder) =
     if (sign)
       proc #&& cmd("sign")
