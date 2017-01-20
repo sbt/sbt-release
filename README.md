@@ -179,7 +179,7 @@ The release process is defined by [State](http://www.scala-sbt.org/release/api/s
       enableCrossBuild: Boolean = false
     )
 
-The function `action` is used to perform the actual release step. Additionally, each release step can provide a `check` function that is run at the beginning of the release and can be used to prevent the release from running because of an unsatisified invariant (i.e. the release step for publishing artifacts checks that publishTo is properly set up).  The property `enableCrossBuild` tells *sbt-release* whether or not a particular `ReleaseStep` needs to be executed for the specified `crossScalaVersions`.
+The function `action` is used to perform the actual release step. Additionally, each release step can provide a `check` function that is run at the beginning of the release and can be used to prevent the release from running because of an unsatisfied invariant (i.e. the release step for publishing artifacts checks that publishTo is properly set up).  The property `enableCrossBuild` tells *sbt-release* whether or not a particular `ReleaseStep` needs to be executed for the specified `crossScalaVersions`.
 
 The sequence of `ReleaseStep`s that make up the release process is stored in the setting `releaseProcess: SettingKey[Seq[ReleaseStep]]`.
 
