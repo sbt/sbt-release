@@ -1,2 +1,2 @@
-* [#82](https://github.com/sbt/sbt-release/pull/82) Ensure that task failure is propogated. Thanks [@jcrobak](https://github.com/jcrobak)!
+* [#82](https://github.com/sbt/sbt-release/pull/82) Ensure that task failure is propagated. Thanks [@jcrobak](https://github.com/jcrobak)!
 * [#49](https://github.com/sbt/sbt-release/pull/49) Make the used publish action configurable (for easier integration with sbt-pgp). Thanks [@jroper](https://github.com/jroper)
