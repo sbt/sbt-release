@@ -122,6 +122,7 @@ object ReleasePlugin extends AutoPlugin {
       val useDefaults = AttributeKey[Boolean]("releaseUseDefaults")
       val skipTests = AttributeKey[Boolean]("releaseSkipTests")
       val cross = AttributeKey[Boolean]("releaseCross")
+      val tagDefault = AttributeKey[Option[String]]("release-default-tag-exists-answer")
 
       private lazy val releaseCommandKey = "release"
       private val FailureCommand = "--failure--"
@@ -136,17 +137,21 @@ object ReleasePlugin extends AutoPlugin {
         (Space ~> token("release-version") ~> Space ~> token(StringBasic, "<release version>")) map ParseResult.ReleaseVersion
       private[this] val NextVersion: Parser[ParseResult] =
         (Space ~> token("next-version") ~> Space ~> token(StringBasic, "<next version>")) map ParseResult.NextVersion
+      private[this] val TagDefault: Parser[ParseResult] =
+        (Space ~> token("default-tag-exists-answer") ~> Space ~> token(StringBasic, "o|k|a|<tag-name>")) map ParseResult.TagDefault
+
 
       private[this] sealed abstract class ParseResult extends Product with Serializable
       private[this] object ParseResult {
         final case class ReleaseVersion(value: String) extends ParseResult
         final case class NextVersion(value: String) extends ParseResult
+        final case class TagDefault(value: String) extends ParseResult
         case object WithDefaults extends ParseResult
         case object SkipTests extends ParseResult
         case object CrossBuild extends ParseResult
       }
 
-      private[this] val releaseParser: Parser[Seq[ParseResult]] = (ReleaseVersion | NextVersion | WithDefaults | SkipTests | CrossBuild).*
+      private[this] val releaseParser: Parser[Seq[ParseResult]] = (ReleaseVersion | NextVersion | WithDefaults | SkipTests | CrossBuild | TagDefault).*
 
       val releaseCommand: Command = Command(releaseCommandKey)(_ => releaseParser) { (st, args) =>
         val extracted = Project.extract(st)
@@ -158,6 +163,7 @@ object ReleasePlugin extends AutoPlugin {
           .put(useDefaults, args.contains(ParseResult.WithDefaults))
           .put(skipTests, args.contains(ParseResult.SkipTests))
           .put(cross, crossEnabled)
+          .put(tagDefault, args.collectFirst{case ParseResult.TagDefault(value) => value})
           .put(commandLineReleaseVersion, args.collectFirst{case ParseResult.ReleaseVersion(value) => value})
           .put(commandLineNextVersion, args.collectFirst{case ParseResult.NextVersion(value) => value})
 

@@ -63,7 +63,11 @@ For all interactions, the following default value will be chosen:
  * Continue with snapshots dependencies: no
  * Release Version: current version without the qualifier (eg. `1.2-SNAPSHOT` -> `1.2`)
  * Next Version: increase the minor version segment of the current version and set the qualifier to '-SNAPSHOT' (eg. `1.2.1-SNAPSHOT` -> `1.3.0-SNAPSHOT`)
- * VCS tag: abort if the tag already exists
+ * VCS tag: default is abort if the tag already exists. It is possible to override the answer to VCS by ```default-tag-exists-answer``` with one of:
+    * ```o``` override
+    * ```k``` do not overwrite
+    * ```a``` abort (default)
+    * ```<tag-name>``` an explicit custom tag name (e.g. ```1.2-M3```)
  * VCS push:
     * Abort if no remote tracking branch is set up.
     * Abort if remote tracking branch cannot be checked (eg. via `git fetch`).
@@ -74,7 +78,7 @@ For all interactions, the following default value will be chosen:
 You can set the release version using the argument `release-version` and next version with `next-version`.
 
 Example:
-    
+
     release release-version 1.0.99 next-version 1.2.0-SNAPSHOT
 
 ### Skipping tests
@@ -238,7 +242,7 @@ Yes, and as a start, let's take a look at the [default definition](https://githu
 #### The default release process
 
     import ReleaseTransformations._
-    
+
     // ...
 
     releaseProcess := Seq[ReleaseStep](
