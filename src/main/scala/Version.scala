@@ -8,11 +8,11 @@ object Version {
   }
 
   object Bump {
-    object Major extends Bump { def bump = _.bumpMajor }
-    object Minor extends Bump { def bump = _.bumpMinor }
-    object Bugfix extends Bump { def bump = _.bumpBugfix }
-    object Nano extends Bump { def bump = _.bumpNano }
-    object Next extends Bump { def bump = _.bump }
+    object Major extends Bump { def bump = _.bumpMajor; override def toString = "Major" }
+    object Minor extends Bump { def bump = _.bumpMinor; override def toString = "Minor" }
+    object Bugfix extends Bump { def bump = _.bumpBugfix; override def toString = "Bugfix" }
+    object Nano extends Bump { def bump = _.bumpNano; override def toString = "Nano" }
+    object Next extends Bump { def bump = _.bump; override def toString = "Next" }
 
     val default = Next
   }
