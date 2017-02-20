@@ -117,6 +117,7 @@ object ReleasePlugin extends AutoPlugin {
     object ReleaseKeys {
 
       val versions = AttributeKey[Versions]("releaseVersions")
+      val branches = AttributeKey[Branches]("releaseBranches")
       val commandLineReleaseVersion = AttributeKey[Option[String]]("release-input-release-version")
       val commandLineNextVersion = AttributeKey[Option[String]]("release-input-next-version")
       val useDefaults = AttributeKey[Boolean]("releaseUseDefaults")

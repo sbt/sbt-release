@@ -21,6 +21,8 @@ trait Vcs {
   def isBehindRemote: Boolean
   def pushChanges: ProcessBuilder
   def currentBranch: String
+  def setBranch(branch: String): ProcessBuilder
+  def newBranch(branch: String): ProcessBuilder
   def hasUntrackedFiles: Boolean
   def hasModifiedFiles: Boolean
 
@@ -106,6 +108,11 @@ class Mercurial(val baseDir: File) extends Vcs with GitLike {
 
   def currentBranch = (cmd("branch") !!) trim
 
+  // FIXME: Need help here
+  def setBranch(branch: String) = cmd("branch", branch)
+
+  def newBranch(branch: String) = setBranch(branch)
+
   // FIXME: This is utterly bogus, but I cannot find a good way...
   def checkRemote(remote: String) = cmd("id", "-n")
 
@@ -133,6 +140,10 @@ class Git(val baseDir: File) extends Vcs with GitLike {
   def hasUpstream = trackingRemoteCmd ! devnull == 0 && trackingBranchCmd ! devnull == 0
 
   def currentBranch =  (cmd("symbolic-ref", "HEAD") !!).trim.stripPrefix("refs/heads/")
+
+  def setBranch(branch: String) = cmd("checkout", branch)
+
+  def newBranch(branch: String) = cmd("checkout", "-b", branch)
 
   def currentHash = revParse("HEAD")
 
@@ -200,6 +211,11 @@ class Subversion(val baseDir: File) extends Vcs {
   }
 
   override def currentBranch: String = workingDirSvnUrl.substring(workingDirSvnUrl.lastIndexOf("/") + 1)
+
+  // FIXME: Need help here
+  def setBranch(branch: String) = cmd("checkout", branch)
+
+  def newBranch(branch: String) = cmd("checkout", "-b", branch)
 
   override def pushChanges: ProcessBuilder = commit("push changes", false)
 
