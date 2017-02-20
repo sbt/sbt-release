@@ -135,7 +135,7 @@ object ReleaseStateTransformations {
       // Git outputs to standard error, so use a logger that redirects stderr to info
       vc.stdErrorToStdOut(st.log)
     } else st.log
-    if (newBranch) vc.newBranch(selected) else vc.setBranch(selected) !! processLogger
+    (if (newBranch) vc.newBranch(selected) else vc.setBranch(selected)) !! processLogger
 
     st
   }
