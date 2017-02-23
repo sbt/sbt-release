@@ -75,12 +75,13 @@ object ReleaseStateTransformations {
   }
 
   lazy val inquireBranches: ReleaseStep = { st: State =>
-    val releaseBranch = SimpleReader.readLine("Release branch : ") match {
+    val releaseBranch = st.get(commandLineReleaseBranch).flatten.getOrElse(SimpleReader.readLine("Release branch : ") match {
       case Some(input) => input.trim
       case None => sys.error("No branch provided!")
-    }
+    })
+    val nextBranch = st.get(commandLineNextBranch).flatten.getOrElse(vcs(st).currentBranch)
 
-    st.put(branches, (releaseBranch, vcs(st).currentBranch))
+    st.put(branches, (releaseBranch, nextBranch))
   }
 
 

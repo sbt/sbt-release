@@ -2,5 +2,9 @@ $ exec git init .
 $ exec git add .
 $ exec git commit -m init
 
--> release
-> release with-defaults
+> 'release release-version 0.7.0 next-version 1.0.0-SNAPSHOT release-branch release-test next-branch master'
+> checkContentsOfVersionSbt 1.0.0-SNAPSHOT
+$ exec git checkout release-test
+> checkContentsOfVersionSbt 0.7.0
+
+-> release with-defaults

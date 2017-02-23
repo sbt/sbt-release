@@ -19,8 +19,8 @@ val parser = Space ~> StringBasic
 
 checkContentsOfVersionSbt := {
   val expected = parser.parsed
-      val versionFile = ((baseDirectory).value) / "version.sbt"
-      assert(IO.read(versionFile).contains(expected), s"does not contains ${expected} in ${versionFile}")
+  val versionFile = ((baseDirectory).value) / "version.sbt"
+  assert(IO.read(versionFile).contains(expected), s"does not contains ${expected} in ${versionFile}")
 }
 
 

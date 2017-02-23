@@ -1,4 +1,4 @@
-import sbtrelease.ReleaseStateTransformations._
+import ReleaseTransformations._
 
 releaseProcess := Seq(
   checkSnapshotDependencies,
@@ -7,9 +7,7 @@ releaseProcess := Seq(
   setReleaseVersion,
   commitReleaseVersion,
   setReleaseBranch,
-  pushChanges,
   setNextBranch,
   setNextVersion,
-  commitNextVersion,
-  pushChanges
+  commitNextVersion
 )
