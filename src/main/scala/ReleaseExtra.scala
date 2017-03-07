@@ -60,13 +60,13 @@ object ReleaseStateTransformations {
     val useDefs = st.get(useDefaults).getOrElse(false)
     val currentV = extracted.get(version)
 
-    val releaseFunc = extracted.get(releaseVersion)
+    val releaseFunc = extracted.runTask(releaseVersion, st)._2
     val suggestedReleaseV = releaseFunc(currentV)
 
     //flatten the Option[Option[String]] as the get returns an Option, and the value inside is an Option
     val releaseV = readVersion(suggestedReleaseV, "Release version [%s] : ", useDefs, st.get(commandLineReleaseVersion).flatten)
 
-    val nextFunc = extracted.get(releaseNextVersion)
+    val nextFunc = extracted.runTask(releaseNextVersion, st)._2
     val suggestedNextV = nextFunc(releaseV)
     //flatten the Option[Option[String]] as the get returns an Option, and the value inside is an Option
     val nextV = readVersion(suggestedNextV, "Next version [%s] : ", useDefs, st.get(commandLineNextVersion).flatten)
