@@ -34,7 +34,7 @@ object ReleaseStateTransformations {
   }
 
 
-  lazy val checkSnapshotDependencies: ReleaseStep = { st: State =>
+  lazy val checkSnapshotDependencies: ReleaseStep = ReleaseStep({ st: State =>
     val thisRef = st.extract.get(thisProjectRef)
     val (newSt, result) = runTaskAggregated(releaseSnapshotDependencies in thisRef, st)
     val snapshotDeps = result match {
@@ -50,7 +50,7 @@ object ReleaseStateTransformations {
       }
     }
     newSt
-  }
+  }, enableCrossBuild = true)
 
 
   lazy val inquireVersions: ReleaseStep = { st: State =>
