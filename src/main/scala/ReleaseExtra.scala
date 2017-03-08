@@ -170,7 +170,11 @@ object ReleaseStateTransformations {
   }
 
   lazy val tagRelease: ReleaseStep = { st: State =>
-    val defaultChoice = extractDefault(st, "a")
+    val defaultChoice =
+      st.get(tagDefault) match {
+        case Some(Some(td)) => Some(td)
+        case _ => extractDefault(st, "a")
+      }
 
     @tailrec
     def findTag(tag: String): Option[String] = {
@@ -372,4 +376,3 @@ object Utilities {
   }
 
 }
-
