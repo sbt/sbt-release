@@ -13,9 +13,9 @@ object ReleasePlugin extends AutoPlugin {
   object autoImport {
     val releaseSnapshotDependencies = taskKey[Seq[ModuleID]]("Calculate the snapshot dependencies for a build")
     val releaseProcess = settingKey[Seq[ReleaseStep]]("The release process")
-    val releaseVersion = settingKey[String => String]("The release version")
-    val releaseNextVersion = settingKey[String => String]("The next release version")
-    val releaseVersionBump = settingKey[Version.Bump]("How the version should be incremented")
+    val releaseVersion = taskKey[String => String]("The release version")
+    val releaseNextVersion = taskKey[String => String]("The next release version")
+    val releaseVersionBump = taskKey[Version.Bump]("How the version should be incremented")
     val releaseTagName = taskKey[String]("The name of the tag")
     val releaseTagComment = taskKey[String]("The comment to use when tagging")
     val releaseCommitMessage = taskKey[String]("The commit message to use when tagging")
