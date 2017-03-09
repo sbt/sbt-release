@@ -327,11 +327,7 @@ releases. This involves creating a new release branch from the develop branch.
     import ReleaseTransformations._
     import sbtrelease._
 
-    releaseCommitMessage := s"Version bump to ${version.value}"
-
-    releaseUseGlobalVersion := false
-
-    releaseNextVersion := { ver => Version(ver).map(_.bumpMinor.asSnapshot.string).getOrElse(versionFormatError) }
+    // ...
 
     releaseProcess := Seq[ReleaseStep](
         checkSnapshotDependencies,
