@@ -139,7 +139,7 @@ class Git(val baseDir: File) extends Vcs with GitLike {
 
   def setBranch(branch: String) = {
     if (trackingRemoteCmd ! devnull != 0) {
-      val currentRemote = currentRemote
+      val currentRemote = trackingRemote
       cmd("checkout", "-b", branch)
       cmd("config", "--add", "branch.%s.remote".format(branch), currentRemote)
     } else cmd("checkout", branch)
