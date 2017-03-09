@@ -130,17 +130,17 @@ class Git(val baseDir: File) extends Vcs with GitLike {
   private lazy val trackingBranchCmd = cmd("config", "branch.%s.merge" format currentBranch)
   private def trackingBranch: String = (trackingBranchCmd !!).trim.stripPrefix("refs/heads/")
 
-  private lazy val trackingRemoteCmd: ProcessBuilder = cmd("config", "branch.%s.remote" format currentBranch)
-  def trackingRemote: String = (trackingRemoteCmd !!) trim
+  private def trackingRemoteCmd(branch: String): ProcessBuilder = cmd("config", "branch.%s.remote" format branch)
+  def trackingRemote: String = (trackingRemoteCmd(currentBranch) !!) trim
 
-  def hasUpstream = trackingRemoteCmd ! devnull == 0 && trackingBranchCmd ! devnull == 0
+  def hasUpstream = trackingRemoteCmd(currentBranch) ! devnull == 0 && trackingBranchCmd ! devnull == 0
 
   def currentBranch =  (cmd("symbolic-ref", "HEAD") !!).trim.stripPrefix("refs/heads/")
 
   def setBranch(branch: String) = {
-    if (trackingRemoteCmd ! devnull != 0) {
+    if (trackingRemoteCmd(branch) ! devnull != 0) {
       val currentRemote = trackingRemote
-      cmd("checkout", "-b", branch)
+      cmd("checkout", "-b", branch).!!
       cmd("config", "--add", "branch.%s.remote".format(branch), currentRemote)
     } else cmd("checkout", branch)
   }
