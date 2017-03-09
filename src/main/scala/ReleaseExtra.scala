@@ -124,9 +124,9 @@ object ReleaseStateTransformations {
     ), st)
   }
 
-  lazy val setReleaseBranch: ReleaseStep = setBranch(_._1, newBranch = true)
+  lazy val setReleaseBranch: ReleaseStep = setBranch(_._1)
   lazy val setNextBranch: ReleaseStep = setBranch(_._2)
-  private[sbtrelease] def setBranch(selectBranch: Branches => String, newBranch: Boolean = false): ReleaseStep = { st: State =>
+  private[sbtrelease] def setBranch(selectBranch: Branches => String): ReleaseStep = { st: State =>
     val vs = st.get(branches).getOrElse(sys.error("No branches are set! Was this release part executed before inquireBranches?"))
     val selected = selectBranch(vs)
 
@@ -136,7 +136,7 @@ object ReleaseStateTransformations {
       // Git outputs to standard error, so use a logger that redirects stderr to info
       vc.stdErrorToStdOut(st.log)
     } else st.log
-    (if (newBranch) vc.newBranch(selected) else vc.setBranch(selected)) !! processLogger
+    vc.setBranch(selected) !! processLogger
 
     st
   }
@@ -241,9 +241,6 @@ object ReleaseStateTransformations {
 
   lazy val pushChanges: ReleaseStep = ReleaseStep(pushChangesAction, checkUpstream)
   private[sbtrelease] lazy val checkUpstream = { st: State =>
-    if (!vcs(st).hasUpstream) {
-      sys.error("No tracking branch is set up. Either configure a remote tracking branch, or remove the pushChanges release part.")
-    }
     val defaultChoice = extractDefault(st, "n")
 
     st.log.info("Checking remote [%s] ..." format vcs(st).trackingRemote)
@@ -267,19 +264,16 @@ object ReleaseStateTransformations {
     val defaultChoice = extractDefault(st, "y")
 
     val vc = vcs(st)
-    if (vc.hasUpstream) {
-      defaultChoice orElse SimpleReader.readLine("Push changes to the remote repository (y/n)? [y] ") match {
-        case Yes() | Some("") =>
-          val processLogger: ProcessLogger = if (vc.isInstanceOf[Git]) {
-            // Git outputs to standard error, so use a logger that redirects stderr to info
-            vc.stdErrorToStdOut(st.log)
-          } else st.log
-          vc.pushChanges !! processLogger
-        case _ => st.log.warn("Remember to push the changes yourself!")
-      }
-    } else {
-      st.log.info("Changes were NOT pushed, because no upstream branch is configured for the local branch [%s]" format vcs(st).currentBranch)
+    defaultChoice orElse SimpleReader.readLine("Push changes to the remote repository (y/n)? [y] ") match {
+      case Yes() | Some("") =>
+        val processLogger: ProcessLogger = if (vc.isInstanceOf[Git]) {
+          // Git outputs to standard error, so use a logger that redirects stderr to info
+          vc.stdErrorToStdOut(st.log)
+        } else st.log
+        vc.pushChanges(!vc.hasUpstream) !! processLogger
+      case _ => st.log.warn("Remember to push the changes yourself!")
     }
+
     st
   }
 
