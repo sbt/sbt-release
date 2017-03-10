@@ -1,4 +1,5 @@
 $ exec git init .
+$ exec git config --add branch.master.remote origin
 $ exec git add .
 $ exec git commit -m init
 
