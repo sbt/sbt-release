@@ -83,14 +83,34 @@ object ReleaseStateTransformations {
     }
   )
 
-
   lazy val runTest: ReleaseStep = ReleaseStep(
-    action = { st: State =>
-      if (!st.get(skipTests).getOrElse(false)) {
-        val extracted = Project.extract(st)
+    action = { state: State =>
+      if (!state.get(skipTests).getOrElse(false)) {
+        val extracted = Project.extract(state)
         val ref = extracted.get(thisProjectRef)
-        extracted.runAggregated(test in Test in ref, st)
-      } else st
+        val (newSt, result) = runTaskAggregated(test in Test in ref, state)
+        result match {
+          case Value(_) =>
+          case Inc(_) => sys.error("tests failed")
+        }
+        newSt
+      } else state
+    },
+    enableCrossBuild = true
+  )
+
+  lazy val runIntegrationTest: ReleaseStep = ReleaseStep(
+    action = { state: State =>
+      if (!state.get(skipTests).getOrElse(false)) {
+        val extracted = Project.extract(state)
+        val ref = extracted.get(thisProjectRef)
+        val (newSt, result) = runTaskAggregated(test in sbt.IntegrationTest in ref, state)
+        result match {
+          case Value(_) =>
+          case Inc(_) => sys.error("integration tests failed")
+        }
+        newSt
+      } else state
     },
     enableCrossBuild = true
   )
