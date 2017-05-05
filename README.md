@@ -1,4 +1,4 @@
-# SBT-RELEASE
+# sbt-release
 This sbt plugin provides a customizable release process that you can add to your project.
 
 **Notice:** This README contains information for the latest release. Please refer to the documents for a specific version by looking up the respective [tag](https://github.com/sbt/sbt-release/tags).
@@ -26,7 +26,7 @@ This sbt plugin provides a customizable release process that you can add to your
 
 Add the following lines to `./project/plugins.sbt`. See the section [Using Plugins](http://www.scala-sbt.org/release/tutorial/Using-Plugins.html) in the sbt wiki for more information.
 
-    addSbtPlugin("com.github.gseitz" % "sbt-release" % "1.0.4")
+    addSbtPlugin("com.github.gseitz" % "sbt-release" % "1.0.5")
 
 ## version.sbt
 
