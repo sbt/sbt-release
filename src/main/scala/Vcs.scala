@@ -16,7 +16,6 @@ trait Vcs {
   def existsTag(name: String): Boolean
   def checkRemote(remote: String): ProcessBuilder
   def tag(name: String, comment: String, sign: Boolean): ProcessBuilder
-  def hasUpstream: Boolean
   def trackingRemote: String
   def isBehindRemote: Boolean
   def pushChanges: ProcessBuilder
@@ -96,8 +95,6 @@ class Mercurial(val baseDir: File) extends Vcs with GitLike {
   def tag(name: String, comment: String, sign: Boolean) =
     andSign(sign, cmd("tag", "-f", "-m", comment, name))
 
-  def hasUpstream = cmd("paths", "default") ! devnull == 0
-
   def trackingRemote = "default"
 
   def isBehindRemote = cmd("incoming", "-b", ".", "-q") ! devnull == 0
@@ -125,12 +122,18 @@ class Git(val baseDir: File) extends Vcs with GitLike {
 
 
   private lazy val trackingBranchCmd = cmd("config", "branch.%s.merge" format currentBranch)
-  private def trackingBranch: String = (trackingBranchCmd !!).trim.stripPrefix("refs/heads/")
+  private def trackingBranch: String = try {
+    (trackingBranchCmd !!).trim.stripPrefix("refs/heads/")
+  } catch {
+    case _: Throwable => currentBranch
+  }
 
   private lazy val trackingRemoteCmd: ProcessBuilder = cmd("config", "branch.%s.remote" format currentBranch)
-  def trackingRemote: String = (trackingRemoteCmd !!) trim
-
-  def hasUpstream = trackingRemoteCmd ! devnull == 0 && trackingBranchCmd ! devnull == 0
+  def trackingRemote: String = try {
+    (trackingRemoteCmd !!).trim
+  } catch {
+    case _: Throwable => "origin"
+  }
 
   def currentBranch =  (cmd("symbolic-ref", "HEAD") !!).trim.stripPrefix("refs/heads/")
 
@@ -138,7 +141,11 @@ class Git(val baseDir: File) extends Vcs with GitLike {
 
   private def revParse(name: String) = (cmd("rev-parse", name) !!) trim
 
-  def isBehindRemote = (cmd("rev-list", "%s..%s/%s".format(currentBranch, trackingRemote, trackingBranch)) !! devnull).trim.nonEmpty
+  def isBehindRemote = try {
+    (cmd("rev-list", "%s..%s/%s".format(currentBranch, trackingRemote, trackingBranch)) !! devnull).trim.nonEmpty
+  } catch {
+    case _: Throwable => false
+  }
 
   private def withSignFlag(sign: Boolean, flag: String)(args: String*) =
     if (sign)
@@ -206,8 +213,6 @@ class Subversion(val baseDir: File) extends Vcs {
   override def isBehindRemote: Boolean = false
 
   override def trackingRemote: String = ""
-
-  override def hasUpstream: Boolean = true
 
   override def tag(name: String, comment: String, sign: Boolean): ProcessBuilder = {
     require(!sign, "Signing not supported in Subversion.")
