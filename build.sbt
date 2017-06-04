@@ -15,8 +15,8 @@ resolvers += "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases"
 
 // Scripted
 scriptedSettings
-scriptedLaunchOpts <<= (scriptedLaunchOpts, version) { case (s,v) => s ++
-  Seq("-Xmx1024M", "-XX:MaxPermSize=256M", "-Dplugin.version=" + v)
+scriptedLaunchOpts := {
+  scriptedLaunchOpts.value ++ Seq("-Xmx1024M", "-XX:MaxPermSize=256M", "-Dplugin.version=" + version.value)
 }
 scriptedBufferLog := false
 
