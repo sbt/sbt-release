@@ -12,6 +12,7 @@ import sbt.Package.ManifestAttributes
 import annotation.tailrec
 import ReleasePlugin.autoImport._
 import ReleaseKeys._
+import sbt.{Load => iLoad}
 
 object Compat {
 
@@ -36,4 +37,6 @@ object Compat {
     }
     (newS, result)
   }
+
+  val Load = iLoad
 }

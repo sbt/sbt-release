@@ -4,6 +4,7 @@ import sbt.internal.Aggregation.KeyValue
 import sbt.EvaluateTask.{extractedTaskConfig, nodeView, runTask, withStreams}
 import sbt.internal.{Act, Aggregation}
 import sbt.internal.Aggregation.{KeyValue}
+import sbt.internal.{Load => iLoad}
 import sbt.std.Transform.DummyTaskMap
 import sbt.{State, Result, TaskKey, EvaluateTask, ScopeMask}
 
@@ -29,4 +30,6 @@ object Compat {
     }
     (newS, result)
   }
+
+  val Load = iLoad
 }

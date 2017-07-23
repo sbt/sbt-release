@@ -8,6 +8,7 @@ import sbt.Package.ManifestAttributes
 import annotation.tailrec
 import ReleasePlugin.autoImport._
 import ReleaseKeys._
+import Compat.Load
 
 import sys.process.ProcessLogger
 
