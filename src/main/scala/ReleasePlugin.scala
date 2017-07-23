@@ -201,7 +201,7 @@ object ReleasePlugin extends AutoPlugin {
 
   override def trigger = allRequirements
 
-  val runtimeVersion = if (releaseUseGlobalVersion.value)(version in ThisBuild).value else version.value
+  val runtimeVersion = if (releaseUseGlobalVersion.value)(version in ThisBuild) else version
 
   override def projectSettings = Seq[Setting[_]](
     releaseSnapshotDependencies := {
@@ -218,10 +218,10 @@ object ReleasePlugin extends AutoPlugin {
     releaseUseGlobalVersion := true,
     releaseCrossBuild := false,
 
-    releaseTagName := s"v$runtimeVersion",
-    releaseTagComment := s"Releasing $runtimeVersion",
+    releaseTagName := s"v${runtimeVersion.value}",
+    releaseTagComment := s"Releasing ${runtimeVersion.value}",
 
-    releaseCommitMessage := s"Setting version to $runtimeVersion",
+    releaseCommitMessage := s"Setting version to ${runtimeVersion.value}",
 
     releaseVcs := Vcs.detect(baseDirectory.value),
     releaseVcsSign := false,
