@@ -1,5 +1,8 @@
 language: scala
 
+jdk:
+  - oraclejdk8
+
 env:
   matrix:
     - SBT_CMD=";test;publishLocal;scripted"
