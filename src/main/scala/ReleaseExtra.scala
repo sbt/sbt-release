@@ -130,17 +130,18 @@ object ReleaseStateTransformations {
 
   lazy val commitNextVersion = ReleaseStep(commitVersion)
   private[sbtrelease] def commitVersion = { st: State =>
+    val log = toProcessLogger(st)
     val file = st.extract.get(releaseVersionFile)
     val base = vcs(st).baseDir
     val sign = st.extract.get(releaseVcsSign)
     val relativePath = IO.relativize(base, file).getOrElse("Version file [%s] is outside of this VCS repository with base directory [%s]!" format(file, base))
 
-    vcs(st).add(relativePath) !! st.log
+    vcs(st).add(relativePath) !! log
     val status = (vcs(st).status !!) trim
 
     val newState = if (status.nonEmpty) {
       val (state, msg) = st.extract.runTask(releaseCommitMessage, st)
-      vcs(state).commit(msg, sign) ! st.log
+      vcs(state).commit(msg, sign) ! log
       state
     } else {
       // nothing to commit. this happens if the version.sbt file hasn't changed.
@@ -220,14 +221,16 @@ object ReleaseStateTransformations {
     st
   }
 
+  private def toProcessLogger(st: State): ProcessLogger = new ProcessLogger {
+    override def err(s: => String): Unit = st.log.info(s)
+    override def out(s: => String): Unit = st.log.info(s)
+    override def buffer[T](f: => T): T = st.log.buffer(f)
+  }
+
   private[sbtrelease] lazy val pushChangesAction = { st: State =>
     val defaultChoice = extractDefault(st, "y")
 
-    val log = new ProcessLogger {
-      override def err(s: => String): Unit = st.log.info(s)
-      override def out(s: => String): Unit = st.log.info(s)
-      override def buffer[T](f: => T): T = st.log.buffer(f)
-    }
+    val log = toProcessLogger(st)
 
     val vc = vcs(st)
     if (vc.hasUpstream) {
