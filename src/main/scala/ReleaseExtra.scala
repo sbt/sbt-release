@@ -223,14 +223,20 @@ object ReleaseStateTransformations {
   private[sbtrelease] lazy val pushChangesAction = { st: State =>
     val defaultChoice = extractDefault(st, "y")
 
+    val log = new ProcessLogger {
+      override def err(s: => String): Unit = st.log.info(s)
+      override def out(s: => String): Unit = st.log.info(s)
+      override def buffer[T](f: => T): T = st.log.buffer(f)
+    }
+
     val vc = vcs(st)
     if (vc.hasUpstream) {
       defaultChoice orElse SimpleReader.readLine("Push changes to the remote repository (y/n)? [y] ") match {
         case Yes() | Some("") =>
           val processLogger: ProcessLogger = if (vc.isInstanceOf[Git]) {
             // Git outputs to standard error, so use a logger that redirects stderr to info
-            vc.stdErrorToStdOut(st.log)
-          } else st.log
+            vc.stdErrorToStdOut(log)
+          } else log
           vc.pushChanges !! processLogger
         case _ => st.log.warn("Remember to push the changes yourself!")
       }

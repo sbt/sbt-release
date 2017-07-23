@@ -41,7 +41,7 @@ trait Vcs {
   def stdErrorToStdOut(delegate: ProcessLogger): ProcessLogger = new ProcessLogger {
     override def buffer[T](f: => T): T = delegate.buffer(f)
     override def out(s: => String): Unit = delegate.out(s)
-    override def err(s: => String): Unit = delegate.err(s)
+    override def err(s: => String): Unit = delegate.out(s)
   }
 }
 
