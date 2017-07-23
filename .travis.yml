@@ -1,12 +1,16 @@
 language: scala
+matrix:
+  include:
+  - env: SBT_VERSION="0.13.16"
+    jdk: oraclejdk7
+  - env: SBT_VERSION="1.0.0-RC3"
+    jdk: oraclejdk8
 script:
  - git config --global user.email "example@example.com"
  - git config --global user.name "example"
  - echo '[ui]' > "$HOME/.hgrc"
  - echo 'username = example <example@example.com>' >> "$HOME/.hgrc"
- - sbt test
- - sbt publishLocal
- - sbt scripted
+ - sbt "^^ ${SBT_VERSION}" test scripted
 cache:
   directories:
   - "$HOME/.ivy2/cache"

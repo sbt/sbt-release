@@ -100,8 +100,9 @@ object ReleasePlugin extends AutoPlugin {
      * Convert the given command string to a release step action, preserving and invoking remaining commands
      */
     def releaseStepCommandAndRemaining(command: String): State => State = { st: State =>
+      import Compat._
       @annotation.tailrec
-      def runCommand(command: String, state: State): State = {
+      def runCommand(command: Compat.Command, state: State): State = {
         val nextState = Parser.parse(command, state.combinedParser) match {
           case Right(cmd) => cmd()
           case Left(msg) => throw sys.error(s"Invalid programmatic input:\n$msg")
@@ -125,7 +126,7 @@ object ReleasePlugin extends AutoPlugin {
       val tagDefault = AttributeKey[Option[String]]("release-default-tag-exists-answer")
 
       private lazy val releaseCommandKey = "release"
-      private val FailureCommand = "--failure--"
+      private val FailureCommand = Compat.FailureCommand
 
       private[this] val WithDefaults: Parser[ParseResult] =
         (Space ~> token("with-defaults")) ^^^ ParseResult.WithDefaults
@@ -201,6 +202,12 @@ object ReleasePlugin extends AutoPlugin {
 
   override def trigger = allRequirements
 
+  val runtimeVersion = Def.task {
+    val v1 = (version in ThisBuild).value
+    val v2 = version.value
+    if (releaseUseGlobalVersion.value) v1 else v2
+  }
+
   override def projectSettings = Seq[Setting[_]](
     releaseSnapshotDependencies := {
       val moduleIds = (managedClasspath in Runtime).value.flatMap(_.get(moduleID.key))
@@ -216,9 +223,10 @@ object ReleasePlugin extends AutoPlugin {
     releaseUseGlobalVersion := true,
     releaseCrossBuild := false,
 
-    releaseTagName := s"v${if (releaseUseGlobalVersion.value) (version in ThisBuild).value else version.value}",
-    releaseTagComment := s"Releasing ${if (releaseUseGlobalVersion.value) (version in ThisBuild).value else version.value}",
-    releaseCommitMessage := s"Setting version to ${if (releaseUseGlobalVersion.value) (version in ThisBuild).value else version.value}",
+    releaseTagName := s"v${runtimeVersion.value}",
+    releaseTagComment := s"Releasing ${runtimeVersion.value}",
+
+    releaseCommitMessage := s"Setting version to ${runtimeVersion.value}",
 
     releaseVcs := Vcs.detect(baseDirectory.value),
     releaseVcsSign := false,
