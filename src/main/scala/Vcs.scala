@@ -3,6 +3,8 @@ package sbtrelease
 import sbt._
 import java.io.File
 
+import sys.process.{ Process, ProcessBuilder, ProcessLogger }
+
 trait Vcs {
   val commandName: String
 
@@ -31,15 +33,15 @@ trait Vcs {
   }
 
   protected val devnull: ProcessLogger = new ProcessLogger {
-    def info(s: => String): Unit = {}
-    def error(s: => String): Unit = {}
-    def buffer[T](f: => T): T = f
+    override def buffer[T](f: => T): T = f
+    override def out(s: => String): Unit = ()
+    override def err(s: => String): Unit = ()
   }
 
   def stdErrorToStdOut(delegate: ProcessLogger): ProcessLogger = new ProcessLogger {
-    def info(s: => String) = delegate.info(s)
-    def error(s: => String) = delegate.info(s)
-    def buffer[T](f: => T): T = delegate.buffer(f)
+    override def buffer[T](f: => T): T = delegate.buffer(f)
+    override def out(s: => String): Unit = delegate.out(s)
+    override def err(s: => String): Unit = delegate.err(s)
   }
 }
 

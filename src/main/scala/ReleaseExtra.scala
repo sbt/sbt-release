@@ -10,6 +10,8 @@ import annotation.tailrec
 import ReleasePlugin.autoImport._
 import ReleaseKeys._
 
+import sys.process.ProcessLogger
+
 object ReleaseStateTransformations {
   import Utilities._
 
