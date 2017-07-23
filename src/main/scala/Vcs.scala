@@ -47,7 +47,7 @@ trait Vcs {
 
 object Vcs {
   def detect(dir: File): Option[Vcs] = {
-    Stream(Git, Mercurial, Subversion).flatMap(comp => comp.isRepository(dir).map(comp.mkVcs(_))).headOption
+    Stream(Git, Mercurial, Subversion).flatMap(comp => comp.isRepository(dir).map(comp.mkVcs)).headOption
   }
 }
 

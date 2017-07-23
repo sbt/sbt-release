@@ -3,7 +3,7 @@ language: scala
 env:
   matrix:
     - SELECT_VERSION="++2.10.6 ^^0.13.16-M1"
-    - SELECT_VERSION="++2.12.2 ^^1.0.0-M6"
+    - SELECT_VERSION="++2.12.2 ^^1.0.0-RC2"
 
 script:
  - git config --global user.email "example@example.com"

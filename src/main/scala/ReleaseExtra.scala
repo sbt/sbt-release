@@ -2,7 +2,6 @@ package sbtrelease
 
 import sbt.Keys._
 import sbt._
-import sbt.Aggregation.KeyValue
 import sbt.std.Transform.DummyTaskMap
 import sbt.Keys._
 import sbt.Package.ManifestAttributes
@@ -15,30 +14,9 @@ import sys.process.ProcessLogger
 object ReleaseStateTransformations {
   import Utilities._
 
-  def runTaskAggregated[T](taskKey: TaskKey[T], state: State): (State, Result[Seq[KeyValue[T]]]) = {
-    import EvaluateTask._
-    val extra = DummyTaskMap(Nil)
-    val extracted = state.extract
-    val config = extractedTaskConfig(extracted, extracted.structure, state)
-
-    val rkey = Utilities.resolve(taskKey.scopedKey, extracted)
-    val keys = Aggregation.aggregate(rkey, ScopeMask(), extracted.structure.extra)
-    val tasks = Act.keyValues(extracted.structure)(keys)
-    val toRun = tasks map { case KeyValue(k,t) => t.map(v => KeyValue(k,v)) } join
-    val roots = tasks map { case KeyValue(k,_) => k }
-
-
-    val (newS, result) = withStreams(extracted.structure, state){ str =>
-      val transform = nodeView(state, str, roots, extra)
-      runTask(toRun, state,str, extracted.structure.index.triggers, config)(transform)
-    }
-    (newS, result)
-  }
-
-
   lazy val checkSnapshotDependencies: ReleaseStep = ReleaseStep({ st: State =>
     val thisRef = st.extract.get(thisProjectRef)
-    val (newSt, result) = runTaskAggregated(releaseSnapshotDependencies in thisRef, st)
+    val (newSt, result) = Compat.runTaskAggregated(releaseSnapshotDependencies in thisRef, st)
     val snapshotDeps = result match {
       case Value(value) => value.flatMap(_.value)
       case Inc(cause) => sys.error("Error checking for snapshot dependencies: " + cause)
