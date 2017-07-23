@@ -187,7 +187,8 @@ object ReleaseStateTransformations {
     val (commentState, comment) = st.extract.runTask(releaseTagComment, tagState)
     val tagToUse = findTag(tag)
     val sign = st.extract.get(releaseVcsSign)
-    tagToUse.foreach(vcs(commentState).tag(_, comment, sign) !! commentState.log)
+    val log = toProcessLogger(commentState)
+    tagToUse.foreach(vcs(commentState).tag(_, comment, sign) !! log)
 
 
     tagToUse map (t =>
@@ -204,8 +205,10 @@ object ReleaseStateTransformations {
     }
     val defaultChoice = extractDefault(st, "n")
 
+    val log = toProcessLogger(st)
+
     st.log.info("Checking remote [%s] ..." format vcs(st).trackingRemote)
-    if (vcs(st).checkRemote(vcs(st).trackingRemote) ! st.log != 0) {
+    if (vcs(st).checkRemote(vcs(st).trackingRemote) ! log != 0) {
       defaultChoice orElse SimpleReader.readLine("Error while checking remote. Still continue (y/n)? [n] ") match {
         case Yes() => // do nothing
         case _ => sys.error("Aborting the release!")
