@@ -41,7 +41,7 @@ object Compat {
     // getPublishTo fails if no publish repository is set up.
     val ex = st.extract
     val ref = ex.get(thisProjectRef)
-    Classpaths.getPublishTo(ex.get(publishTo in Global in ref))
+    Classpaths.getPublishTo(ex.runTask((publishTo in Global in ref), st)._2)
     st
   }
 
