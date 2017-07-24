@@ -237,7 +237,7 @@ I highly recommend to make yourself familiar with the [State API](http://www.sca
 
 ### Can we finally customize that release process, please?
 
-Yes, and as a start, let's take a look at the [default definition](https://github.com/sbt/sbt-release/blob/v1.0.0/src/main/scala/ReleasePlugin.scala#L177) of `releaseProcess`:
+Yes, and as a start, let's take a look at the [default definition](https://github.com/sbt/sbt-release/blob/v1.0.5/src/main/scala/ReleasePlugin.scala#L232) of `releaseProcess`:
 
 #### The default release process
 
@@ -248,6 +248,7 @@ Yes, and as a start, let's take a look at the [default definition](https://githu
     releaseProcess := Seq[ReleaseStep](
       checkSnapshotDependencies,              // : ReleaseStep
       inquireVersions,                        // : ReleaseStep
+      runClean,                               // : ReleaseStep
       runTest,                                // : ReleaseStep
       setReleaseVersion,                      // : ReleaseStep
       commitReleaseVersion,                   // : ReleaseStep, performs the initial git checks
