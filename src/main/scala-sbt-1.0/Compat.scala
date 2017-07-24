@@ -55,7 +55,7 @@ object Compat {
 
   def crossVersions(st: State): Seq[String] = {
     // copied from https://github.com/sbt/sbt/blob/2d7ec47b13e02526174f897cca0aef585bd7b128/main/src/main/scala/sbt/Cross.scala#L40
-    val proj = Project.extract(state.value)
+    val proj = Project.extract(st)
     import proj._
     crossVersions(proj, currentRef)
   }
