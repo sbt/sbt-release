@@ -108,7 +108,15 @@ object ReleaseStateTransformations {
 
     val hasUntrackedFiles = vcs(st).hasUntrackedFiles
     val hasModifiedFiles = vcs(st).hasModifiedFiles
-    if ( hasModifiedFiles ) sys.error( "Aborting release: unstaged modified files" )
+    if ( hasModifiedFiles ) {
+      sys.error(
+        s"""Aborting release: unstaged modified files
+          |
+          |Modified files:
+          |
+          |${vcs(st).modifiedFiles.mkString(" - ", "\n", "")}
+        """.stripMargin )
+    }
     if ( hasUntrackedFiles && !extracted.get( releaseIgnoreUntrackedFiles ) )
     {
         sys.error(

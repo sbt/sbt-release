@@ -25,7 +25,8 @@ trait Vcs {
   def currentBranch: String
   def hasUntrackedFiles: Boolean = untrackedFiles.nonEmpty
   def untrackedFiles: Seq[String]
-  def hasModifiedFiles: Boolean
+  def hasModifiedFiles: Boolean = modifiedFiles.nonEmpty
+  def modifiedFiles: Seq[String]
 
   protected def executableName(command: String) = {
     val maybeOsName = sys.props.get("os.name").map(_.toLowerCase)
@@ -113,8 +114,7 @@ class Mercurial(val baseDir: File) extends Vcs with GitLike {
   def checkRemote(remote: String) = cmd("id", "-n")
 
   def untrackedFiles = cmd("status", "-un").lines
-
-  def hasModifiedFiles = cmd("status", "-mn").!!.trim.nonEmpty
+  def modifiedFiles = cmd("status", "-mn").lines
 }
 
 object Git extends VcsCompanion {
@@ -173,8 +173,7 @@ class Git(val baseDir: File) extends Vcs with GitLike {
   private def pushTags = cmd("push", "--tags", trackingRemote)
 
   def untrackedFiles = cmd("ls-files", "--other", "--exclude-standard").lines
-
-  def hasModifiedFiles : Boolean = cmd("ls-files", "--modified", "--exclude-standard").!!.trim.nonEmpty
+  def modifiedFiles = cmd("ls-files", "--modified", "--exclude-standard").lines
 }
 
 object Subversion extends VcsCompanion {
@@ -189,7 +188,7 @@ class Subversion(val baseDir: File) extends Vcs {
 
   override def cmd(args: Any*): ProcessBuilder = Process(exec +: args.map(_.toString), baseDir)
 
-  override def hasModifiedFiles: Boolean = cmd("status", "-q").!!.trim.nonEmpty
+  override def modifiedFiles = cmd("status", "-q").lines
   override def untrackedFiles = cmd("status").lines.filter(_.startsWith("?"))
 
   override def add(files: String*) = {
