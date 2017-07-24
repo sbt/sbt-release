@@ -1,7 +1,8 @@
 package sbtrelease
 
 import sbt.Keys.{resolvedScoped, streams}
-import sbt.{AttributeKey, Def, Global, InputTask, Project, Reference, Scope, ScopedKey, Select, Setting, Settings, Show, Task, Keys, URI, ~>}
+import sbt.{AttributeKey, Def, Global, InputTask, Project, Reference, Scope, Select, Setting, Settings, Show, Task, Keys, URI, ~>}
+import sbt.Def.ScopedKey
 
 // sbt.Load was made private in sbt 1.0
 // the core developers recommend copying the required methods: https://github.com/sbt/sbt/issues/3296#issuecomment-315218050
