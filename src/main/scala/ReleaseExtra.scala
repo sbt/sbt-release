@@ -301,7 +301,7 @@ object ReleaseStateTransformations {
   private[sbtrelease] def runCrossBuild(func: State => State): State => State = { state =>
     val x = Project.extract(state)
     import x._
-    val versions = Cross.crossVersions(state)
+    val versions = Compat.crossVersions(state)
     val current = scalaVersion in currentRef get structure.data
     val finalS = (state /: versions) {
       case (s, v) => func(switchScalaVersion(s, v))

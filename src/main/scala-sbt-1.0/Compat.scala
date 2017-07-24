@@ -2,11 +2,11 @@ package sbtrelease
 
 import sbt.internal.Aggregation.KeyValue
 import sbt.EvaluateTask.{extractedTaskConfig, nodeView, runTask, withStreams}
-import sbt.Keys.{publishTo, scalaHome, scalaVersion, thisProjectRef}
+import sbt.Keys._
 import sbt.internal.{Act, Aggregation}
 import sbt.internal.Aggregation.KeyValue
 import sbt.std.Transform.DummyTaskMap
-import sbt.{AttributeKey, Classpaths, EvaluateTask, Global, Reference, Result, Scope, ScopeMask, Select, Setting, State, TaskKey, Zero}
+import sbt._
 import sbt.Def.ScopedKey
 
 object Compat {
@@ -52,6 +52,21 @@ object Compat {
       case ScopedKey(Scope(_, Zero, Zero, _), key) if keys.contains(key) => true
       case _ => false
     }
+
+  def crossVersions(st: State): Seq[String] = {
+    // copied from https://github.com/sbt/sbt/blob/2d7ec47b13e02526174f897cca0aef585bd7b128/main/src/main/scala/sbt/Cross.scala#L40
+    val proj = Project.extract(state.value)
+    import proj._
+    crossVersions(proj, currentRef)
+  }
+
+  private def crossVersions(extracted: Extracted, proj: ProjectRef): Seq[String] = {
+    import extracted._
+    (crossScalaVersions in proj get structure.data) getOrElse {
+      // reading scalaVersion is a one-time deal
+      (scalaVersion in proj get structure.data).toSeq
+    }
+  }
 
   // type aliases
   type StructureIndex = sbt.internal.StructureIndex

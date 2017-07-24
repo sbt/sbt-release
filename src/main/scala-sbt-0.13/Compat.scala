@@ -58,6 +58,8 @@ object Compat {
       case _ => false
     }
 
+  def crossVersions(st: State): Seq[String] = Cross.crossVersions(st)
+
   // type aliases
   type StructureIndex = sbt.StructureIndex
   type BuildStructure = sbt.BuildStructure
