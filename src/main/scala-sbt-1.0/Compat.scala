@@ -2,16 +2,18 @@ package sbtrelease
 
 import sbt.internal.Aggregation.KeyValue
 import sbt.EvaluateTask.{extractedTaskConfig, nodeView, runTask, withStreams}
+import sbt.Keys.{publishTo, thisProjectRef}
 import sbt.internal.{Act, Aggregation}
-import sbt.internal.Aggregation.{KeyValue}
-import sbt.internal.{Load => iLoad}
+import sbt.internal.Aggregation.KeyValue
 import sbt.std.Transform.DummyTaskMap
-import sbt.{State, Result, TaskKey, EvaluateTask, ScopeMask, Scope, Reference, Select, Zero}
+import sbt.{Classpaths, EvaluateTask, Reference, Result, Scope, ScopeMask, Select, State, TaskKey, Zero, Global}
 
 object Compat {
+
+  import Utilities._
+
   def runTaskAggregated[T](taskKey: TaskKey[T], state: State): (State, Result[Seq[KeyValue[T]]]) = {
     import EvaluateTask._
-    import Utilities._
 
     val extra = DummyTaskMap(Nil)
     val extracted = state.extract
@@ -33,6 +35,16 @@ object Compat {
 
   def projectScope(project: Reference): Scope = Scope(Select(project), Zero, Zero, Zero)
 
+  // checking if publishTo is configured
+  def checkPublishTo(st: State): State = {
+    // getPublishTo fails if no publish repository is set up.
+    val ex = st.extract
+    val ref = ex.get(thisProjectRef)
+    Classpaths.getPublishTo(ex.get(publishTo in Global in ref))
+    st
+  }
+
+  // type aliases
   type StructureIndex = sbt.internal.StructureIndex
   type BuildStructure = sbt.internal.BuildStructure
   val BuildStreams = sbt.internal.BuildStreams

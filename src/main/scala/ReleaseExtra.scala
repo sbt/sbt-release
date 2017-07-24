@@ -254,13 +254,7 @@ object ReleaseStateTransformations {
 
   lazy val publishArtifacts = ReleaseStep(
     action = runPublishArtifactsAction,
-    check = st => {
-      // getPublishTo fails if no publish repository is set up.
-      val ex = st.extract
-      val ref = ex.get(thisProjectRef)
-      Classpaths.getPublishTo(ex.get(publishTo in Global in ref))
-      st
-    },
+    check = Compat.checkPublishTo,
     enableCrossBuild = true
   )
   private[sbtrelease] lazy val runPublishArtifactsAction = { st: State =>

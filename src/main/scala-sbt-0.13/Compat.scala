@@ -15,9 +15,10 @@ import ReleaseKeys._
 
 object Compat {
 
+  import Utilities._
+
   def runTaskAggregated[T](taskKey: TaskKey[T], state: State): (State, Result[Seq[KeyValue[T]]]) = {
     import EvaluateTask._
-    import Utilities._
 
     val extra = DummyTaskMap(Nil)
     val extracted = state.extract
@@ -39,6 +40,16 @@ object Compat {
 
   def projectScope(project: Reference): Scope = Scope(Select(project), Global, Global, Global)
 
+  // checking if publishTo is configured
+  def checkPublishTo(st: State ): State = {
+    // getPublishTo fails if no publish repository is set up.
+    val ex = st.extract
+    val ref = ex.get(thisProjectRef)
+    Classpaths.getPublishTo(ex.get(publishTo in Global in ref))
+    st
+  }
+
+  // type aliases
   type StructureIndex = sbt.StructureIndex
   type BuildStructure = sbt.BuildStructure
   val BuildStreams = sbt.BuildStreams
