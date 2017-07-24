@@ -2,11 +2,12 @@ package sbtrelease
 
 import sbt.internal.Aggregation.KeyValue
 import sbt.EvaluateTask.{extractedTaskConfig, nodeView, runTask, withStreams}
-import sbt.Keys.{publishTo, thisProjectRef}
+import sbt.Keys.{publishTo, scalaHome, scalaVersion, thisProjectRef}
 import sbt.internal.{Act, Aggregation}
 import sbt.internal.Aggregation.KeyValue
 import sbt.std.Transform.DummyTaskMap
-import sbt.{Classpaths, EvaluateTask, Reference, Result, Scope, ScopeMask, Select, State, TaskKey, Zero, Global}
+import sbt.{AttributeKey, Classpaths, EvaluateTask, Global, Reference, Result, Scope, ScopeMask, Select, Setting, State, TaskKey, Zero}
+import sbt.Def.ScopedKey
 
 object Compat {
 
@@ -45,6 +46,12 @@ object Compat {
   }
 
   val FailureCommand = sbt.Exec("--failure--", None, None)
+
+  def excludeKeys(keys: Set[AttributeKey[_]]): Setting[_] => Boolean =
+    _.key match {
+      case ScopedKey(Scope(_, Zero, Zero, _), key) if keys.contains(key) => true
+      case _ => false
+    }
 
   // type aliases
   type StructureIndex = sbt.internal.StructureIndex

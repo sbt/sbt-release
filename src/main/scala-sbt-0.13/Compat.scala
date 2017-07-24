@@ -12,6 +12,7 @@ import sbt.Package.ManifestAttributes
 import annotation.tailrec
 import ReleasePlugin.autoImport._
 import ReleaseKeys._
+import sbt.Def.ScopedKey
 
 object Compat {
 
@@ -50,6 +51,12 @@ object Compat {
   }
 
   val FailureCommand = "--failure--"
+
+  def excludeKeys(keys: Set[AttributeKey[_]]): Setting[_] => Boolean =
+    _.key match {
+      case ScopedKey(Scope(_, Global, Global, _), key) if keys.contains(key) => true
+      case _ => false
+    }
 
   // type aliases
   type StructureIndex = sbt.StructureIndex
