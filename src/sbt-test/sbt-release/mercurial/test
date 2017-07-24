@@ -1,6 +1,7 @@
+$ exec hg init .
+
 > update
 
-$ exec hg init .
 $ exec hg add .
 $ exec hg commit -m init
 
