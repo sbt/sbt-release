@@ -58,7 +58,7 @@ trait GitLike extends Vcs {
 
   def cmd(args: Any*): ProcessBuilder = Process(exec +: args.map(_.toString), baseDir)
 
-  def add(files: String*) = cmd(("add" +: files): _*)
+  def add(files: String*) = cmd("add" +: files: _*)
 }
 
 trait VcsCompanion {
@@ -90,9 +90,9 @@ class Mercurial(val baseDir: File) extends Vcs with GitLike {
 
   def status = cmd("status")
 
-  def currentHash = (cmd("identify", "-i") !!) trim
+  def currentHash = cmd("identify", "-i").!!.trim
 
-  def existsTag(name: String) = (cmd("tags") !!).linesIterator.exists(_.endsWith(" "+name))
+  def existsTag(name: String) = cmd("tags").!!.linesIterator.exists(_.endsWith(" "+name))
 
   def commit(message: String, sign: Boolean) =
     andSign(sign, cmd("commit", "-m", message))
@@ -108,7 +108,7 @@ class Mercurial(val baseDir: File) extends Vcs with GitLike {
 
   def pushChanges = cmd("push", "-b", ".")
 
-  def currentBranch = (cmd("branch") !!) trim
+  def currentBranch = cmd("branch").!!.trim
 
   // FIXME: This is utterly bogus, but I cannot find a good way...
   def checkRemote(remote: String) = cmd("id", "-n")
@@ -131,15 +131,15 @@ class Git(val baseDir: File) extends Vcs with GitLike {
   private def trackingBranch: String = (trackingBranchCmd !!).trim.stripPrefix("refs/heads/")
 
   private lazy val trackingRemoteCmd: ProcessBuilder = cmd("config", "branch.%s.remote" format currentBranch)
-  def trackingRemote: String = (trackingRemoteCmd !!) trim
+  def trackingRemote: String = trackingRemoteCmd.!!.trim
 
   def hasUpstream = trackingRemoteCmd ! devnull == 0 && trackingBranchCmd ! devnull == 0
 
-  def currentBranch =  (cmd("symbolic-ref", "HEAD") !!).trim.stripPrefix("refs/heads/")
+  def currentBranch =  cmd("symbolic-ref", "HEAD").!!.trim.stripPrefix("refs/heads/")
 
   def currentHash = revParse("HEAD")
 
-  private def revParse(name: String) = (cmd("rev-parse", name) !!) trim
+  private def revParse(name: String) = cmd("rev-parse", name).!!.trim
 
   def isBehindRemote = (cmd("rev-list", "%s..%s/%s".format(currentBranch, trackingRemote, trackingBranch)) !! devnull).trim.nonEmpty
 
@@ -244,7 +244,7 @@ class Subversion(val baseDir: File) extends Vcs {
       workingDirSvnUrl.indexOf("/branches"),
       workingDirSvnUrl.indexOf("/tags")
     ).filter(_ >= 0)
-    require(!svnBaseUrlEndIdxOptions.isEmpty, "No /trunk, /branches or /tags part found in svn url. Base url cannot be extracted.")
+    require(svnBaseUrlEndIdxOptions.nonEmpty, "No /trunk, /branches or /tags part found in svn url. Base url cannot be extracted.")
     val svnBaseUrlEndIdx = svnBaseUrlEndIdxOptions.head
     workingDirSvnUrl.substring(0, svnBaseUrlEndIdx + 1)
   }
