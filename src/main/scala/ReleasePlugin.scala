@@ -125,7 +125,7 @@ object ReleasePlugin extends AutoPlugin {
       val tagDefault = AttributeKey[Option[String]]("release-default-tag-exists-answer")
 
       private lazy val releaseCommandKey = "release"
-      private val FailureCommand = "--failure--"
+      private val FailureCommand = Compat.FailureCommand
 
       private[this] val WithDefaults: Parser[ParseResult] =
         (Space ~> token("with-defaults")) ^^^ ParseResult.WithDefaults

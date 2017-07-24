@@ -49,6 +49,8 @@ object Compat {
     st
   }
 
+  val FailureCommand = "--failure--"
+
   // type aliases
   type StructureIndex = sbt.StructureIndex
   type BuildStructure = sbt.BuildStructure

@@ -44,6 +44,8 @@ object Compat {
     st
   }
 
+  val FailureCommand = sbt.Exec("--failure--", None, None)
+
   // type aliases
   type StructureIndex = sbt.internal.StructureIndex
   type BuildStructure = sbt.internal.BuildStructure
