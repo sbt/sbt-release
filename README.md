@@ -100,7 +100,7 @@ Of the predefined release steps, the `clean`, `test`, and `publish` release step
 
 A cross release behaves analogous to using the `+` command:
  1. If no `crossScalaVersions` are set, then running `release` or `release cross` will not trigger a cross release (i.e. run the release with the scala version specified in the setting `scalaVersion`).
- 1. If the `crossScalaVersions` setting is set, then only these scala versions will be used. Make sure to include the regular/default `scalaVersion` in the `crossScalaVersion` setting as well.
+ 1. If the `crossScalaVersions` setting is set, then only these scala versions will be used. Make sure to include the regular/default `scalaVersion` in the `crossScalaVersions` setting as well.
 
 In the section *Customizing the release process* we take a look at how to define a `ReleaseStep` to participate in a cross build.
 
