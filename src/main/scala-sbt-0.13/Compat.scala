@@ -1,7 +1,7 @@
 package sbtrelease
 
 import sbt.std.Transform.DummyTaskMap
-import sbt.{EvaluateTask, Result, ScopeMask, State, TaskKey, Act, Aggregation}
+import sbt.{EvaluateTask, Result, ScopeMask, State, TaskKey, Act, Aggregation, Scope, Reference, Select}
 import sbt.Aggregation.KeyValue
 import sbt.Keys._
 import sbt._
@@ -12,7 +12,6 @@ import sbt.Package.ManifestAttributes
 import annotation.tailrec
 import ReleasePlugin.autoImport._
 import ReleaseKeys._
-import sbt.{Load => iLoad}
 
 object Compat {
 
@@ -38,5 +37,16 @@ object Compat {
     (newS, result)
   }
 
-  val Load = iLoad
+  def projectScope(project: Reference): Scope = Scope(Select(project), Global, Global, Global)
+
+  type StructureIndex = sbt.StructureIndex
+  type BuildStructure = sbt.BuildStructure
+  val BuildStreams = sbt.BuildStreams
+  type BuildUtil[Proj] = sbt.BuildUtil[Proj]
+  val BuildUtil = sbt.BuildUtil
+  val Index = sbt.Index
+  type KeyIndex = sbt.KeyIndex
+  val KeyIndex = sbt.KeyIndex
+  type LoadedBuildUnit = sbt.LoadedBuildUnit
+
 }

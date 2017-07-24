@@ -8,7 +8,6 @@ import sbt.Package.ManifestAttributes
 import annotation.tailrec
 import ReleasePlugin.autoImport._
 import ReleaseKeys._
-import Compat.Load
 
 import sys.process.ProcessLogger
 
@@ -284,7 +283,7 @@ object ReleaseStateTransformations {
     val extracted = state.extract
     import extracted._
 
-    val append = Load.transformSettings(Load.projectScope(currentRef), currentRef.build, rootProject, settings)
+    val append = Load.transformSettings(Compat.projectScope(currentRef), currentRef.build, rootProject, settings)
 
     // We don't want even want to be able to save the settings that are applied to the session during the release cycle.
     // Just using an empty string works fine and in case the user calls `session save`, empty lines will be generated.

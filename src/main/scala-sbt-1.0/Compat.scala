@@ -6,7 +6,7 @@ import sbt.internal.{Act, Aggregation}
 import sbt.internal.Aggregation.{KeyValue}
 import sbt.internal.{Load => iLoad}
 import sbt.std.Transform.DummyTaskMap
-import sbt.{State, Result, TaskKey, EvaluateTask, ScopeMask}
+import sbt.{State, Result, TaskKey, EvaluateTask, ScopeMask, Scope, Reference, Select, Zero}
 
 object Compat {
   def runTaskAggregated[T](taskKey: TaskKey[T], state: State): (State, Result[Seq[KeyValue[T]]]) = {
@@ -31,5 +31,15 @@ object Compat {
     (newS, result)
   }
 
-  val Load = iLoad
+  def projectScope(project: Reference): Scope = Scope(Select(project), Zero, Zero, Zero)
+
+  type StructureIndex = sbt.internal.StructureIndex
+  type BuildStructure = sbt.internal.BuildStructure
+  val BuildStreams = sbt.internal.BuildStreams
+  type BuildUtil[Proj] = sbt.internal.BuildUtil[Proj]
+  val BuildUtil = sbt.internal.BuildUtil
+  val Index = sbt.internal.Index
+  type KeyIndex = sbt.internal.KeyIndex
+  val KeyIndex = sbt.internal.KeyIndex
+  type LoadedBuildUnit = sbt.internal.LoadedBuildUnit
 }
