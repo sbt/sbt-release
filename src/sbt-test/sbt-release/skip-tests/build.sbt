@@ -1,6 +1,6 @@
 import sbtrelease.ReleaseStateTransformations._
 
-libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.6" % "test"
+libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.3" % "test"
 
 releaseProcess := Seq(
   checkSnapshotDependencies,
