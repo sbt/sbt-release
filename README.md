@@ -26,7 +26,7 @@ This sbt plugin provides a customizable release process that you can add to your
 
 ## Usage
 
-Add the following lines to `./project/plugins.sbt`. See the section [Using Plugins](http://www.scala-sbt.org/release/tutorial/Using-Plugins.html) in the sbt wiki for more information.
+Add the following lines to `./project/plugins.sbt`. See the section [Using Plugins](http://www.scala-sbt.org/release/docs/Using-Plugins.html) in the sbt wiki for more information.
 
     addSbtPlugin("com.github.gseitz" % "sbt-release" % "1.0.5")
 
@@ -36,7 +36,7 @@ Since the build definition is actual Scala code, it's not as straight forward to
 
 For this reason, *sbt-release* won't ever touch your build definition files, but instead writes the new release or development version to a file defined by the setting `release-version-file`, which is set to **`file("version.sbt")`** by default and points to `$PROJECT_ROOT/version.sbt`.
 
-By default the version is set on the build level (using `version in ThisBuild`). This behavior can be controlled by setting `releaseUseGlobalVersion` to `false`, after which a version like `version := 1.2.3` will be written to `version.sbt`.
+By default the version is set on the build level (using `version in ThisBuild`). This behavior can be controlled by setting `releaseUseGlobalVersion` to `false`, after which a version like `version := "1.2.3"` will be written to `version.sbt`.
 
 
 ## Release Process
@@ -89,7 +89,7 @@ For that emergency release at 2am on a Sunday, you can optionally avoid running 
 
 ### Cross building during a release
 
-Since version 0.7, *sbt-release* comes with built-in support for [cross building](http://www.scala-sbt.org/release/docs/Detailed-Topics/Cross-Build.html) and cross publishing. A cross release can be triggered in two ways:
+Since version 0.7, *sbt-release* comes with built-in support for [cross building](http://www.scala-sbt.org/release/docs/Cross-Build.html) and cross publishing. A cross release can be triggered in two ways:
 
  1. via the setting `releaseCrossBuild` (by default set to `false`)
  1. by using the option `cross` for the `release` command
@@ -239,7 +239,7 @@ I highly recommend to make yourself familiar with the [State API](http://www.sca
 
 ### Can we finally customize that release process, please?
 
-Yes, and as a start, let's take a look at the [default definition](https://github.com/sbt/sbt-release/blob/v1.0.0/src/main/scala/ReleasePlugin.scala#L177) of `releaseProcess`:
+Yes, and as a start, let's take a look at the [default definition](https://github.com/sbt/sbt-release/blob/v1.0.5/src/main/scala/ReleasePlugin.scala#L232) of `releaseProcess`:
 
 #### The default release process
 
@@ -250,6 +250,7 @@ Yes, and as a start, let's take a look at the [default definition](https://githu
     releaseProcess := Seq[ReleaseStep](
       checkSnapshotDependencies,              // : ReleaseStep
       inquireVersions,                        // : ReleaseStep
+      runClean,                               // : ReleaseStep
       runTest,                                // : ReleaseStep
       setReleaseVersion,                      // : ReleaseStep
       commitReleaseVersion,                   // : ReleaseStep, performs the initial git checks
