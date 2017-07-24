@@ -68,6 +68,9 @@ object Compat {
     }
   }
 
+  type Command = sbt.Exec
+  implicit def command2String(command:Command) = command.commandLine
+
   // type aliases
   type StructureIndex = sbt.internal.StructureIndex
   type BuildStructure = sbt.internal.BuildStructure

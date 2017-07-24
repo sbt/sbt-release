@@ -60,6 +60,8 @@ object Compat {
 
   val crossVersions = Cross.crossVersions _
 
+  type Command = String
+
   // type aliases
   type StructureIndex = sbt.StructureIndex
   type BuildStructure = sbt.BuildStructure
