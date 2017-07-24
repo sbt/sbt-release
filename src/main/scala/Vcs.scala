@@ -23,7 +23,8 @@ trait Vcs {
   def isBehindRemote: Boolean
   def pushChanges: ProcessBuilder
   def currentBranch: String
-  def hasUntrackedFiles: Boolean
+  def hasUntrackedFiles: Boolean = untrackedFiles.nonEmpty
+  def untrackedFiles: Seq[String]
   def hasModifiedFiles: Boolean
 
   protected def executableName(command: String) = {
@@ -111,7 +112,7 @@ class Mercurial(val baseDir: File) extends Vcs with GitLike {
   // FIXME: This is utterly bogus, but I cannot find a good way...
   def checkRemote(remote: String) = cmd("id", "-n")
 
-  def hasUntrackedFiles = cmd("status", "-un").!!.trim.nonEmpty
+  def untrackedFiles = cmd("status", "-un").lines
 
   def hasModifiedFiles = cmd("status", "-mn").!!.trim.nonEmpty
 }
@@ -171,7 +172,7 @@ class Git(val baseDir: File) extends Vcs with GitLike {
 
   private def pushTags = cmd("push", "--tags", trackingRemote)
 
-  def hasUntrackedFiles : Boolean = cmd("ls-files", "--other", "--exclude-standard").!!.trim.nonEmpty
+  def untrackedFiles = cmd("ls-files", "--other", "--exclude-standard").lines
 
   def hasModifiedFiles : Boolean = cmd("ls-files", "--modified", "--exclude-standard").!!.trim.nonEmpty
 }
@@ -189,7 +190,7 @@ class Subversion(val baseDir: File) extends Vcs {
   override def cmd(args: Any*): ProcessBuilder = Process(exec +: args.map(_.toString), baseDir)
 
   override def hasModifiedFiles: Boolean = cmd("status", "-q").!!.trim.nonEmpty
-  override def hasUntrackedFiles: Boolean = cmd("status").lines.exists(_.startsWith("?"))
+  override def untrackedFiles = cmd("status").lines.filter(_.startsWith("?"))
 
   override def add(files: String*) = {
     val filesToAdd = files.filterNot(isFileUnderVersionControl)

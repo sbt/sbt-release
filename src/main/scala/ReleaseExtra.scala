@@ -111,7 +111,13 @@ object ReleaseStateTransformations {
     if ( hasModifiedFiles ) sys.error( "Aborting release: unstaged modified files" )
     if ( hasUntrackedFiles && !extracted.get( releaseIgnoreUntrackedFiles ) )
     {
-        sys.error( "Aborting release: untracked files. Remove them or specify 'releaseIgnoreUntrackedFiles := true' in settings" )
+        sys.error(
+          s"""Aborting release: untracked files. Remove them or specify 'releaseIgnoreUntrackedFiles := true' in settings
+            |
+            |Untracked files:
+            |
+            |${vcs(st).untrackedFiles.mkString(" - ", "\n", "")}
+          """.stripMargin )
     }
 
     st.log.info("Starting release process off commit: " + vcs(st).currentHash)
