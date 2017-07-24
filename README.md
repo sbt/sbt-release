@@ -24,7 +24,7 @@ This sbt plugin provides a customizable release process that you can add to your
 
 ## Usage
 
-Add the following lines to `./project/plugins.sbt`. See the section [Using Plugins](http://www.scala-sbt.org/release/tutorial/Using-Plugins.html) in the sbt wiki for more information.
+Add the following lines to `./project/plugins.sbt`. See the section [Using Plugins](http://www.scala-sbt.org/release/docs/Using-Plugins.html) in the sbt wiki for more information.
 
     addSbtPlugin("com.github.gseitz" % "sbt-release" % "1.0.5")
 
@@ -87,7 +87,7 @@ For that emergency release at 2am on a Sunday, you can optionally avoid running 
 
 ### Cross building during a release
 
-Since version 0.7, *sbt-release* comes with built-in support for [cross building](http://www.scala-sbt.org/release/docs/Detailed-Topics/Cross-Build.html) and cross publishing. A cross release can be triggered in two ways:
+Since version 0.7, *sbt-release* comes with built-in support for [cross building](http://www.scala-sbt.org/release/docs/Cross-Build.html) and cross publishing. A cross release can be triggered in two ways:
 
  1. via the setting `releaseCrossBuild` (by default set to `false`)
  1. by using the option `cross` for the `release` command
