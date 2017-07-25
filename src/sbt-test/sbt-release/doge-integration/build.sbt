@@ -16,14 +16,11 @@ val commonSettings = Seq(
   )
 )
 
-lazy val root = {
-  val r = (project in file("."))
+lazy val root = (project in file("."))
     .settings(commonSettings: _*)
     .settings(publishArtifact := false)
     .aggregate(library, plugin)
-  if(Keys.sbtVersion.value.startsWith("0.13")) r.enablePlugins(CrossPerProjectPlugin)
-  else r
-}
+    .enablePlugins(CrossPerProjectPlugin)
 
 // since it's a library it should be cross published
 val library = (project in file("library"))
