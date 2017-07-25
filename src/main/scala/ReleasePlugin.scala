@@ -203,7 +203,9 @@ object ReleasePlugin extends AutoPlugin {
   override def trigger = allRequirements
 
   val runtimeVersion = Def.task {
-    if (releaseUseGlobalVersion.value)(version in ThisBuild).value else version.value
+    val v1 = (version in ThisBuild).value
+    val v2 = version.value
+    if (releaseUseGlobalVersion.value) v1 else v2
   }
 
   override def projectSettings = Seq[Setting[_]](
