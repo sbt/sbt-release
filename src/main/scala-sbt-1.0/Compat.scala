@@ -69,7 +69,11 @@ object Compat {
   }
 
   type Command = sbt.Exec
-  implicit def command2String(command:Command) = command.commandLine
+  implicit def command2String(command: Command) = command.commandLine
+  implicit def string2Exex(s: String): Command = sbt.Exec(s, None, None)
+
+  // for doge integration test
+  object CrossPerProjectPlugin extends AutoPlugin
 
   // type aliases
   type StructureIndex = sbt.internal.StructureIndex

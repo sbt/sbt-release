@@ -16,7 +16,7 @@ libraryDependencies ++= Seq("org.specs2" %% "specs2-core" % "3.9.4" % "test")
 // Scripted
 
 scriptedSettings
-scriptedLaunchOpts := Seq("-Xmx1024M", "-XX:MaxPermSize=256M", "-Dplugin.version=" + version.value)
+scriptedLaunchOpts := Seq("-Xmx1024M", "-XX:MaxPermSize=256M", "-Dplugin.version=" + version.value, "-Dsbt.version=" + sbtVersion.value)
 
 scriptedBufferLog := false
 

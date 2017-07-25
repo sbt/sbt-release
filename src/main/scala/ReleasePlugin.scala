@@ -99,7 +99,7 @@ object ReleasePlugin extends AutoPlugin {
     /**
      * Convert the given command string to a release step action, preserving and invoking remaining commands
      */
-    def releaseStepCommandAndRemaining(command: Compat.Command): State => State = { st: State =>
+    def releaseStepCommandAndRemaining(command: String): State => State = { st: State =>
       import Compat._
       @annotation.tailrec
       def runCommand(command: Compat.Command, state: State): State = {
