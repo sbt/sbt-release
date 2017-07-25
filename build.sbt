@@ -6,18 +6,18 @@ name := "sbt-release"
 homepage := Some(url("https://github.com/sbt/sbt-release"))
 licenses := Seq("Apache-2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0"))
 
+crossSbtVersions := Vector("0.13.16-RC1", "1.0.0-RC2")
 sbtPlugin := true
 publishMavenStyle := false
 scalacOptions += "-deprecation"
 
-libraryDependencies ++= Seq("org.specs2" %% "specs2-core" % "3.6" % "test")
-resolvers += "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases"
+libraryDependencies ++= Seq("org.specs2" %% "specs2-core" % "3.9.4" % "test")
 
 // Scripted
+
 scriptedSettings
-scriptedLaunchOpts := {
-  scriptedLaunchOpts.value ++ Seq("-Xmx1024M", "-XX:MaxPermSize=256M", "-Dplugin.version=" + version.value)
-}
+scriptedLaunchOpts := Seq("-Xmx1024M", "-XX:MaxPermSize=256M", "-Dplugin.version=" + version.value, "-Dsbt.version=" + (sbtVersion in pluginCrossBuild).value)
+
 scriptedBufferLog := false
 
 // Bintray

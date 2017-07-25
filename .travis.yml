@@ -1,10 +1,26 @@
 language: scala
+
+jdk: oraclejdk8
+
+env:
+  matrix:
+    - SBT_CMD=";++2.10.6;^^0.13.16-RC1;test;publishLocal;scripted"
+    - SBT_CMD=";++2.12.2;^^1.0.0-RC2;test;publishLocal;scripted"
+
 script:
  - git config --global user.email "example@example.com"
  - git config --global user.name "example"
  - echo '[ui]' > "$HOME/.hgrc"
  - echo 'username = example <example@example.com>' >> "$HOME/.hgrc"
- - sbt test
- - sbt publishLocal
- - sbt scripted
+ - sbt "$SBT_CMD"
+
+cache:
+  directories:
+    - $HOME/.ivy2/cache
+    - $HOME/.sbt/boot/
+before_cache:
+  # Tricks to avoid unnecessary cache updates
+  - find $HOME/.ivy2 -name "ivydata-*.properties" -delete
+  - find $HOME/.sbt -name "*.lock" -delete
+
 sudo: false

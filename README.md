@@ -3,6 +3,8 @@ This sbt plugin provides a customizable release process that you can add to your
 
 **Notice:** This README contains information for the latest release. Please refer to the documents for a specific version by looking up the respective [tag](https://github.com/sbt/sbt-release/tags).
 
+[![Build Status](https://travis-ci.org/sbt/sbt-release.svg?branch=master)](https://travis-ci.org/sbt/sbt-release)
+
 ## Requirements
  * sbt 0.13.5+
  * The version of the project should follow the semantic versioning scheme on [semver.org](http://www.semver.org) with the following additions:

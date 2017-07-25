@@ -1,8 +1,10 @@
 import sbtrelease.ReleaseStateTransformations._
+import sbtrelease.Compat._
 
 val Scala210 = "2.10.6"
 
 val SupportedScalaVersions = Seq(Scala210, "2.11.8")
+
 
 val commonSettings = Seq(
   scalaVersion := Scala210,
@@ -15,10 +17,10 @@ val commonSettings = Seq(
 )
 
 lazy val root = (project in file("."))
-  .settings(commonSettings: _*)
-  .settings(publishArtifact := false)
-  .aggregate(library, plugin)
-  .enablePlugins(CrossPerProjectPlugin)
+    .settings(commonSettings: _*)
+    .settings(publishArtifact := false)
+    .aggregate(library, plugin)
+    .enablePlugins(CrossPerProjectPlugin)
 
 // since it's a library it should be cross published
 val library = (project in file("library"))

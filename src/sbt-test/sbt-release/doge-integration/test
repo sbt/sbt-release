@@ -1,3 +1,10 @@
+$ exec git init .
+
+> update
+
+$ exec git add .
+$ exec git commit -m init
+
 > release
 $ exists artifacts/library/library_2.10/0.1.2/library_2.10-0.1.2.jar
 $ exists artifacts/library/library_2.11/0.1.2/library_2.11-0.1.2.jar
