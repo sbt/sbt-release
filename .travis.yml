@@ -18,3 +18,7 @@ cache:
 before_cache:
   - find $HOME/.ivy2 -name "ivydata-*.properties" -delete
 sudo: false
+addons:
+  apt:
+    packages:
+    - oracle-java8-installer
