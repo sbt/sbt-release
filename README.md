@@ -46,6 +46,7 @@ The default release process consists of the following tasks:
  1. Check that the working directory is a git repository and the repository has no outstanding changes. Also prints the hash of the last commit to the console.
  1. If there are any snapshot dependencies, ask the user whether to continue or not (default: no).
  1. Ask the user for the `release version` and the `next development version`. Sensible defaults are provided.
+ 1. run `clean`
  1. Run `test:test`, if any test fails, the release process is aborted.
  1. Write `version in ThisBuild := "$releaseVersion"` to the file `version.sbt` and also apply this setting to the current [build state](http://www.scala-sbt.org/release/docs/Build-State.html).
  1. Commit the changes in `version.sbt`.
