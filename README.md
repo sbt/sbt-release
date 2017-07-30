@@ -28,7 +28,7 @@ This sbt plugin provides a customizable release process that you can add to your
 
 Add the following lines to `./project/plugins.sbt`. See the section [Using Plugins](http://www.scala-sbt.org/release/docs/Using-Plugins.html) in the sbt wiki for more information.
 
-    addSbtPlugin("com.github.gseitz" % "sbt-release" % "1.0.5")
+    addSbtPlugin("com.github.gseitz" % "sbt-release" % "1.0.6")
 
 ## version.sbt
 
@@ -239,7 +239,7 @@ I highly recommend to make yourself familiar with the [State API](http://www.sca
 
 ### Can we finally customize that release process, please?
 
-Yes, and as a start, let's take a look at the [default definition](https://github.com/sbt/sbt-release/blob/v1.0.5/src/main/scala/ReleasePlugin.scala#L232) of `releaseProcess`:
+Yes, and as a start, let's take a look at the [default definition](https://github.com/sbt/sbt-release/blob/v1.0.6/src/main/scala/ReleasePlugin.scala#L240) of `releaseProcess`:
 
 #### The default release process
 
