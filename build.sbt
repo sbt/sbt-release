@@ -21,6 +21,26 @@ Seq(Compile, Test).flatMap(c =>
   scalacOptions in (c, console) --= unusedWarnings
 )
 
+val tagName = Def.setting{
+  s"v${if (releaseUseGlobalVersion.value) (version in ThisBuild).value else version.value}"
+}
+val tagOrHash = Def.setting{
+  if(isSnapshot.value)
+    sys.process.Process("git rev-parse HEAD").lines_!.head
+  else
+    tagName.value
+}
+
+releaseTagName := tagName.value
+
+scalacOptions in (Compile, doc) ++= {
+  val tag = tagOrHash.value
+  Seq(
+    "-sourcepath", (baseDirectory in LocalRootProject).value.getAbsolutePath,
+    "-doc-source-url", s"https://github.com/sbt/sbt-release/tree/${tag}€{FILE_PATH}.scala"
+  )
+}
+
 libraryDependencies ++= Seq("org.specs2" %% "specs2-core" % "3.9.1" % "test")
 
 // Scripted
