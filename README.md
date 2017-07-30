@@ -26,7 +26,7 @@ This sbt plugin provides a customizable release process that you can add to your
 
 ## Usage
 
-Add the following lines to `./project/plugins.sbt`. See the section [Using Plugins](http://www.scala-sbt.org/release/docs/Using-Plugins.html) in the sbt wiki for more information.
+Add the following lines to `./project/plugins.sbt`. See the section [Using Plugins](http://www.scala-sbt.org/release/docs/Using-Plugins.html) in the sbt website for more information.
 
     addSbtPlugin("com.github.gseitz" % "sbt-release" % "1.0.6")
 
@@ -94,7 +94,7 @@ Since version 0.7, *sbt-release* comes with built-in support for [cross building
  1. via the setting `releaseCrossBuild` (by default set to `false`)
  1. by using the option `cross` for the `release` command
 
-    > release cross with-defaults
+    `> release cross with-defaults`
 
 Combining both ways of steering a cross release, it is possible to generally disable automatic detection of cross release by using `releaseCrossBuild := false` and running `release cross`.
 
@@ -189,7 +189,7 @@ The function `action` is used to perform the actual release step. Additionally, 
 
 The sequence of `ReleaseStep`s that make up the release process is stored in the setting `releaseProcess: SettingKey[Seq[ReleaseStep]]`.
 
-The state transformations functions used in *sbt-release* are the same as the action/body part of a no-argument command.  You can read more about [building commands](http://www.scala-sbt.org/release/docs/Commands.html) in the sbt wiki.
+The state transformations functions used in *sbt-release* are the same as the action/body part of a no-argument command.  You can read more about [building commands](http://www.scala-sbt.org/release/docs/Commands.html) in the sbt website.
 
 ### Release Steps
 
@@ -263,7 +263,7 @@ Yes, and as a start, let's take a look at the [default definition](https://githu
 
 The names of the individual steps of the release process are pretty much self-describing.
 Notice how we can just reuse the `publish` task by utilizing the `releaseTask` helper function,
-but keep in mind that it needs to be properly scoped (more info on [scoping and settings](https://github.com/harrah/xsbt/wiki/Settings)).
+but keep in mind that it needs to be properly scoped (more info on [Scopes](http://www.scala-sbt.org/release/docs/Scopes.html)).
 
 Note, the `commitReleaseVersion` step requires that the working directory has no untracked files by default. It will abort the release in this case. You may disable this check
 by setting the `releaseIgnoreUntrackedFiles` key to `true`.
