@@ -4,7 +4,6 @@ import java.io.Serializable
 
 import sbt._
 import Keys._
-import _root_.sbt.complete.DefaultParsers._
 import sbt.complete.DefaultParsers._
 import sbt.complete.Parser
 
