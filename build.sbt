@@ -6,7 +6,7 @@ name := "sbt-release"
 homepage := Some(url("https://github.com/sbt/sbt-release"))
 licenses := Seq("Apache-2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0"))
 
-crossSbtVersions := Vector("0.13.16", "1.0.0-RC3")
+crossSbtVersions := Vector("0.13.16", "1.0.0")
 sbtPlugin := true
 publishMavenStyle := false
 scalacOptions += "-deprecation"
