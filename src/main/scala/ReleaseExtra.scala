@@ -30,6 +30,8 @@ object ReleaseStateTransformations {
     newSt
   }, enableCrossBuild = true)
 
+  def whenRelease(releaseStep: ReleaseStep): ReleaseStep =
+    releaseStep.copy(state => if (Project.extract(state).get(isSnapshot)) state else releaseStep.action(state))
 
   lazy val inquireVersions: ReleaseStep = { st: State =>
 
