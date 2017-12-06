@@ -55,8 +55,10 @@ object Load {
     val attributeKeys = Index.attributeKeys(data) ++ keys.map(_.key)
     val scopedKeys = keys ++ data.allKeys((s, k) => ScopedKey(s, k)).toVector
     val projectsMap = projects.mapValues(_.defined.keySet)
-    val keyIndex = KeyIndex(scopedKeys.toVector, projectsMap)
-    val aggIndex = KeyIndex.aggregate(scopedKeys.toVector, extra(keyIndex), projectsMap)
+    val configsMap: Map[String, Seq[Configuration]] =
+      projects.values.flatMap(bu => bu.defined map { case (k, v) => (k, v.configurations) }).toMap
+    val keyIndex = keyIndexApply(scopedKeys.toVector, projectsMap, configsMap)
+    val aggIndex = keyIndexAggregate(scopedKeys.toVector, extra(keyIndex), projectsMap, configsMap)
     new StructureIndex(Index.stringToKeyMap(attributeKeys), Index.taskToKeyMap(data), Index.triggers(data), keyIndex, aggIndex)
   }
 
