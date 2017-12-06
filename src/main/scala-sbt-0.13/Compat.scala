@@ -68,4 +68,19 @@ object Compat {
   val KeyIndex = sbt.KeyIndex
   type LoadedBuildUnit = sbt.LoadedBuildUnit
 
+  private[sbtrelease] def keyIndexApply(
+    known: Iterable[ScopedKey[_]],
+    projects: Map[URI, Set[String]],
+    configurations: Map[String, Seq[Configuration]]
+  ) = {
+    KeyIndex.apply(known = known, projects = projects)
+  }
+
+  private[sbtrelease] def keyIndexAggregate(known: Iterable[ScopedKey[_]],
+                extra: BuildUtil[_],
+                projects: Map[URI, Set[String]],
+                configurations: Map[String, Seq[Configuration]]) = {
+    KeyIndex.aggregate(known = known, extra = extra, projects = projects)
+  }
+
 }
