@@ -4,6 +4,7 @@ import sbt._
 import java.io.File
 
 import sys.process.{ Process, ProcessBuilder, ProcessLogger }
+import Compat._
 
 trait Vcs {
   val commandName: String
@@ -113,8 +114,8 @@ class Mercurial(val baseDir: File) extends Vcs with GitLike {
   // FIXME: This is utterly bogus, but I cannot find a good way...
   def checkRemote(remote: String) = cmd("id", "-n")
 
-  def untrackedFiles = cmd("status", "-un").lines
-  def modifiedFiles = cmd("status", "-mn").lines
+  def untrackedFiles = cmd("status", "-un").lineStream
+  def modifiedFiles = cmd("status", "-mn").lineStream
 }
 
 object Git extends VcsCompanion {
@@ -172,8 +173,8 @@ class Git(val baseDir: File) extends Vcs with GitLike {
 
   private def pushTags = cmd("push", "--tags", trackingRemote)
 
-  def untrackedFiles = cmd("ls-files", "--other", "--exclude-standard").lines
-  def modifiedFiles = cmd("ls-files", "--modified", "--exclude-standard").lines
+  def untrackedFiles = cmd("ls-files", "--other", "--exclude-standard").lineStream
+  def modifiedFiles = cmd("ls-files", "--modified", "--exclude-standard").lineStream
 }
 
 object Subversion extends VcsCompanion {
@@ -188,8 +189,8 @@ class Subversion(val baseDir: File) extends Vcs {
 
   override def cmd(args: Any*): ProcessBuilder = Process(exec +: args.map(_.toString), baseDir)
 
-  override def modifiedFiles = cmd("status", "-q").lines
-  override def untrackedFiles = cmd("status").lines.filter(_.startsWith("?"))
+  override def modifiedFiles = cmd("status", "-q").lineStream
+  override def untrackedFiles = cmd("status").lineStream.filter(_.startsWith("?"))
 
   override def add(files: String*) = {
     val filesToAdd = files.filterNot(isFileUnderVersionControl)

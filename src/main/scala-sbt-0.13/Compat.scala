@@ -83,4 +83,7 @@ object Compat {
     KeyIndex.aggregate(known = known, extra = extra, projects = projects)
   }
 
+  private[sbtrelease] implicit class ProcessBuilderOps(val self: scala.sys.process.ProcessBuilder) {
+    def lineStream = self.lines
+  }
 }
