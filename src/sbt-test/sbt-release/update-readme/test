@@ -1,0 +1,10 @@
+$ exec git init .
+
+> update
+
+$ exec git add .
+$ exec git commit -m init
+
+> release release-version 2.3.4 next-version 2.3.5-SNAPSHOT
+
+> checkReadme
