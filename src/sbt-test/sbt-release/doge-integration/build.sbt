@@ -1,4 +1,5 @@
 import sbtrelease.ReleaseStateTransformations._
+import sbtrelease.Compat._
 
 val Scala210 = "2.10.6"
 
@@ -14,11 +15,22 @@ val commonSettings = Seq(
   )
 )
 
-lazy val root = (project in file("."))
-  .settings(commonSettings: _*)
-  .settings(publishArtifact := false)
-  .aggregate(library, plugin)
-  .enablePlugins(CrossPerProjectPlugin)
+lazy val root = {
+  val p = (project in file("."))
+    .settings(commonSettings: _*)
+    .settings(publishArtifact := false)
+    .aggregate(library, plugin)
+
+  val doge = try {
+    val field = Class.forName("sbtdoge.CrossPerProjectPlugin$").getField(scala.reflect.NameTransformer.MODULE_INSTANCE_NAME)
+    Some(field.get(null).asInstanceOf[AutoPlugin])
+  } catch {
+    case _: ClassNotFoundException =>
+      None
+  }
+
+  doge.fold(p)(p.enablePlugins(_))
+}
 
 // since it's a library it should be cross published
 val library = (project in file("library"))
@@ -28,5 +40,5 @@ val library = (project in file("library"))
 // since it's an sbt plugin, it should only be published for 2.10
 val plugin = (project in file("plugin"))
   .settings(commonSettings: _*)
-  .settings(sbtPlugin := true, crossScalaVersions := Seq(Scala210))
+  .settings(sbtPlugin := true, sbtVersion in pluginCrossBuild := "0.13.16", crossScalaVersions := Seq(Scala210))
   .dependsOn(library)

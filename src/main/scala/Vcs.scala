@@ -3,6 +3,9 @@ package sbtrelease
 import sbt._
 import java.io.File
 
+import sys.process.{ Process, ProcessBuilder, ProcessLogger }
+import Compat._
+
 trait Vcs {
   val commandName: String
 
@@ -22,8 +25,10 @@ trait Vcs {
   def pushChanges(withUpstream: Boolean): ProcessBuilder
   def currentBranch: String
   def setBranch(branch: String): ProcessBuilder
-  def hasUntrackedFiles: Boolean
-  def hasModifiedFiles: Boolean
+  def hasUntrackedFiles: Boolean = untrackedFiles.nonEmpty
+  def untrackedFiles: Seq[String]
+  def hasModifiedFiles: Boolean = modifiedFiles.nonEmpty
+  def modifiedFiles: Seq[String]
 
   protected def executableName(command: String) = {
     val maybeOsName = sys.props.get("os.name").map(_.toLowerCase)
@@ -32,15 +37,15 @@ trait Vcs {
   }
 
   protected val devnull: ProcessLogger = new ProcessLogger {
-    def info(s: => String): Unit = {}
-    def error(s: => String): Unit = {}
-    def buffer[T](f: => T): T = f
+    override def out(s: => String): Unit = {}
+    override def err(s: => String): Unit = {}
+    override def buffer[T](f: => T): T = f
   }
 
   def stdErrorToStdOut(delegate: ProcessLogger): ProcessLogger = new ProcessLogger {
-    def info(s: => String) = delegate.info(s)
-    def error(s: => String) = delegate.info(s)
-    def buffer[T](f: => T): T = delegate.buffer(f)
+    override def out(s: => String): Unit = delegate.out(s)
+    override def err(s: => String): Unit = delegate.out(s)
+    override def buffer[T](f: => T): T = delegate.buffer(f)
   }
 }
 
@@ -87,9 +92,9 @@ class Mercurial(val baseDir: File) extends Vcs with GitLike {
 
   def status = cmd("status")
 
-  def currentHash = (cmd("identify", "-i") !!) trim
+  def currentHash = cmd("identify", "-i").!!.trim
 
-  def existsTag(name: String) = (cmd("tags") !!).linesIterator.exists(_.endsWith(" "+name))
+  def existsTag(name: String) = cmd("tags").!!.linesIterator.exists(_.endsWith(" "+name))
 
   def commit(message: String, sign: Boolean) =
     andSign(sign, cmd("commit", "-m", message))
@@ -105,16 +110,15 @@ class Mercurial(val baseDir: File) extends Vcs with GitLike {
 
   def pushChanges(withUpstream: Boolean) = cmd("push", "-b", ".")
 
-  def currentBranch = (cmd("branch") !!) trim
+  def currentBranch = cmd("branch").!!.trim
 
   def setBranch(branch: String) = throw sys.error("Branch switching not currently supported in hg")
 
   // FIXME: This is utterly bogus, but I cannot find a good way...
   def checkRemote(remote: String) = cmd("id", "-n")
 
-  def hasUntrackedFiles = cmd("status", "-un").!!.trim.nonEmpty
-
-  def hasModifiedFiles = cmd("status", "-mn").!!.trim.nonEmpty
+  def untrackedFiles = cmd("status", "-un").lineStream
+  def modifiedFiles = cmd("status", "-mn").lineStream
 }
 
 object Git extends VcsCompanion {
@@ -135,7 +139,7 @@ class Git(val baseDir: File) extends Vcs with GitLike {
 
   def hasUpstream = trackingRemoteCmd(currentBranch) ! devnull == 0 && trackingBranchCmd ! devnull == 0
 
-  def currentBranch =  (cmd("symbolic-ref", "HEAD") !!).trim.stripPrefix("refs/heads/")
+  def currentBranch =  cmd("symbolic-ref", "HEAD").!!.trim.stripPrefix("refs/heads/")
 
   def setBranch(branch: String) = {
     if (trackingRemoteCmd(branch) ! devnull != 0) {
@@ -147,7 +151,7 @@ class Git(val baseDir: File) extends Vcs with GitLike {
 
   def currentHash = revParse("HEAD")
 
-  private def revParse(name: String) = (cmd("rev-parse", name) !!) trim
+  private def revParse(name: String) = cmd("rev-parse", name).!!.trim
 
   def isBehindRemote = (cmd("rev-list", "%s..%s/%s".format(currentBranch, trackingRemote, trackingBranch)) !! devnull).trim.nonEmpty
 
@@ -182,9 +186,8 @@ class Git(val baseDir: File) extends Vcs with GitLike {
 
   private def pushTags = cmd("push", "--tags", trackingRemote)
 
-  def hasUntrackedFiles : Boolean = cmd("ls-files", "--other", "--exclude-standard").!!.trim.nonEmpty
-
-  def hasModifiedFiles : Boolean = cmd("ls-files", "--modified", "--exclude-standard").!!.trim.nonEmpty
+  def untrackedFiles = cmd("ls-files", "--other", "--exclude-standard").lineStream
+  def modifiedFiles = cmd("ls-files", "--modified", "--exclude-standard").lineStream
 }
 
 object Subversion extends VcsCompanion {
@@ -199,8 +202,8 @@ class Subversion(val baseDir: File) extends Vcs {
 
   override def cmd(args: Any*): ProcessBuilder = Process(exec +: args.map(_.toString), baseDir)
 
-  override def hasModifiedFiles: Boolean = cmd("status", "-q").!!.trim.nonEmpty
-  override def hasUntrackedFiles: Boolean = cmd("status").lines.exists(_.startsWith("?"))
+  override def modifiedFiles = cmd("status", "-q").lineStream
+  override def untrackedFiles = cmd("status").lineStream.filter(_.startsWith("?"))
 
   override def add(files: String*) = {
     val filesToAdd = files.filterNot(isFileUnderVersionControl)

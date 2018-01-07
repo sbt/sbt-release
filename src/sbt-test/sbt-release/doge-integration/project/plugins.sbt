@@ -1,4 +1,10 @@
-addSbtPlugin("com.eed3si9n" % "sbt-doge" % "0.1.5")
+libraryDependencies ++= {
+  // sbt-doge has been included in sbt 1.0 so this plugin is only available for 0.13
+  if(sbtVersion.value.startsWith("0.13"))
+    Seq(Defaults.sbtPluginExtra("com.eed3si9n" % "sbt-doge" % "0.1.5", sbtBinaryVersion.value, scalaBinaryVersion.value))
+  else
+    Nil
+}
 
 {
   val pluginVersion = System.getProperty("plugin.version")

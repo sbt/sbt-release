@@ -6,17 +6,47 @@ name := "sbt-release"
 homepage := Some(url("https://github.com/sbt/sbt-release"))
 licenses := Seq("Apache-2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0"))
 
+crossSbtVersions := Vector("0.13.16", "1.0.4")
 sbtPlugin := true
 publishMavenStyle := false
 scalacOptions += "-deprecation"
 
-libraryDependencies ++= Seq("org.specs2" %% "specs2-core" % "3.6" % "test")
-resolvers += "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases"
+val unusedWarnings = Seq("-Ywarn-unused-import")
+
+scalacOptions ++= PartialFunction.condOpt(CrossVersion.partialVersion(scalaVersion.value)){
+  case Some((2, v)) if v >= 11 => unusedWarnings
+}.toList.flatten
+
+Seq(Compile, Test).flatMap(c =>
+  scalacOptions in (c, console) --= unusedWarnings
+)
+
+val tagName = Def.setting{
+  s"v${if (releaseUseGlobalVersion.value) (version in ThisBuild).value else version.value}"
+}
+val tagOrHash = Def.setting{
+  if(isSnapshot.value)
+    sys.process.Process("git rev-parse HEAD").lines_!.head
+  else
+    tagName.value
+}
+
+releaseTagName := tagName.value
+
+scalacOptions in (Compile, doc) ++= {
+  val tag = tagOrHash.value
+  Seq(
+    "-sourcepath", (baseDirectory in LocalRootProject).value.getAbsolutePath,
+    "-doc-source-url", s"https://github.com/sbt/sbt-release/tree/${tag}€{FILE_PATH}.scala"
+  )
+}
+
+libraryDependencies ++= Seq("org.specs2" %% "specs2-core" % "3.9.1" % "test")
 
 // Scripted
 scriptedSettings
-scriptedLaunchOpts <<= (scriptedLaunchOpts, version) { case (s,v) => s ++
-  Seq("-Xmx1024M", "-XX:MaxPermSize=256M", "-Dplugin.version=" + v)
+scriptedLaunchOpts := {
+  scriptedLaunchOpts.value ++ Seq("-Xmx1024M", "-XX:MaxPermSize=256M", "-Dplugin.version=" + version.value)
 }
 scriptedBufferLog := false
 
@@ -28,16 +58,16 @@ bintrayReleaseOnPublish := false
 
 // Release
 import ReleaseTransformations._
-releasePublishArtifactsAction := PgpKeys.publishSigned.value
 releaseProcess := Seq[ReleaseStep](
   checkSnapshotDependencies,
   inquireVersions,
   runClean,
-  runTest,
+  releaseStepCommandAndRemaining("^ test"),
+  releaseStepCommandAndRemaining("^ scripted"),
   setReleaseVersion,
   commitReleaseVersion,
   tagRelease,
-  publishArtifacts,
+  releaseStepCommandAndRemaining("^ publishSigned"),
   releaseStepTask(bintrayRelease in `sbt-release`),
   setNextVersion,
   commitNextVersion,
