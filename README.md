@@ -110,7 +110,7 @@ In the section *Customizing the release process* we take a look at how to define
 
 ### Convenient versioning
 
-As of version 0.8, *sbt-release* comes with four strategies for computing the next snapshot version via the `releaseVersionBump` setting. These strategies are, defined in `sbtrelease.Version.Bump`. By default, the `Next` strategy is used:
+As of version 0.8, *sbt-release* comes with four strategies for computing the next snapshot version via the `releaseVersionBump` setting. These strategies are defined in `sbtrelease.Version.Bump`. By default, the `Next` strategy is used:
 
  * `Major`: always bumps the *major* part of the version
  * `Minor`: always bumps the *minor* part of the version
@@ -138,8 +138,10 @@ The default settings make use of the helper class [`Version`](https://github.com
     // strip the qualifier off the input version, eg. 1.2.1-SNAPSHOT -> 1.2.1
     releaseVersion     := { ver => Version(ver).map(_.withoutQualifier.string).getOrElse(versionFormatError) }
 
-    // bump the minor version and append '-SNAPSHOT', eg. 1.2.1 -> 1.3.0-SNAPSHOT
-    releaseNextVersion := { ver => Version(ver).map(_.bumpMinor.asSnapshot.string).getOrElse(versionFormatError) }
+    // bump the version and append '-SNAPSHOT', eg. 1.2.1 -> 1.3.0-SNAPSHOT
+    releaseNextVersion := {
+      ver => Version(ver).map(_.bump(releaseVersionBump.value).asSnapshot.string).getOrElse(versionFormatError)
+    },
 
 If you want to customize the versioning, keep the following in mind:
 
