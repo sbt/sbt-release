@@ -1,0 +1,8 @@
+$ exec git init .
+
+> update
+
+$ exec git add .
+$ exec git commit -m init
+
+> checkExitCodes

@@ -183,6 +183,10 @@ object ReleasePlugin extends AutoPlugin {
           }
         }
 
+        val failureCheck = { s: State =>
+          filterFailure(_.copy(onFailure = Some(FailureCommand)))(s)
+        }
+
         val process = releaseParts.map { step =>
           if (step.enableCrossBuild && crossEnabled) {
             filterFailure(ReleaseStateTransformations.runCrossBuild(step.action)) _
@@ -190,7 +194,9 @@ object ReleasePlugin extends AutoPlugin {
         }
 
         initialChecks.foreach(_(startState))
-        Function.chain(process :+ removeFailureCommand)(startState)
+        Function.chain(
+          (process :+ removeFailureCommand).flatMap(Seq(_, failureCheck))
+        )(startState)
       }
     }
   }
