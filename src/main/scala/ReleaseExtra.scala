@@ -96,7 +96,7 @@ object ReleaseStateTransformations {
     st.extract.get(releaseVcs).getOrElse(sys.error("Aborting release. Working directory is not a repository of a recognized VCS."))
   }
 
-  private def writeVersion(st: State, versionString: String) {
+  private def writeVersion(st: State, versionString: String): Unit = {
     val file = st.extract.get(releaseVersionFile)
     IO.writeLines(file, Seq(versionString))
   }
