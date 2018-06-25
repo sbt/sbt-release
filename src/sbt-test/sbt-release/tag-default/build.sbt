@@ -1,6 +1,6 @@
 import sbtrelease.ReleaseStateTransformations._
 
-scalaVersion := "2.11.11"
+scalaVersion := "2.11.12"
 
 libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.6" % "test"
 
