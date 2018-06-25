@@ -1,9 +1,9 @@
 import sbtrelease.ReleaseStateTransformations._
 import sbtrelease.Compat._
 
-val Scala210 = "2.10.6"
+val Scala210 = "2.10.7"
 
-val SupportedScalaVersions = Seq(Scala210, "2.11.8")
+val SupportedScalaVersions = Seq(Scala210, "2.11.12")
 
 val commonSettings = Seq(
   scalaVersion := Scala210,
