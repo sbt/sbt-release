@@ -98,7 +98,7 @@ object ReleasePlugin extends AutoPlugin {
     /**
      * Convert the given command string to a release step action, preserving and invoking remaining commands
      */
-    def releaseStepCommandAndRemaining(command: String): State => State = { st: State =>
+    def releaseStepCommandAndRemaining(command: String): State => State = { initState: State =>
       import Compat._
       @annotation.tailrec
       def runCommand(command: Compat.Command, state: State): State = {
@@ -107,11 +107,12 @@ object ReleasePlugin extends AutoPlugin {
           case Left(msg) => throw sys.error(s"Invalid programmatic input:\n$msg")
         }
         nextState.remainingCommands.toList match {
-          case Nil => nextState
+          case Nil => nextState.copy(remainingCommands = initState.remainingCommands)
+          case Compat.FailureCommand :: tail => nextState.copy(remainingCommands = FailureCommand +: initState.remainingCommands)
           case head :: tail => runCommand(head, nextState.copy(remainingCommands = tail))
         }
       }
-      runCommand(command, st.copy(remainingCommands = Nil)).copy(remainingCommands = st.remainingCommands)
+      runCommand(command, initState.copy(remainingCommands = Nil))
     }
 
     object ReleaseKeys {
