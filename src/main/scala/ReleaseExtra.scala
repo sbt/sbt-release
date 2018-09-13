@@ -123,7 +123,7 @@ object ReleaseStateTransformations {
     st.extract.get(releaseVcs).getOrElse(sys.error("Aborting release. Working directory is not a repository of a recognized VCS."))
   }
 
-  private def writeVersion(st: State, versionString: String) {
+  private def writeVersion(st: State, versionString: String): Unit = {
     val file = st.extract.get(releaseVersionFile)
     IO.writeLines(file, Seq(versionString))
   }
@@ -173,6 +173,7 @@ object ReleaseStateTransformations {
     val file = st.extract.get(releaseVersionFile).getCanonicalFile
     val base = vcs(st).baseDir.getCanonicalFile
     val sign = st.extract.get(releaseVcsSign)
+    val signOff = st.extract.get(releaseVcsSignOff)
     val relativePath = IO.relativize(base, file).getOrElse("Version file [%s] is outside of this VCS repository with base directory [%s]!" format(file, base))
 
     vcs(st).add(relativePath) !! log
@@ -180,7 +181,7 @@ object ReleaseStateTransformations {
 
     val newState = if (status.nonEmpty) {
       val (state, msg) = st.extract.runTask(releaseCommitMessage, st)
-      vcs(state).commit(msg, sign) ! log
+      vcs(state).commit(msg, sign, signOff) ! log
       state
     } else {
       // nothing to commit. this happens if the version.sbt file hasn't changed.

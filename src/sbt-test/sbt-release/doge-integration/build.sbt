@@ -1,9 +1,9 @@
 import sbtrelease.ReleaseStateTransformations._
 import sbtrelease.Compat._
 
-val Scala210 = "2.10.6"
+val Scala210 = "2.10.7"
 
-val SupportedScalaVersions = Seq(Scala210, "2.11.8")
+val SupportedScalaVersions = Seq(Scala210, "2.11.12")
 
 val commonSettings = Seq(
   scalaVersion := Scala210,
@@ -40,5 +40,5 @@ val library = (project in file("library"))
 // since it's an sbt plugin, it should only be published for 2.10
 val plugin = (project in file("plugin"))
   .settings(commonSettings: _*)
-  .settings(sbtPlugin := true, sbtVersion in pluginCrossBuild := "0.13.16", crossScalaVersions := Seq(Scala210))
+  .settings(sbtPlugin := true, sbtVersion in pluginCrossBuild := "0.13.17", crossScalaVersions := Seq(Scala210))
   .dependsOn(library)

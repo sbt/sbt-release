@@ -15,7 +15,7 @@ trait Vcs {
   def status: ProcessBuilder
   def currentHash: String
   def add(files: String*): ProcessBuilder
-  def commit(message: String, sign: Boolean): ProcessBuilder
+  def commit(message: String, sign: Boolean, signOff: Boolean): ProcessBuilder
   def existsTag(name: String): Boolean
   def checkRemote(remote: String): ProcessBuilder
   def tag(name: String, comment: String, sign: Boolean): ProcessBuilder
@@ -96,7 +96,7 @@ class Mercurial(val baseDir: File) extends Vcs with GitLike {
 
   def existsTag(name: String) = cmd("tags").!!.linesIterator.exists(_.endsWith(" "+name))
 
-  def commit(message: String, sign: Boolean) =
+  def commit(message: String, sign: Boolean, signOff: Boolean) =
     andSign(sign, cmd("commit", "-m", message))
 
   def tag(name: String, comment: String, sign: Boolean) =
@@ -155,17 +155,29 @@ class Git(val baseDir: File) extends Vcs with GitLike {
 
   def isBehindRemote = (cmd("rev-list", "%s..%s/%s".format(currentBranch, trackingRemote, trackingBranch)) !! devnull).trim.nonEmpty
 
-  private def withSignFlag(sign: Boolean, flag: String)(args: String*) =
-    if (sign)
-      args :+ s"-$flag"
+  private final case class GitFlag(on: Boolean, flag: String)
+
+  private def withFlags(flags: Seq[GitFlag])(args: String*) = {
+    val appended = flags.map{gitFlag =>
+      if (gitFlag.on)
+        s"-${gitFlag.flag}"
+      else
+        ""
+    }.mkString(" ")
+
+    if (appended.trim.nonEmpty)
+      args :+ appended
     else
       args
+  }
 
-  def commit(message: String, sign: Boolean) =
-    cmd(withSignFlag(sign, "S")("commit", "-m", message): _*)
+  def commit(message: String, sign: Boolean, signOff: Boolean) = {
+    val gitFlags = List(GitFlag(sign, "S"), GitFlag(signOff, "s"))
+    cmd(withFlags(gitFlags)("commit", "-m", message): _*)
+  }
 
   def tag(name: String, comment: String, sign: Boolean) =
-    cmd(withSignFlag(sign, "s")("tag", "-f", "-a", name, "-m", comment): _*)
+    cmd(withFlags(List(GitFlag(sign, "s")))("tag", "-f", "-a", name, "-m", comment): _*)
 
   def existsTag(name: String) = cmd("show-ref", "--quiet", "--tags", "--verify", "refs/tags/" + name) ! devnull == 0
 
@@ -210,8 +222,9 @@ class Subversion(val baseDir: File) extends Vcs {
     if(!filesToAdd.isEmpty) cmd(("add" +: filesToAdd): _*) else noop
   }
 
-  override def commit(message: String, sign: Boolean) = {
+  override def commit(message: String, sign: Boolean, signOff: Boolean) = {
     require(!sign, "Signing not supported in Subversion.")
+    require(!signOff, "Signing off not supported in Subversion.")
     cmd("commit", "-m", message)
   }
 
@@ -219,7 +232,7 @@ class Subversion(val baseDir: File) extends Vcs {
 
   def setBranch(branch: String) = throw sys.error("Branch switching not currently supported in svn")
 
-  override def pushChanges(withUpstream: Boolean): ProcessBuilder = commit("push changes", false)
+  override def pushChanges(withUpstream: Boolean): ProcessBuilder = commit("push changes", false, false)
 
   override def isBehindRemote: Boolean = false
 

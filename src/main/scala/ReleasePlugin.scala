@@ -23,6 +23,7 @@ object ReleasePlugin extends AutoPlugin {
     val releaseUseGlobalVersion = settingKey[Boolean]("Whether to use a global version")
     val releaseIgnoreUntrackedFiles = settingKey[Boolean]("Whether to ignore untracked files")
     val releaseVcsSign = settingKey[Boolean]("Whether to sign VCS commits and tags")
+    val releaseVcsSignOff = settingKey[Boolean]("Whether to signoff VCS commits")
 
     val releaseVcs = settingKey[Option[Vcs]]("The VCS to use")
     val releasePublishArtifactsAction = taskKey[Unit]("The action that should be performed to publish artifacts")
@@ -98,7 +99,7 @@ object ReleasePlugin extends AutoPlugin {
     /**
      * Convert the given command string to a release step action, preserving and invoking remaining commands
      */
-    def releaseStepCommandAndRemaining(command: String): State => State = { st: State =>
+    def releaseStepCommandAndRemaining(command: String): State => State = { initState: State =>
       import Compat._
       @annotation.tailrec
       def runCommand(command: Compat.Command, state: State): State = {
@@ -107,11 +108,12 @@ object ReleasePlugin extends AutoPlugin {
           case Left(msg) => throw sys.error(s"Invalid programmatic input:\n$msg")
         }
         nextState.remainingCommands.toList match {
-          case Nil => nextState
+          case Nil => nextState.copy(remainingCommands = initState.remainingCommands)
+          case Compat.FailureCommand :: tail => nextState.copy(remainingCommands = FailureCommand +: initState.remainingCommands)
           case head :: tail => runCommand(head, nextState.copy(remainingCommands = tail))
         }
       }
-      runCommand(command, st.copy(remainingCommands = Nil)).copy(remainingCommands = st.remainingCommands)
+      runCommand(command, initState.copy(remainingCommands = Nil))
     }
 
     object ReleaseKeys {
@@ -194,6 +196,10 @@ object ReleasePlugin extends AutoPlugin {
           }
         }
 
+        val failureCheck = { s: State =>
+          filterFailure(_.copy(onFailure = Some(FailureCommand)))(s)
+        }
+
         val process = releaseParts.map { step =>
           if (step.enableCrossBuild && crossEnabled) {
             filterFailure(ReleaseStateTransformations.runCrossBuild(step.action)) _
@@ -201,7 +207,9 @@ object ReleasePlugin extends AutoPlugin {
         }
 
         initialChecks.foreach(_(startState))
-        Function.chain(process :+ removeFailureCommand)(startState)
+        Function.chain(
+          (process :+ removeFailureCommand).flatMap(Seq(_, failureCheck))
+        )(startState)
       }
     }
   }
@@ -240,6 +248,7 @@ object ReleasePlugin extends AutoPlugin {
 
     releaseVcs := Vcs.detect(baseDirectory.value),
     releaseVcsSign := false,
+    releaseVcsSignOff := false,
 
     releaseVersionFile := baseDirectory.value / "version.sbt",
 
