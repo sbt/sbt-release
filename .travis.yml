@@ -8,7 +8,7 @@ matrix:
   - env: SBT_VERSION="1.1.0"
     jdk: oraclejdk8
   - env: SBT_VERSION="1.1.6"
-    jdk: oraclejdk10
+    jdk: openjdk11
 script:
  - git config --global user.email "example@example.com"
  - git config --global user.name "example"
