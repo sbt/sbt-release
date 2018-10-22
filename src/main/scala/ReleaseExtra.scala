@@ -281,7 +281,7 @@ object ReleaseStateTransformations {
     else if (useDef) ver
     else SimpleReader.readLine(prompt format ver) match {
       case Some("") => ver
-      case Some(input) => Version(input).map(_.string).getOrElse(versionFormatError)
+      case Some(input) => Version(input).map(_.string).getOrElse(versionFormatError(input))
       case None => sys.error("No version provided!")
     }
   }
