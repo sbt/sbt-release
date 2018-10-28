@@ -222,10 +222,10 @@ object ReleasePlugin extends AutoPlugin {
       snapshots
     },
 
-    releaseVersion := { ver => Version(ver).map(_.withoutQualifier.string).getOrElse(versionFormatError) },
+    releaseVersion := { ver => Version(ver).map(_.withoutQualifier.string).getOrElse(versionFormatError(ver)) },
     releaseVersionBump := Version.Bump.default,
     releaseNextVersion := {
-      ver => Version(ver).map(_.bump(releaseVersionBump.value).asSnapshot.string).getOrElse(versionFormatError)
+      ver => Version(ver).map(_.bump(releaseVersionBump.value).asSnapshot.string).getOrElse(versionFormatError(ver))
     },
     releaseUseGlobalVersion := true,
     releaseCrossBuild := false,
