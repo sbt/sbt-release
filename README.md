@@ -10,7 +10,7 @@ This sbt plugin provides a customizable release process that you can add to your
  * sbt 0.13.5+
  * The version of the project should follow the semantic versioning scheme on [semver.org](http://www.semver.org) with the following additions:
    * The minor and bugfix (and beyond) part of the version are optional.
-   * There is no limit to the number of subverions you may have.
+   * There is no limit to the number of subversions you may have.
    * The appendix after the bugfix part must be alphanumeric (`[0-9a-zA-Z]`) but may also contain dash characters `-`.
    * These are all valid version numbers:
      * 1.2.3
