@@ -249,7 +249,7 @@ class Subversion(val baseDir: File) extends Vcs {
     val svnInfo = cmd("info").!!
     val svnInfoUrlKey = "URL: "
     val urlStartIdx = svnInfo.indexOf(svnInfoUrlKey) + svnInfoUrlKey.length
-    svnInfo.substring(urlStartIdx, svnInfo.indexOf('\n', urlStartIdx)-1)
+    svnInfo.substring(urlStartIdx, svnInfo.indexOf('\n', urlStartIdx)).trim
   }
 
   lazy val repoRoot:String = {
@@ -258,7 +258,7 @@ class Subversion(val baseDir: File) extends Vcs {
       workingDirSvnUrl.indexOf("/branches"),
       workingDirSvnUrl.indexOf("/tags")
     ).filter(_ >= 0)
-    require(!svnBaseUrlEndIdxOptions.isEmpty, "No /trunk, /branches or /tags part found in svn url. Base url cannot be extracted.")
+    require(!svnBaseUrlEndIdxOptions.isEmpty, "No /trunk, /branches or /tags part found in svn url. Base url cannot be extracted. Url: " + workingDirSvnUrl)
     val svnBaseUrlEndIdx = svnBaseUrlEndIdxOptions.head
     workingDirSvnUrl.substring(0, svnBaseUrlEndIdx + 1)
   }
