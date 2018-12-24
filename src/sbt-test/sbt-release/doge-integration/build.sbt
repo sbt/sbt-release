@@ -40,5 +40,5 @@ val library = (project in file("library"))
 // since it's an sbt plugin, it should only be published for 2.10
 val plugin = (project in file("plugin"))
   .settings(commonSettings: _*)
-  .settings(sbtPlugin := true, sbtVersion in pluginCrossBuild := "0.13.17", crossScalaVersions := Seq(Scala210))
+  .settings(sbtPlugin := true, sbtVersion in pluginCrossBuild := "0.13.18", crossScalaVersions := Seq(Scala210))
   .dependsOn(library)
