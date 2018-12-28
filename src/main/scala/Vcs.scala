@@ -146,18 +146,12 @@ class Git(val baseDir: File) extends Vcs with GitLike {
 
   private final case class GitFlag(on: Boolean, flag: String)
 
-  private def withFlags(flags: Seq[GitFlag])(args: String*) = {
-    val appended = flags.map{gitFlag =>
-      if (gitFlag.on)
-        s"-${gitFlag.flag}"
-      else
-        ""
-    }.mkString(" ")
+  private def withFlags(flags: Seq[GitFlag])(args: String*): Seq[String] = {
+    val appended = flags.collect {
+      case GitFlag(true, flag) => s"-$flag"
+    }
 
-    if (appended.trim.nonEmpty)
-      args :+ appended
-    else
-      args
+    args ++ appended
   }
 
   def commit(message: String, sign: Boolean, signOff: Boolean) = {
