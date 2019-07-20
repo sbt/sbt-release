@@ -1,13 +1,16 @@
-# SBT-RELEASE
+# sbt-release
 This sbt plugin provides a customizable release process that you can add to your project.
 
 **Notice:** This README contains information for the latest release. Please refer to the documents for a specific version by looking up the respective [tag](https://github.com/sbt/sbt-release/tags).
+
+[![Build Status](https://travis-ci.org/sbt/sbt-release.svg?branch=master)](https://travis-ci.org/sbt/sbt-release) [![Download](https://api.bintray.com/packages/sbt/sbt-plugin-releases/sbt-release/images/download.svg)](https://bintray.com/sbt/sbt-plugin-releases/sbt-release/_latestVersion)
+
 
 ## Requirements
  * sbt 0.13.5+
  * The version of the project should follow the semantic versioning scheme on [semver.org](http://www.semver.org) with the following additions:
    * The minor and bugfix (and beyond) part of the version are optional.
-   * There is no limit to the number of subverions you may have.
+   * There is no limit to the number of subversions you may have.
    * The appendix after the bugfix part must be alphanumeric (`[0-9a-zA-Z]`) but may also contain dash characters `-`.
    * These are all valid version numbers:
      * 1.2.3
@@ -24,9 +27,9 @@ This sbt plugin provides a customizable release process that you can add to your
 
 ## Usage
 
-Add the following lines to `./project/plugins.sbt`. See the section [Using Plugins](http://www.scala-sbt.org/release/tutorial/Using-Plugins.html) in the sbt wiki for more information.
+Add the following lines to `./project/plugins.sbt`. See the section [Using Plugins](http://www.scala-sbt.org/release/docs/Using-Plugins.html) in the sbt website for more information.
 
-    addSbtPlugin("com.github.gseitz" % "sbt-release" % "1.0.3")
+    addSbtPlugin("com.github.gseitz" % "sbt-release" % "1.0.11")
 
 ## version.sbt
 
@@ -34,7 +37,7 @@ Since the build definition is actual Scala code, it's not as straight forward to
 
 For this reason, *sbt-release* won't ever touch your build definition files, but instead writes the new release or development version to a file defined by the setting `release-version-file`, which is set to **`file("version.sbt")`** by default and points to `$PROJECT_ROOT/version.sbt`.
 
-By default the version is set on the build level (using `version in ThisBuild`). This behavior can be controlled by setting `releaseUseGlobalVersion` to `false`, after which a version like `version := 1.2.3` will be written to `version.sbt`.
+By default the version is set on the build level (using `version in ThisBuild`). This behavior can be controlled by setting `releaseUseGlobalVersion` to `false`, after which a version like `version := "1.2.3"` will be written to `version.sbt`.
 
 
 ## Release Process
@@ -44,6 +47,7 @@ The default release process consists of the following tasks:
  1. Check that the working directory is a git repository and the repository has no outstanding changes. Also prints the hash of the last commit to the console.
  1. If there are any snapshot dependencies, ask the user whether to continue or not (default: no).
  1. Ask the user for the `release version` and the `next development version`. Sensible defaults are provided.
+ 1. Run `clean`.
  1. Run `test:test`, if any test fails, the release process is aborted.
  1. Write `version in ThisBuild := "$releaseVersion"` to the file `version.sbt` and also apply this setting to the current [build state](http://www.scala-sbt.org/release/docs/Build-State.html).
  1. Commit the changes in `version.sbt`.
@@ -63,11 +67,23 @@ For all interactions, the following default value will be chosen:
  * Continue with snapshots dependencies: no
  * Release Version: current version without the qualifier (eg. `1.2-SNAPSHOT` -> `1.2`)
  * Next Version: increase the minor version segment of the current version and set the qualifier to '-SNAPSHOT' (eg. `1.2.1-SNAPSHOT` -> `1.3.0-SNAPSHOT`)
- * VCS tag: abort if the tag already exists
+ * VCS tag: default is abort if the tag already exists. It is possible to override the answer to VCS by ```default-tag-exists-answer``` with one of:
+    * ```o``` override
+    * ```k``` do not overwrite
+    * ```a``` abort (default)
+    * ```<tag-name>``` an explicit custom tag name (e.g. ```1.2-M3```)
  * VCS push:
     * Abort if no remote tracking branch is set up.
     * Abort if remote tracking branch cannot be checked (eg. via `git fetch`).
     * Abort if the remote tracking branch has unmerged commits.
+
+### Set release version and next version as command arguments
+
+You can set the release version using the argument `release-version` and next version with `next-version`.
+
+Example:
+
+    release release-version 1.0.99 next-version 1.2.0-SNAPSHOT
 
 ### Skipping tests
 
@@ -75,12 +91,12 @@ For that emergency release at 2am on a Sunday, you can optionally avoid running 
 
 ### Cross building during a release
 
-Since version 0.7, *sbt-release* comes with built-in support for [cross building](http://www.scala-sbt.org/release/docs/Detailed-Topics/Cross-Build.html) and cross publishing. A cross release can be triggered in two ways:
+Since version 0.7, *sbt-release* comes with built-in support for [cross building](http://www.scala-sbt.org/release/docs/Cross-Build.html) and cross publishing. A cross release can be triggered in two ways:
 
  1. via the setting `releaseCrossBuild` (by default set to `false`)
  1. by using the option `cross` for the `release` command
 
-    > release cross with-defaults
+    `> release cross with-defaults`
 
 Combining both ways of steering a cross release, it is possible to generally disable automatic detection of cross release by using `releaseCrossBuild := false` and running `release cross`.
 
@@ -88,13 +104,13 @@ Of the predefined release steps, the `clean`, `test`, and `publish` release step
 
 A cross release behaves analogous to using the `+` command:
  1. If no `crossScalaVersions` are set, then running `release` or `release cross` will not trigger a cross release (i.e. run the release with the scala version specified in the setting `scalaVersion`).
- 1. If the `crossScalaVersions` setting is set, then only these scala versions will be used. Make sure to include the regular/default `scalaVersion` in the `crossScalaVersion` setting as well.
+ 1. If the `crossScalaVersions` setting is set, then only these scala versions will be used. Make sure to include the regular/default `scalaVersion` in the `crossScalaVersions` setting as well.
 
 In the section *Customizing the release process* we take a look at how to define a `ReleaseStep` to participate in a cross build.
 
 ### Convenient versioning
 
-As of version 0.8, *sbt-release* comes with four strategies for computing the next snapshot version via the `releaseVersionBump` setting. These strategies are, defined in `sbtrelease.Version.Bump`. By default, the `Next` strategy is used:
+As of version 0.8, *sbt-release* comes with four strategies for computing the next snapshot version via the `releaseVersionBump` setting. These strategies are defined in `sbtrelease.Version.Bump`. By default, the `Next` strategy is used:
 
  * `Major`: always bumps the *major* part of the version
  * `Minor`: always bumps the *minor* part of the version
@@ -120,10 +136,12 @@ Let's take a look at the types:
 The default settings make use of the helper class [`Version`](https://github.com/sbt/sbt-release/blob/master/src/main/scala/Version.scala) that ships with *sbt-release*.
 
     // strip the qualifier off the input version, eg. 1.2.1-SNAPSHOT -> 1.2.1
-    releaseVersion     := { ver => Version(ver).map(_.withoutQualifier.string).getOrElse(versionFormatError) }
+    releaseVersion     := { ver => Version(ver).map(_.withoutQualifier.string).getOrElse(versionFormatError(ver)) }
 
-    // bump the minor version and append '-SNAPSHOT', eg. 1.2.1 -> 1.3.0-SNAPSHOT
-    releaseNextVersion := { ver => Version(ver).map(_.bumpMinor.asSnapshot.string).getOrElse(versionFormatError) }
+    // bump the version and append '-SNAPSHOT', eg. 1.2.1 -> 1.3.0-SNAPSHOT
+    releaseNextVersion := {
+      ver => Version(ver).map(_.bump(releaseVersionBump.value).asSnapshot.string).getOrElse(versionFormatError(ver))
+    },
 
 If you want to customize the versioning, keep the following in mind:
 
@@ -171,11 +189,11 @@ The release process is defined by [State](http://www.scala-sbt.org/release/api/s
       enableCrossBuild: Boolean = false
     )
 
-The function `action` is used to perform the actual release step. Additionally, each release step can provide a `check` function that is run at the beginning of the release and can be used to prevent the release from running because of an unsatisified invariant (i.e. the release step for publishing artifacts checks that publishTo is properly set up).  The property `enableCrossBuild` tells *sbt-release* whether or not a particular `ReleaseStep` needs to be executed for the specified `crossScalaVersions`.
+The function `action` is used to perform the actual release step. Additionally, each release step can provide a `check` function that is run at the beginning of the release and can be used to prevent the release from running because of an unsatisfied invariant (i.e. the release step for publishing artifacts checks that publishTo is properly set up).  The property `enableCrossBuild` tells *sbt-release* whether or not a particular `ReleaseStep` needs to be executed for the specified `crossScalaVersions`.
 
 The sequence of `ReleaseStep`s that make up the release process is stored in the setting `releaseProcess: SettingKey[Seq[ReleaseStep]]`.
 
-The state transformations functions used in *sbt-release* are the same as the action/body part of a no-argument command.  You can read more about [building commands](http://www.scala-sbt.org/release/docs/Commands.html) in the sbt wiki.
+The state transformations functions used in *sbt-release* are the same as the action/body part of a no-argument command.  You can read more about [building commands](http://www.scala-sbt.org/release/docs/Commands.html) in the sbt website.
 
 ### Release Steps
 
@@ -225,17 +243,18 @@ I highly recommend to make yourself familiar with the [State API](http://www.sca
 
 ### Can we finally customize that release process, please?
 
-Yes, and as a start, let's take a look at the [default definition](https://github.com/sbt/sbt-release/blob/v1.0.0/src/main/scala/ReleasePlugin.scala#L177) of `releaseProcess`:
+Yes, and as a start, let's take a look at the [default definition](https://github.com/sbt/sbt-release/blob/v1.0.11/src/main/scala/ReleasePlugin.scala#L248) of `releaseProcess`:
 
 #### The default release process
 
     import ReleaseTransformations._
-    
+
     // ...
 
     releaseProcess := Seq[ReleaseStep](
       checkSnapshotDependencies,              // : ReleaseStep
       inquireVersions,                        // : ReleaseStep
+      runClean,                               // : ReleaseStep
       runTest,                                // : ReleaseStep
       setReleaseVersion,                      // : ReleaseStep
       commitReleaseVersion,                   // : ReleaseStep, performs the initial git checks
@@ -248,7 +267,7 @@ Yes, and as a start, let's take a look at the [default definition](https://githu
 
 The names of the individual steps of the release process are pretty much self-describing.
 Notice how we can just reuse the `publish` task by utilizing the `releaseTask` helper function,
-but keep in mind that it needs to be properly scoped (more info on [scoping and settings](https://github.com/harrah/xsbt/wiki/Settings)).
+but keep in mind that it needs to be properly scoped (more info on [Scopes](http://www.scala-sbt.org/release/docs/Scopes.html)).
 
 Note, the `commitReleaseVersion` step requires that the working directory has no untracked files by default. It will abort the release in this case. You may disable this check
 by setting the `releaseIgnoreUntrackedFiles` key to `true`.

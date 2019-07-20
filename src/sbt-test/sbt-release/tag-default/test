@@ -1,0 +1,21 @@
+$ exec git init .
+
+> update
+
+$ exec git add .
+$ exec git commit -m init
+
+#prerequisite for the use case covered
+$ exec git tag v0.1.0
+
+#fail since it try to overwrite tag v0.1.0 that is already present
+-> release with-defaults
+#fail since default action is to abort on tag already present
+-> release with-defaults default-tag-exists-answer a
+
+#succeed since we let overwrite existing tag
+> release with-defaults default-tag-exists-answer o
+#succeed since we do not overwrite existing tag
+> release with-defaults default-tag-exists-answer k
+#succeed since ask to tag with an explicit tag that is different from the previous one
+> release with-defaults default-tag-exists-answer v0.1.0-debug

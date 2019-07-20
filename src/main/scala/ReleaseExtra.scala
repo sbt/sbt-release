@@ -1,42 +1,20 @@
 package sbtrelease
 
-import sbt.Keys._
 import sbt._
-import sbt.Aggregation.KeyValue
-import sbt.std.Transform.DummyTaskMap
 import sbt.Keys._
 import sbt.Package.ManifestAttributes
 import annotation.tailrec
 import ReleasePlugin.autoImport._
 import ReleaseKeys._
 
+import sys.process.ProcessLogger
+
 object ReleaseStateTransformations {
   import Utilities._
 
-  private def runTaskAggregated[T](taskKey: TaskKey[T], state: State): (State, Result[Seq[KeyValue[T]]]) = {
-    import EvaluateTask._
-    val extra = DummyTaskMap(Nil)
-    val extracted = state.extract
-    val config = extractedTaskConfig(extracted, extracted.structure, state)
-
-    val rkey = Utilities.resolve(taskKey.scopedKey, extracted)
-    val keys = Aggregation.aggregate(rkey, ScopeMask(), extracted.structure.extra)
-    val tasks = Act.keyValues(extracted.structure)(keys)
-    val toRun = tasks map { case KeyValue(k,t) => t.map(v => KeyValue(k,v)) } join
-    val roots = tasks map { case KeyValue(k,_) => k }
-
-
-    val (newS, result) = withStreams(extracted.structure, state){ str =>
-      val transform = nodeView(state, str, roots, extra)
-      runTask(toRun, state,str, extracted.structure.index.triggers, config)(transform)
-    }
-    (newS, result)
-  }
-
-
-  lazy val checkSnapshotDependencies: ReleaseStep = { st: State =>
+  lazy val checkSnapshotDependencies: ReleaseStep = ReleaseStep({ st: State =>
     val thisRef = st.extract.get(thisProjectRef)
-    val (newSt, result) = runTaskAggregated(releaseSnapshotDependencies in thisRef, st)
+    val (newSt, result) = Compat.runTaskAggregated(releaseSnapshotDependencies in thisRef, st)
     val snapshotDeps = result match {
       case Value(value) => value.flatMap(_.value)
       case Inc(cause) => sys.error("Error checking for snapshot dependencies: " + cause)
@@ -50,7 +28,7 @@ object ReleaseStateTransformations {
       }
     }
     newSt
-  }
+  }, enableCrossBuild = true)
 
 
   lazy val inquireVersions: ReleaseStep = { st: State =>
@@ -60,13 +38,13 @@ object ReleaseStateTransformations {
     val useDefs = st.get(useDefaults).getOrElse(false)
     val currentV = extracted.get(version)
 
-    val releaseFunc = extracted.get(releaseVersion)
+    val releaseFunc = extracted.runTask(releaseVersion, st)._2
     val suggestedReleaseV = releaseFunc(currentV)
 
     //flatten the Option[Option[String]] as the get returns an Option, and the value inside is an Option
     val releaseV = readVersion(suggestedReleaseV, "Release version [%s] : ", useDefs, st.get(commandLineReleaseVersion).flatten)
 
-    val nextFunc = extracted.get(releaseNextVersion)
+    val nextFunc = extracted.runTask(releaseNextVersion, st)._2
     val suggestedNextV = nextFunc(releaseV)
     //flatten the Option[Option[String]] as the get returns an Option, and the value inside is an Option
     val nextV = readVersion(suggestedNextV, "Next version [%s] : ", useDefs, st.get(commandLineNextVersion).flatten)
@@ -118,7 +96,7 @@ object ReleaseStateTransformations {
     st.extract.get(releaseVcs).getOrElse(sys.error("Aborting release. Working directory is not a repository of a recognized VCS."))
   }
 
-  private def writeVersion(st: State, versionString: String) {
+  private def writeVersion(st: State, versionString: String): Unit = {
     val file = st.extract.get(releaseVersionFile)
     IO.writeLines(file, Seq(versionString))
   }
@@ -128,10 +106,24 @@ object ReleaseStateTransformations {
 
     val hasUntrackedFiles = vcs(st).hasUntrackedFiles
     val hasModifiedFiles = vcs(st).hasModifiedFiles
-    if ( hasModifiedFiles ) sys.error( "Aborting release: unstaged modified files" )
+    if ( hasModifiedFiles ) {
+      sys.error(
+        s"""Aborting release: unstaged modified files
+          |
+          |Modified files:
+          |
+          |${vcs(st).modifiedFiles.mkString(" - ", "\n", "")}
+        """.stripMargin )
+    }
     if ( hasUntrackedFiles && !extracted.get( releaseIgnoreUntrackedFiles ) )
     {
-        sys.error( "Aborting release: untracked files. Remove them or specify 'releaseIgnoreUntrackedFiles := true' in settings" )
+        sys.error(
+          s"""Aborting release: untracked files. Remove them or specify 'releaseIgnoreUntrackedFiles := true' in settings
+            |
+            |Untracked files:
+            |
+            |${vcs(st).untrackedFiles.mkString(" - ", "\n", "")}
+          """.stripMargin )
     }
 
     st.log.info("Starting release process off commit: " + vcs(st).currentHash)
@@ -150,16 +142,19 @@ object ReleaseStateTransformations {
 
   lazy val commitNextVersion = ReleaseStep(commitVersion)
   private[sbtrelease] def commitVersion = { st: State =>
-    val file = st.extract.get(releaseVersionFile)
-    val base = vcs(st).baseDir
+    val log = toProcessLogger(st)
+    val file = st.extract.get(releaseVersionFile).getCanonicalFile
+    val base = vcs(st).baseDir.getCanonicalFile
+    val sign = st.extract.get(releaseVcsSign)
+    val signOff = st.extract.get(releaseVcsSignOff)
     val relativePath = IO.relativize(base, file).getOrElse("Version file [%s] is outside of this VCS repository with base directory [%s]!" format(file, base))
 
-    vcs(st).add(relativePath) !! st.log
+    vcs(st).add(relativePath) !! log
     val status = (vcs(st).status !!) trim
 
     val newState = if (status.nonEmpty) {
       val (state, msg) = st.extract.runTask(releaseCommitMessage, st)
-      vcs(state).commit(msg) ! st.log
+      vcs(state).commit(msg, sign, signOff) ! log
       state
     } else {
       // nothing to commit. this happens if the version.sbt file hasn't changed.
@@ -169,7 +164,11 @@ object ReleaseStateTransformations {
   }
 
   lazy val tagRelease: ReleaseStep = { st: State =>
-    val defaultChoice = extractDefault(st, "a")
+    val defaultChoice =
+      st.get(tagDefault) match {
+        case Some(Some(td)) => Some(td)
+        case _ => extractDefault(st, "a")
+      }
 
     @tailrec
     def findTag(tag: String): Option[String] = {
@@ -200,7 +199,9 @@ object ReleaseStateTransformations {
     val (tagState, tag) = st.extract.runTask(releaseTagName, st)
     val (commentState, comment) = st.extract.runTask(releaseTagComment, tagState)
     val tagToUse = findTag(tag)
-    tagToUse.foreach(vcs(commentState).tag(_, comment, force = true) !! commentState.log)
+    val sign = st.extract.get(releaseVcsSign)
+    val log = toProcessLogger(commentState)
+    tagToUse.foreach(vcs(commentState).tag(_, comment, sign) !! log)
 
 
     tagToUse map (t =>
@@ -217,8 +218,10 @@ object ReleaseStateTransformations {
     }
     val defaultChoice = extractDefault(st, "n")
 
+    val log = toProcessLogger(st)
+
     st.log.info("Checking remote [%s] ..." format vcs(st).trackingRemote)
-    if (vcs(st).checkRemote(vcs(st).trackingRemote) ! st.log != 0) {
+    if (vcs(st).checkRemote(vcs(st).trackingRemote) ! log != 0) {
       defaultChoice orElse SimpleReader.readLine("Error while checking remote. Still continue (y/n)? [n] ") match {
         case Yes() => // do nothing
         case _ => sys.error("Aborting the release!")
@@ -234,8 +237,16 @@ object ReleaseStateTransformations {
     st
   }
 
+  private def toProcessLogger(st: State): ProcessLogger = new ProcessLogger {
+    override def err(s: => String): Unit = st.log.info(s)
+    override def out(s: => String): Unit = st.log.info(s)
+    override def buffer[T](f: => T): T = st.log.buffer(f)
+  }
+
   private[sbtrelease] lazy val pushChangesAction = { st: State =>
     val defaultChoice = extractDefault(st, "y")
+
+    val log = toProcessLogger(st)
 
     val vc = vcs(st)
     if (vc.hasUpstream) {
@@ -243,8 +254,8 @@ object ReleaseStateTransformations {
         case Yes() | Some("") =>
           val processLogger: ProcessLogger = if (vc.isInstanceOf[Git]) {
             // Git outputs to standard error, so use a logger that redirects stderr to info
-            vc.stdErrorToStdOut(st.log)
-          } else st.log
+            vc.stdErrorToStdOut(log)
+          } else log
           vc.pushChanges !! processLogger
         case _ => st.log.warn("Remember to push the changes yourself!")
       }
@@ -256,13 +267,7 @@ object ReleaseStateTransformations {
 
   lazy val publishArtifacts = ReleaseStep(
     action = runPublishArtifactsAction,
-    check = st => {
-      // getPublishTo fails if no publish repository is set up.
-      val ex = st.extract
-      val ref = ex.get(thisProjectRef)
-      Classpaths.getPublishTo(ex.get(publishTo in Global in ref))
-      st
-    },
+    check = Compat.checkPublishTo,
     enableCrossBuild = true
   )
   private[sbtrelease] lazy val runPublishArtifactsAction = { st: State =>
@@ -276,7 +281,7 @@ object ReleaseStateTransformations {
     else if (useDef) ver
     else SimpleReader.readLine(prompt format ver) match {
       case Some("") => ver
-      case Some(input) => Version(input).map(_.string).getOrElse(versionFormatError)
+      case Some(input) => Version(input).map(_.string).getOrElse(versionFormatError(input))
       case None => sys.error("No version provided!")
     }
   }
@@ -285,7 +290,7 @@ object ReleaseStateTransformations {
     val extracted = state.extract
     import extracted._
 
-    val append = Load.transformSettings(Load.projectScope(currentRef), currentRef.build, rootProject, settings)
+    val append = Load.transformSettings(Compat.projectScope(currentRef), currentRef.build, rootProject, settings)
 
     // We don't want even want to be able to save the settings that are applied to the session during the release cycle.
     // Just using an empty string works fine and in case the user calls `session save`, empty lines will be generated.
@@ -293,6 +298,7 @@ object ReleaseStateTransformations {
 		BuiltinCommands.reapply(newSession, structure, state)
   }
 
+  def crossExclude(s: Setting[_]): Boolean = Compat.excludeKeys(Set(scalaVersion.key, scalaHome.key))(s)
 
   // This is a copy of the state function for the command Cross.switchVersion
   private[sbtrelease] def switchScalaVersion(state: State, version: String): State = {
@@ -300,7 +306,7 @@ object ReleaseStateTransformations {
     import x._
     state.log.info("Setting scala version to " + version)
     val add = (scalaVersion in GlobalScope := version) :: (scalaHome in GlobalScope := None) :: Nil
-    val cleared = session.mergeSettings.filterNot(Cross.crossExclude)
+    val cleared = session.mergeSettings.filterNot(crossExclude)
     val newStructure = Load.reapply(add ++ cleared, structure)
     Project.setProject(session, newStructure, state)
   }
@@ -308,7 +314,7 @@ object ReleaseStateTransformations {
   private[sbtrelease] def runCrossBuild(func: State => State): State => State = { state =>
     val x = Project.extract(state)
     import x._
-    val versions = Cross.crossVersions(state)
+    val versions = Compat.crossVersions(state)
     val current = scalaVersion in currentRef get structure.data
     val finalS = (state /: versions) {
       case (s, v) => func(switchScalaVersion(s, v))
@@ -370,4 +376,3 @@ object Utilities {
   }
 
 }
-

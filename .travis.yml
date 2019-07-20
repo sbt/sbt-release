@@ -1,14 +1,26 @@
 language: scala
+dist: xenial
+matrix:
+  include:
+  - env: SBT_VERSION="0.13.18"
+    jdk: openjdk7
+    dist: trusty
+  - env: SBT_VERSION="1.0.4"
+    jdk: openjdk8
+  - env: SBT_VERSION="1.1.0"
+    jdk: openjdk8
+  - env: SBT_VERSION="1.1.6"
+    jdk: openjdk11
 script:
  - git config --global user.email "example@example.com"
  - git config --global user.name "example"
- - sbt publish-local scripted
-sudo: false
+ - echo '[ui]' > "$HOME/.hgrc"
+ - echo 'username = example <example@example.com>' >> "$HOME/.hgrc"
+ - sbt "^^ ${SBT_VERSION}" test scripted
 cache:
   directories:
-    - $HOME/.ivy2/cache
+  - "$HOME/.ivy2/cache"
+  - "$HOME/.sbt/launchers"
 before_cache:
-  # Delete the cached artifacts
-  - rm -rf $HOME/.ivy2/cache/scala_*/sbt_*/com.github.gseitz
-  # Delete all ivydata files
-  - find $HOME/.ivy2/cache -name "ivydata-*.properties" | xargs rm
+  - find $HOME/.ivy2 -name "ivydata-*.properties" -delete
+sudo: false

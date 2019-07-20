@@ -4,7 +4,6 @@ import java.io.Serializable
 
 import sbt._
 import Keys._
-import _root_.sbt.complete.DefaultParsers._
 import sbt.complete.DefaultParsers._
 import sbt.complete.Parser
 
@@ -13,9 +12,9 @@ object ReleasePlugin extends AutoPlugin {
   object autoImport {
     val releaseSnapshotDependencies = taskKey[Seq[ModuleID]]("Calculate the snapshot dependencies for a build")
     val releaseProcess = settingKey[Seq[ReleaseStep]]("The release process")
-    val releaseVersion = settingKey[String => String]("The release version")
-    val releaseNextVersion = settingKey[String => String]("The next release version")
-    val releaseVersionBump = settingKey[Version.Bump]("How the version should be incremented")
+    val releaseVersion = taskKey[String => String]("The release version")
+    val releaseNextVersion = taskKey[String => String]("The next release version")
+    val releaseVersionBump = taskKey[Version.Bump]("How the version should be incremented")
     val releaseTagName = taskKey[String]("The name of the tag")
     val releaseTagComment = taskKey[String]("The comment to use when tagging")
     val releaseCommitMessage = taskKey[String]("The commit message to use when tagging")
@@ -23,6 +22,8 @@ object ReleasePlugin extends AutoPlugin {
     val releaseVersionFile = settingKey[File]("The file to write the version to")
     val releaseUseGlobalVersion = settingKey[Boolean]("Whether to use a global version")
     val releaseIgnoreUntrackedFiles = settingKey[Boolean]("Whether to ignore untracked files")
+    val releaseVcsSign = settingKey[Boolean]("Whether to sign VCS commits and tags")
+    val releaseVcsSignOff = settingKey[Boolean]("Whether to signoff VCS commits")
 
     val releaseVcs = settingKey[Option[Vcs]]("The VCS to use")
     val releasePublishArtifactsAction = taskKey[Unit]("The action that should be performed to publish artifacts")
@@ -95,6 +96,26 @@ object ReleasePlugin extends AutoPlugin {
       }
     }
 
+    /**
+     * Convert the given command string to a release step action, preserving and invoking remaining commands
+     */
+    def releaseStepCommandAndRemaining(command: String): State => State = { initState: State =>
+      import Compat._
+      @annotation.tailrec
+      def runCommand(command: Compat.Command, state: State): State = {
+        val nextState = Parser.parse(command, state.combinedParser) match {
+          case Right(cmd) => cmd()
+          case Left(msg) => throw sys.error(s"Invalid programmatic input:\n$msg")
+        }
+        nextState.remainingCommands.toList match {
+          case Nil => nextState.copy(remainingCommands = initState.remainingCommands)
+          case Compat.FailureCommand :: tail => nextState.copy(remainingCommands = FailureCommand +: initState.remainingCommands)
+          case head :: tail => runCommand(head, nextState.copy(remainingCommands = tail))
+        }
+      }
+      runCommand(command, initState.copy(remainingCommands = Nil))
+    }
+
     object ReleaseKeys {
 
       val versions = AttributeKey[Versions]("releaseVersions")
@@ -103,9 +124,10 @@ object ReleasePlugin extends AutoPlugin {
       val useDefaults = AttributeKey[Boolean]("releaseUseDefaults")
       val skipTests = AttributeKey[Boolean]("releaseSkipTests")
       val cross = AttributeKey[Boolean]("releaseCross")
+      val tagDefault = AttributeKey[Option[String]]("release-default-tag-exists-answer")
 
       private lazy val releaseCommandKey = "release"
-      private val FailureCommand = "--failure--"
+      private val FailureCommand = Compat.FailureCommand
 
       private[this] val WithDefaults: Parser[ParseResult] =
         (Space ~> token("with-defaults")) ^^^ ParseResult.WithDefaults
@@ -117,17 +139,21 @@ object ReleasePlugin extends AutoPlugin {
         (Space ~> token("release-version") ~> Space ~> token(StringBasic, "<release version>")) map ParseResult.ReleaseVersion
       private[this] val NextVersion: Parser[ParseResult] =
         (Space ~> token("next-version") ~> Space ~> token(StringBasic, "<next version>")) map ParseResult.NextVersion
+      private[this] val TagDefault: Parser[ParseResult] =
+        (Space ~> token("default-tag-exists-answer") ~> Space ~> token(StringBasic, "o|k|a|<tag-name>")) map ParseResult.TagDefault
+
 
       private[this] sealed abstract class ParseResult extends Product with Serializable
       private[this] object ParseResult {
         final case class ReleaseVersion(value: String) extends ParseResult
         final case class NextVersion(value: String) extends ParseResult
+        final case class TagDefault(value: String) extends ParseResult
         case object WithDefaults extends ParseResult
         case object SkipTests extends ParseResult
         case object CrossBuild extends ParseResult
       }
 
-      private[this] val releaseParser: Parser[Seq[ParseResult]] = (ReleaseVersion | NextVersion | WithDefaults | SkipTests | CrossBuild).*
+      private[this] val releaseParser: Parser[Seq[ParseResult]] = (ReleaseVersion | NextVersion | WithDefaults | SkipTests | CrossBuild | TagDefault).*
 
       val releaseCommand: Command = Command(releaseCommandKey)(_ => releaseParser) { (st, args) =>
         val extracted = Project.extract(st)
@@ -139,6 +165,7 @@ object ReleasePlugin extends AutoPlugin {
           .put(useDefaults, args.contains(ParseResult.WithDefaults))
           .put(skipTests, args.contains(ParseResult.SkipTests))
           .put(cross, crossEnabled)
+          .put(tagDefault, args.collectFirst{case ParseResult.TagDefault(value) => value})
           .put(commandLineReleaseVersion, args.collectFirst{case ParseResult.ReleaseVersion(value) => value})
           .put(commandLineNextVersion, args.collectFirst{case ParseResult.NextVersion(value) => value})
 
@@ -158,6 +185,10 @@ object ReleasePlugin extends AutoPlugin {
           }
         }
 
+        val failureCheck = { s: State =>
+          filterFailure(_.copy(onFailure = Some(FailureCommand)))(s)
+        }
+
         val process = releaseParts.map { step =>
           if (step.enableCrossBuild && crossEnabled) {
             filterFailure(ReleaseStateTransformations.runCrossBuild(step.action)) _
@@ -165,7 +196,9 @@ object ReleasePlugin extends AutoPlugin {
         }
 
         initialChecks.foreach(_(startState))
-        Function.chain(process :+ removeFailureCommand)(startState)
+        Function.chain(
+          (process :+ removeFailureCommand).flatMap(Seq(_, failureCheck))
+        )(startState)
       }
     }
   }
@@ -176,6 +209,12 @@ object ReleasePlugin extends AutoPlugin {
 
   override def trigger = allRequirements
 
+  val runtimeVersion = Def.task {
+    val v1 = (version in ThisBuild).value
+    val v2 = version.value
+    if (releaseUseGlobalVersion.value) v1 else v2
+  }
+
   override def projectSettings = Seq[Setting[_]](
     releaseSnapshotDependencies := {
       val moduleIds = (managedClasspath in Runtime).value.flatMap(_.get(moduleID.key))
@@ -183,19 +222,22 @@ object ReleasePlugin extends AutoPlugin {
       snapshots
     },
 
-    releaseVersion := { ver => Version(ver).map(_.withoutQualifier.string).getOrElse(versionFormatError) },
+    releaseVersion := { ver => Version(ver).map(_.withoutQualifier.string).getOrElse(versionFormatError(ver)) },
     releaseVersionBump := Version.Bump.default,
     releaseNextVersion := {
-      ver => Version(ver).map(_.bump(releaseVersionBump.value).asSnapshot.string).getOrElse(versionFormatError)
+      ver => Version(ver).map(_.bump(releaseVersionBump.value).asSnapshot.string).getOrElse(versionFormatError(ver))
     },
     releaseUseGlobalVersion := true,
     releaseCrossBuild := false,
 
-    releaseTagName := s"v${if (releaseUseGlobalVersion.value) (version in ThisBuild).value else version.value}",
-    releaseTagComment := s"Releasing ${if (releaseUseGlobalVersion.value) (version in ThisBuild).value else version.value}",
-    releaseCommitMessage := s"Setting version to ${if (releaseUseGlobalVersion.value) (version in ThisBuild).value else version.value}",
+    releaseTagName := s"v${runtimeVersion.value}",
+    releaseTagComment := s"Releasing ${runtimeVersion.value}",
+
+    releaseCommitMessage := s"Setting version to ${runtimeVersion.value}",
 
     releaseVcs := Vcs.detect(baseDirectory.value),
+    releaseVcsSign := false,
+    releaseVcsSignOff := false,
 
     releaseVersionFile := baseDirectory.value / "version.sbt",
 

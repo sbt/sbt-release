@@ -1,0 +1,9 @@
+* [#193][] The `checkSnapshotDependencies` release step now has `enabledCrossBuild` enabled by default.
+* [#185][] Adds a `default-tag-exists-answer` option to the `release` command to customise the default response to a tag already existing in the `tagRelease` release step.
+* [#194][] Makes `releaseVersion`, `releaseNextVersion`, and `releaseVersionBump` task keys instead of setting keys.
+
+[v1.0.4...v1.0.5](https://github.com/sbt/sbt-release/compare/v1.0.4%E2%80%A6v1.0.5)
+
+[#193]: https://github.com/sbt/sbt-release/pull/193
+[#185]: https://github.com/sbt/sbt-release/pull/185
+[#194]: https://github.com/sbt/sbt-release/pull/194

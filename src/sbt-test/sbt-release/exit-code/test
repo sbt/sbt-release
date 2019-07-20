@@ -5,6 +5,4 @@ $ exec git init .
 $ exec git add .
 $ exec git commit -m init
 
--> release with-defaults
-
-> release with-defaults skip-tests
+> checkExitCodes
