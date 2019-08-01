@@ -41,6 +41,8 @@ object ReleaseStateTransformations {
     val releaseFunc = extracted.runTask(releaseVersion, st)._2
     val suggestedReleaseV = releaseFunc(currentV)
 
+    st.log.info("Press enter to use the default value")
+
     //flatten the Option[Option[String]] as the get returns an Option, and the value inside is an Option
     val releaseV = readVersion(suggestedReleaseV, "Release version [%s] : ", useDefs, st.get(commandLineReleaseVersion).flatten)
 
