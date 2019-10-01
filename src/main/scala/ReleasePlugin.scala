@@ -18,6 +18,7 @@ object ReleasePlugin extends AutoPlugin {
     val releaseTagName = taskKey[String]("The name of the tag")
     val releaseTagComment = taskKey[String]("The comment to use when tagging")
     val releaseCommitMessage = taskKey[String]("The commit message to use when tagging")
+    val releaseNextCommitMessage = taskKey[String]("The commit message to use for next iteration")
     val releaseCrossBuild = settingKey[Boolean]("Whether the release should be cross built")
     val releaseVersionFile = settingKey[File]("The file to write the version to")
     val releaseUseGlobalVersion = settingKey[Boolean]("Whether to use a global version")
@@ -234,6 +235,7 @@ object ReleasePlugin extends AutoPlugin {
     releaseTagComment := s"Releasing ${runtimeVersion.value}",
 
     releaseCommitMessage := s"Setting version to ${runtimeVersion.value}",
+    releaseNextCommitMessage := s"Setting version to ${runtimeVersion.value}",
 
     releaseVcs := Vcs.detect(baseDirectory.value),
     releaseVcsSign := false,
