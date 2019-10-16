@@ -8,9 +8,9 @@ licenses := Seq("Apache-2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0"
 
 crossSbtVersions := Vector("0.13.18", "1.1.6")
 publishMavenStyle := false
-scalacOptions += "-deprecation"
+scalacOptions ++= Seq("-deprecation", "-feature", "-language:implicitConversions")
 
-val unusedWarnings = Seq("-Ywarn-unused-import")
+val unusedWarnings = Seq("-Ywarn-unused:imports")
 
 scalacOptions ++= PartialFunction.condOpt(CrossVersion.partialVersion(scalaVersion.value)){
   case Some((2, v)) if v >= 11 => unusedWarnings

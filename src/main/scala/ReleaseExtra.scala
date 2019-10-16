@@ -153,7 +153,7 @@ object ReleaseStateTransformations {
     val relativePath = IO.relativize(base, file).getOrElse("Version file [%s] is outside of this VCS repository with base directory [%s]!" format(file, base))
 
     vcs(st).add(relativePath) !! log
-    val status = (vcs(st).status !!) trim
+    val status = vcs(st).status.!!.trim
 
     val newState = if (status.nonEmpty) {
       val (state, msg) = st.extract.runTask(commitMessage, st)

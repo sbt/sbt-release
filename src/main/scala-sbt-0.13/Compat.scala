@@ -23,8 +23,8 @@ object Compat {
     val rkey = Utilities.resolve(taskKey.scopedKey, extracted)
     val keys = Aggregation.aggregate(rkey, ScopeMask(), extracted.structure.extra)
     val tasks = Act.keyValues(extracted.structure)(keys)
-    val toRun = tasks map { case KeyValue(k,t) => t.map(v => KeyValue(k,v)) } join
-    val roots = tasks map { case KeyValue(k,_) => k }
+    val toRun = tasks.map { case KeyValue(k,t) => t.map(v => KeyValue(k,v)) }.join
+    val roots = tasks.map { case KeyValue(k,_) => k }
 
 
     val (newS, result) = withStreams(extracted.structure, state){ str =>

@@ -129,7 +129,7 @@ class Git(val baseDir: File) extends Vcs with GitLike {
 
 
   private lazy val trackingBranchCmd = cmd("config", "branch.%s.merge" format currentBranch)
-  private def trackingBranch: String = (trackingBranchCmd !!).trim.stripPrefix("refs/heads/")
+  private def trackingBranch: String = trackingBranchCmd.!!.trim.stripPrefix("refs/heads/")
 
   private lazy val trackingRemoteCmd: ProcessBuilder = cmd("config", "branch.%s.remote" format currentBranch)
   def trackingRemote: String = trackingRemoteCmd.!!.trim
