@@ -132,7 +132,7 @@ object ReleaseStateTransformations {
 
   lazy val commitReleaseVersion = ReleaseStep(commitReleaseVersionAction, initialVcsChecks)
   private[sbtrelease] lazy val commitReleaseVersionAction = { st: State =>
-    val newState = commitVersion(st)
+    val newState = commitVersion(st, releaseCommitMessage)
     reapply(Seq[Setting[_]](
       packageOptions += ManifestAttributes(
         "Vcs-Release-Hash" -> vcs(st).currentHash
@@ -140,8 +140,9 @@ object ReleaseStateTransformations {
     ), newState)
   }
 
-  lazy val commitNextVersion = ReleaseStep(commitVersion)
-  private[sbtrelease] def commitVersion = { st: State =>
+  lazy val commitNextVersion = {st: State => commitVersion(st, releaseNextCommitMessage)}
+
+  private[sbtrelease] def commitVersion = { (st: State, commitMessage: TaskKey[String]) =>
     val log = toProcessLogger(st)
     val file = st.extract.get(releaseVersionFile).getCanonicalFile
     val base = vcs(st).baseDir.getCanonicalFile
@@ -153,7 +154,7 @@ object ReleaseStateTransformations {
     val status = (vcs(st).status !!) trim
 
     val newState = if (status.nonEmpty) {
-      val (state, msg) = st.extract.runTask(releaseCommitMessage, st)
+      val (state, msg) = st.extract.runTask(commitMessage, st)
       vcs(state).commit(msg, sign, signOff) ! log
       state
     } else {
