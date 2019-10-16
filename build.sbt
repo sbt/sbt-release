@@ -7,7 +7,6 @@ homepage := Some(url("https://github.com/sbt/sbt-release"))
 licenses := Seq("Apache-2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0"))
 
 crossSbtVersions := Vector("0.13.18", "1.1.6")
-sbtPlugin := true
 publishMavenStyle := false
 scalacOptions += "-deprecation"
 
@@ -26,7 +25,7 @@ val tagName = Def.setting{
 }
 val tagOrHash = Def.setting{
   if(isSnapshot.value)
-    sys.process.Process("git rev-parse HEAD").lines_!.head
+    sys.process.Process("git rev-parse HEAD").lineStream_!.head
   else
     tagName.value
 }
@@ -44,7 +43,7 @@ scalacOptions in (Compile, doc) ++= {
 libraryDependencies ++= Seq("org.specs2" %% "specs2-core" % "3.9.1" % "test")
 
 // Scripted
-scriptedSettings
+enablePlugins(SbtPlugin)
 scriptedLaunchOpts := {
   scriptedLaunchOpts.value ++ Seq("-Xmx1024M", "-XX:MaxPermSize=256M", "-Dplugin.version=" + version.value)
 }
