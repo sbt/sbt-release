@@ -319,7 +319,7 @@ object ReleaseStateTransformations {
     import x._
     val versions = Compat.crossVersions(state)
     val current = scalaVersion in currentRef get structure.data
-    val finalS = (state /: versions) {
+    val finalS = versions.foldLeft(state) {
       case (s, v) => func(switchScalaVersion(s, v))
     }
     current.map(switchScalaVersion(finalS, _)).getOrElse(finalS)
