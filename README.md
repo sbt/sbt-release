@@ -29,7 +29,9 @@ This sbt plugin provides a customizable release process that you can add to your
 
 Add the following lines to `./project/plugins.sbt`. See the section [Using Plugins](http://www.scala-sbt.org/release/docs/Using-Plugins.html) in the sbt website for more information.
 
-    addSbtPlugin("com.github.gseitz" % "sbt-release" % "1.0.12")
+```scala
+addSbtPlugin("com.github.gseitz" % "sbt-release" % "1.0.12")
+```
 
 ## version.sbt
 
@@ -130,18 +132,22 @@ These derived versions are used for the suggestions/defaults in the prompt and f
 
 Let's take a look at the types:
 
-    val releaseVersion     : SettingKey[String => String]
-    val releaseNextVersion : SettingKey[String => String]
+```scala
+val releaseVersion     : SettingKey[String => String]
+val releaseNextVersion : SettingKey[String => String]
+```
 
 The default settings make use of the helper class [`Version`](https://github.com/sbt/sbt-release/blob/master/src/main/scala/Version.scala) that ships with *sbt-release*.
 
-    // strip the qualifier off the input version, eg. 1.2.1-SNAPSHOT -> 1.2.1
-    releaseVersion     := { ver => Version(ver).map(_.withoutQualifier.string).getOrElse(versionFormatError(ver)) }
+```scala
+// strip the qualifier off the input version, eg. 1.2.1-SNAPSHOT -> 1.2.1
+releaseVersion     := { ver => Version(ver).map(_.withoutQualifier.string).getOrElse(versionFormatError(ver)) }
 
-    // bump the version and append '-SNAPSHOT', eg. 1.2.1 -> 1.3.0-SNAPSHOT
-    releaseNextVersion := {
-      ver => Version(ver).map(_.bump(releaseVersionBump.value).asSnapshot.string).getOrElse(versionFormatError(ver))
-    },
+// bump the version and append '-SNAPSHOT', eg. 1.2.1 -> 1.3.0-SNAPSHOT
+releaseNextVersion := {
+  ver => Version(ver).map(_.bump(releaseVersionBump.value).asSnapshot.string).getOrElse(versionFormatError(ver))
+},
+```
 
 If you want to customize the versioning, keep the following in mind:
 
@@ -156,12 +162,14 @@ If you want to customize the versioning, keep the following in mind:
 ### Custom VCS messages
 *sbt-release* has built in support to commit/push to Git, Mercurial and Subversion repositories. The messages for the tag and the commits can be customized to your needs with these settings:
 
-    val releaseTagComment    : TaskKey[String]
-    val releaseCommitMessage : TaskKey[String]
+```scala
+val releaseTagComment    : TaskKey[String]
+val releaseCommitMessage : TaskKey[String]
 
-    // defaults
-    releaseTagComment    := s"Releasing ${(version in ThisBuild).value}",
-    releaseCommitMessage := s"Setting version to ${(version in ThisBuild).value}",
+// defaults
+releaseTagComment    := s"Releasing ${(version in ThisBuild).value}",
+releaseCommitMessage := s"Setting version to ${(version in ThisBuild).value}",
+```
 
 ### Publishing signed releases
 
@@ -169,7 +177,9 @@ SBT is able to publish signed releases using the [sbt-pgp plugin](https://github
 
 After setting that up for your project, you can then tell *sbt-release* to use it by setting the `releasePublishArtifactsAction` key:
 
-    releasePublishArtifactsAction := PgpKeys.publishSigned.value
+```scala
+releasePublishArtifactsAction := PgpKeys.publishSigned.value
+````
 
 ## Customizing the release process
 
@@ -183,11 +193,13 @@ The release process can be customized to the project's needs.
 
 The release process is defined by [State](http://www.scala-sbt.org/release/api/sbt/State.html) transformation functions (`State => State`), for which *sbt-release* defines this case class:
 
-    case class ReleaseStep (
-      action: State => State,
-      check: State => State = identity,
-      enableCrossBuild: Boolean = false
-    )
+```scala
+case class ReleaseStep (
+  action: State => State,
+  check: State => State = identity,
+  enableCrossBuild: Boolean = false
+)
+```
 
 The function `action` is used to perform the actual release step. Additionally, each release step can provide a `check` function that is run at the beginning of the release and can be used to prevent the release from running because of an unsatisfied invariant (i.e. the release step for publishing artifacts checks that publishTo is properly set up).  The property `enableCrossBuild` tells *sbt-release* whether or not a particular `ReleaseStep` needs to be executed for the specified `crossScalaVersions`.
 
@@ -203,17 +215,19 @@ There are basically 2 ways to creating a new `ReleaseStep`:
 
 You can define your own state tansformation functions, just like *sbt-release* does, for example:
 
-    val checkOrganization = ReleaseStep(action = st => {
-      // extract the build state
-      val extracted = Project.extract(st)
-      // retrieve the value of the organization SettingKey
-      val org = extracted.get(Keys.organization)
+```scala
+val checkOrganization = ReleaseStep(action = st => {
+  // extract the build state
+  val extracted = Project.extract(st)
+  // retrieve the value of the organization SettingKey
+  val org = extracted.get(Keys.organization)
 
-      if (org.startsWith("com.acme"))
-        sys.error("Hey, no need to release a toy project!")
+  if (org.startsWith("com.acme"))
+    sys.error("Hey, no need to release a toy project!")
 
-      st
-    })
+  st
+})
+```
 
 We will later see how to let this release step participate in the release process.
 
@@ -247,23 +261,25 @@ Yes, and as a start, let's take a look at the [default definition](https://githu
 
 #### The default release process
 
-    import ReleaseTransformations._
+```scala
+import ReleaseTransformations._
 
-    // ...
+// ...
 
-    releaseProcess := Seq[ReleaseStep](
-      checkSnapshotDependencies,              // : ReleaseStep
-      inquireVersions,                        // : ReleaseStep
-      runClean,                               // : ReleaseStep
-      runTest,                                // : ReleaseStep
-      setReleaseVersion,                      // : ReleaseStep
-      commitReleaseVersion,                   // : ReleaseStep, performs the initial git checks
-      tagRelease,                             // : ReleaseStep
-      publishArtifacts,                       // : ReleaseStep, checks whether `publishTo` is properly set up
-      setNextVersion,                         // : ReleaseStep
-      commitNextVersion,                      // : ReleaseStep
-      pushChanges                             // : ReleaseStep, also checks that an upstream branch is properly configured
-    )
+releaseProcess := Seq[ReleaseStep](
+  checkSnapshotDependencies,              // : ReleaseStep
+  inquireVersions,                        // : ReleaseStep
+  runClean,                               // : ReleaseStep
+  runTest,                                // : ReleaseStep
+  setReleaseVersion,                      // : ReleaseStep
+  commitReleaseVersion,                   // : ReleaseStep, performs the initial git checks
+  tagRelease,                             // : ReleaseStep
+  publishArtifacts,                       // : ReleaseStep, checks whether `publishTo` is properly set up
+  setNextVersion,                         // : ReleaseStep
+  commitNextVersion,                      // : ReleaseStep
+  pushChanges                             // : ReleaseStep, also checks that an upstream branch is properly configured
+)
+```
 
 The names of the individual steps of the release process are pretty much self-describing.
 Notice how we can just reuse the `publish` task by utilizing the `releaseTask` helper function,
@@ -276,19 +292,21 @@ by setting the `releaseIgnoreUntrackedFiles` key to `true`.
 
 Let's modify the previous release process and remove the Git related steps, who uses that anyway.
 
-    import ReleaseTransformations._
+```scala
+import ReleaseTransformations._
 
-    // ...
+// ...
 
-    ReleaseKeys.releaseProcess := Seq[ReleaseStep](
-      checkOrganization,                // Look Ma', my own release step!
-      checkSnapshotDependencies,
-      inquireVersions,
-      runTest,
-      setReleaseVersion,
-      publishArtifacts,
-      setNextVersion
-    )
+ReleaseKeys.releaseProcess := Seq[ReleaseStep](
+  checkOrganization,                // Look Ma', my own release step!
+  checkSnapshotDependencies,
+  inquireVersions,
+  runTest,
+  setReleaseVersion,
+  publishArtifacts,
+  setNextVersion
+)
+```
 
 Overall, the process stayed pretty much the same:
 
@@ -298,31 +316,33 @@ Overall, the process stayed pretty much the same:
 #### Release notes anyone?
 Now let's also add steps for [posterous-sbt](https://github.com/n8han/posterous-sbt):
 
-    import posterous.Publish._
-    import ReleaseTransformations._
+```scala
+import posterous.Publish._
+import ReleaseTransformations._
 
-    // ...
+// ...
 
-    val publishReleaseNotes = (ref: ProjectRef) => ReleaseStep(
-      check  = releaseStepTaskAggregated(check in Posterous in ref),   // upfront check
-      action = releaseStepTaskAggregated(publish in Posterous in ref) // publish release notes
-    )
+val publishReleaseNotes = (ref: ProjectRef) => ReleaseStep(
+  check  = releaseStepTaskAggregated(check in Posterous in ref),   // upfront check
+  action = releaseStepTaskAggregated(publish in Posterous in ref) // publish release notes
+)
 
-    // ...
+// ...
 
-    ReleaseKeys.releaseProcess <<= thisProjectRef apply { ref =>
-      import ReleaseStateTransformations._
-      Seq[ReleaseStep](
-        checkOrganization,
-        checkSnapshotDependencies,
-        inquireVersions,
-        runTest,
-        setReleaseVersion,
-        publishArtifacts,
-        publishReleaseNotes(ref) // we need to forward `thisProjectRef` for proper scoping of the underlying tasks
-        setNextVersion
-      )
-    }
+ReleaseKeys.releaseProcess <<= thisProjectRef apply { ref =>
+  import ReleaseStateTransformations._
+  Seq[ReleaseStep](
+    checkOrganization,
+    checkSnapshotDependencies,
+    inquireVersions,
+    runTest,
+    setReleaseVersion,
+    publishArtifacts,
+    publishReleaseNotes(ref) // we need to forward `thisProjectRef` for proper scoping of the underlying tasks
+    setNextVersion
+  )
+}
+```
 
 The `check` part of the release step is run at the start, to make sure we have everything set up to post the release notes later on.
 After publishing the actual build artifacts, we also publish the release notes.
