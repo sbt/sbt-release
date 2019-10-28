@@ -163,12 +163,14 @@ If you want to customize the versioning, keep the following in mind:
 *sbt-release* has built in support to commit/push to Git, Mercurial and Subversion repositories. The messages for the tag and the commits can be customized to your needs with these settings:
 
 ```scala
-val releaseTagComment    : TaskKey[String]
-val releaseCommitMessage : TaskKey[String]
+val releaseTagComment        : TaskKey[String]
+val releaseCommitMessage     : TaskKey[String]
+val releaseNextCommitMessage : TaskKey[String]
 
 // defaults
-releaseTagComment    := s"Releasing ${(version in ThisBuild).value}",
-releaseCommitMessage := s"Setting version to ${(version in ThisBuild).value}",
+releaseTagComment        := s"Releasing ${(version in ThisBuild).value}",
+releaseCommitMessage     := s"Setting version to ${(version in ThisBuild).value}",
+releaseNextCommitMessage := s"Setting version to ${(version in ThisBuild).value}",
 ```
 
 ### Publishing signed releases
