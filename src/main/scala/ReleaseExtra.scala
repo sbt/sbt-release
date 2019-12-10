@@ -75,6 +75,15 @@ object ReleaseStateTransformations {
     enableCrossBuild = true
   )
 
+  lazy val crossRunTest: ReleaseStep = ReleaseStep(
+    action = { st: State =>
+      if (!st.get(skipTests).getOrElse(false)) {
+        releaseStepCommandAndRemaining("+test")(st)
+      } else st
+    },
+    enableCrossBuild = true
+  )
+
   lazy val setReleaseVersion: ReleaseStep = setVersion(_._1)
   lazy val setNextVersion: ReleaseStep = setVersion(_._2)
   val globalVersionString = "version in ThisBuild := \"%s\""
