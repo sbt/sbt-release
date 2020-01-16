@@ -38,10 +38,13 @@ object Compat {
 
   // checking if publishTo is configured
   def checkPublishTo(st: State ): State = {
-    // getPublishTo fails if no publish repository is set up.
+    // getPublishTo fails if no publish repository is set up for projects with `skip in publish := false`.
     val ex = st.extract
     val ref = ex.get(thisProjectRef)
-    Classpaths.getPublishTo(ex.get(publishTo in Global in ref))
+    val (_, skipPublish) = ex.runTask(skip in publish in ref, st)
+    if (!skipPublish) {
+      Classpaths.getPublishTo(ex.get(publishTo in Global in ref))
+    }
     st
   }
 
