@@ -30,7 +30,7 @@ This sbt plugin provides a customizable release process that you can add to your
 Add the following lines to `./project/plugins.sbt`. See the section [Using Plugins](http://www.scala-sbt.org/release/docs/Using-Plugins.html) in the sbt website for more information.
 
 ```scala
-addSbtPlugin("com.github.gseitz" % "sbt-release" % "1.0.12")
+addSbtPlugin("com.github.gseitz" % "sbt-release" % "1.0.13")
 ```
 
 ## version.sbt
@@ -106,7 +106,7 @@ Of the predefined release steps, the `clean`, `test`, and `publish` release step
 
 A cross release behaves analogous to using the `+` command:
  1. If no `crossScalaVersions` are set, then running `release` or `release cross` will not trigger a cross release (i.e. run the release with the scala version specified in the setting `scalaVersion`).
- 1. If the `crossScalaVersions` setting is set, then only these scala versions will be used. Make sure to include the regular/default `scalaVersion` in the `crossScalaVersions` setting as well.
+ 1. If the `crossScalaVersions` setting is set, then only these scala versions will be used. Make sure to include the regular/default `scalaVersion` in the `crossScalaVersions` setting as well. Note that setting running `release cross` on a root project with `crossScalaVersions` set to `Nil` will not release anything. 
 
 In the section *Customizing the release process* we take a look at how to define a `ReleaseStep` to participate in a cross build.
 
@@ -259,7 +259,7 @@ I highly recommend to make yourself familiar with the [State API](http://www.sca
 
 ### Can we finally customize that release process, please?
 
-Yes, and as a start, let's take a look at the [default definition](https://github.com/sbt/sbt-release/blob/v1.0.12/src/main/scala/ReleasePlugin.scala#L250) of `releaseProcess`:
+Yes, and as a start, let's take a look at the [default definition](https://github.com/sbt/sbt-release/blob/v1.0.13/src/main/scala/ReleasePlugin.scala#L250) of `releaseProcess`:
 
 #### The default release process
 
