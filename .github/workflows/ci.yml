@@ -1,0 +1,31 @@
+name: CI
+on:
+  pull_request:
+  push:
+  schedule:
+  - cron: '0 8 * * 0'
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - java: 8
+            sbt_version: "0.13.18"
+          - java: 8
+            sbt_version: "1.2.8"
+          - java: 8
+          - java: 11
+    steps:
+    - uses: actions/checkout@v1
+    - uses: olafurpg/setup-scala@v10
+      with:
+        java-version: "adopt@1.${{ matrix.java }}"
+    - uses: coursier/cache-action@v5
+    - run: |
+        git config --global user.email "example@example.com"
+        git config --global user.name "example"
+        echo '[ui]' > "$HOME/.hgrc"
+        echo 'username = example <example@example.com>' >> "$HOME/.hgrc"
+    - run: sbt -v $(if [[ "${{matrix.sbt_version}}" != "" ]] ; then echo "^^${{matrix.sbt_version}}" ; fi) test scripted

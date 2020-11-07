@@ -3,7 +3,7 @@ This sbt plugin provides a customizable release process that you can add to your
 
 **Notice:** This README contains information for the latest release. Please refer to the documents for a specific version by looking up the respective [tag](https://github.com/sbt/sbt-release/tags).
 
-[![Build Status](https://travis-ci.org/sbt/sbt-release.svg?branch=master)](https://travis-ci.org/sbt/sbt-release) [![Download](https://api.bintray.com/packages/sbt/sbt-plugin-releases/sbt-release/images/download.svg)](https://bintray.com/sbt/sbt-plugin-releases/sbt-release/_latestVersion)
+[![Download](https://api.bintray.com/packages/sbt/sbt-plugin-releases/sbt-release/images/download.svg)](https://bintray.com/sbt/sbt-plugin-releases/sbt-release/_latestVersion)
 
 
 ## Requirements
