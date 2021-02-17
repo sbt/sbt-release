@@ -77,7 +77,8 @@ object ReleaseStateTransformations {
 
   lazy val setReleaseVersion: ReleaseStep = setVersion(_._1)
   lazy val setNextVersion: ReleaseStep = setVersion(_._2)
-  val globalVersionString = "version in ThisBuild := \"%s\""
+  val globalVersionString = "ThisBuild / version := \"%s\""
+  private[this] val globalVersionStringOldSyntax = "version in ThisBuild := \"%s\""
   val versionString = "version := \"%s\""
   private[sbtrelease] def setVersion(selectVersion: Versions => String): ReleaseStep =  { st: State =>
     val vs = st.get(versions).getOrElse(sys.error("No versions are set! Was this release part executed before inquireVersions?"))
@@ -85,7 +86,17 @@ object ReleaseStateTransformations {
 
     st.log.info("Setting version to '%s'." format selected)
     val useGlobal = st.extract.get(releaseUseGlobalVersion)
-    val versionStr = (if (useGlobal) globalVersionString else versionString) format selected
+    val versionStr = (
+      if (useGlobal) {
+        if (Project.extract(st).get(sbtVersion).startsWith("0")) {
+          globalVersionStringOldSyntax
+        } else {
+          globalVersionString
+        }
+      } else {
+        versionString
+      }
+    ) format selected
     writeVersion(st, versionStr)
 
     reapply(Seq(
