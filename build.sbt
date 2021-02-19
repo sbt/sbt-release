@@ -1,6 +1,6 @@
 lazy val `sbt-release` = project in file(".")
 
-organization := "com.github.gseitz"
+organization := "com.github.sbt"
 name := "sbt-release"
 
 homepage := Some(url("https://github.com/sbt/sbt-release"))
@@ -22,23 +22,12 @@ Seq(Compile, Test).flatMap(c =>
   scalacOptions in (c, console) --= unusedWarnings
 )
 
-val tagName = Def.setting{
-  s"v${if (releaseUseGlobalVersion.value) (version in ThisBuild).value else version.value}"
-}
-val tagOrHash = Def.setting{
-  if(isSnapshot.value)
-    sys.process.Process("git rev-parse HEAD").lineStream_!.head
-  else
-    tagName.value
-}
-
-releaseTagName := tagName.value
+def hash(): String = sys.process.Process("git rev-parse HEAD").lineStream_!.head
 
 scalacOptions in (Compile, doc) ++= {
-  val tag = tagOrHash.value
   Seq(
     "-sourcepath", (baseDirectory in LocalRootProject).value.getAbsolutePath,
-    "-doc-source-url", s"https://github.com/sbt/sbt-release/tree/${tag}€{FILE_PATH}.scala"
+    "-doc-source-url", s"https://github.com/sbt/sbt-release/tree/${hash()}€{FILE_PATH}.scala"
   )
 }
 
@@ -51,26 +40,16 @@ scriptedLaunchOpts := {
 }
 scriptedBufferLog := false
 
-// Bintray
-bintrayOrganization := Some("sbt")
-bintrayRepository := "sbt-plugin-releases"
-bintrayPackage := "sbt-release"
-bintrayReleaseOnPublish := false
-
-// Release
-import ReleaseTransformations._
-releaseProcess := Seq[ReleaseStep](
-  checkSnapshotDependencies,
-  inquireVersions,
-  runClean,
-  releaseStepCommandAndRemaining("^ test"),
-  releaseStepCommandAndRemaining("^ scripted"),
-  setReleaseVersion,
-  commitReleaseVersion,
-  tagRelease,
-  releaseStepCommandAndRemaining("^ publishSigned"),
-  releaseStepTask(bintrayRelease in `sbt-release`),
-  setNextVersion,
-  commitNextVersion,
-  pushChanges
-)
+pomExtra := {
+  <developers>{
+    Seq(
+      ("xuwei-k", "Kenji Yoshida"),
+    ).map { case (id, name) =>
+      <developer>
+        <id>{id}</id>
+        <name>{name}</name>
+        <url>https://github.com/{id}</url>
+      </developer>
+    }
+  }</developers>
+}
