@@ -88,7 +88,10 @@ object ReleaseStateTransformations {
     val useGlobal = st.extract.get(releaseUseGlobalVersion)
     val versionStr = (
       if (useGlobal) {
-        if (Project.extract(st).get(sbtVersion).startsWith("0")) {
+        val v = Project.extract(st).get(sbtVersion)
+        // use new slash syntax if sbt 1.1 or later 
+        // https://github.com/sbt/sbt/commit/21bd7c3a91a3407826
+        if (v.startsWith("0") || v.startsWith("1.0")) {
           globalVersionStringOldSyntax
         } else {
           globalVersionString
