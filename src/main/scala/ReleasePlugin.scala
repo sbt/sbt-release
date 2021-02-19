@@ -218,7 +218,7 @@ object ReleasePlugin extends AutoPlugin {
 
   override def projectSettings = Seq[Setting[_]](
     releaseSnapshotDependencies := {
-      val moduleIds = (managedClasspath in Runtime).value.flatMap(_.get(moduleID.key))
+      val moduleIds = (dependencyClasspath in Runtime).value.flatMap(_.get(moduleID.key))
       val snapshots = moduleIds.filter(m => m.isChanging || m.revision.endsWith("-SNAPSHOT"))
       snapshots
     },
