@@ -8,7 +8,7 @@ This sbt plugin provides a customizable release process that you can add to your
 
 ## Requirements
  * sbt 0.13.5+
- * The version of the project should follow the semantic versioning scheme on [semver.org](http://www.semver.org) with the following additions:
+ * The version of the project should follow the semantic versioning scheme on [semver.org](https://www.semver.org) with the following additions:
    * The minor and bugfix (and beyond) part of the version are optional.
    * There is no limit to the number of subversions you may have.
    * The appendix after the bugfix part must be alphanumeric (`[0-9a-zA-Z]`) but may also contain dash characters `-`.
@@ -22,12 +22,12 @@ This sbt plugin provides a customizable release process that you can add to your
      * 1-BETA17
      * 1.2.3.4.5
      * 1.2.3.4.5-SNAPSHOT
- * A [publish repository](http://www.scala-sbt.org/release/docs/Publishing.html) configured. (Required only for the default release process. See further below for release process customizations.)
+ * A [publish repository](https://www.scala-sbt.org/release/docs/Publishing.html) configured. (Required only for the default release process. See further below for release process customizations.)
  * git [optional]
 
 ## Usage
 
-Add the following lines to `./project/plugins.sbt`. See the section [Using Plugins](http://www.scala-sbt.org/release/docs/Using-Plugins.html) in the sbt website for more information.
+Add the following lines to `./project/plugins.sbt`. See the section [Using Plugins](https://www.scala-sbt.org/release/docs/Using-Plugins.html) in the sbt website for more information.
 
 ```scala
 addSbtPlugin("com.github.sbt" % "sbt-release" % "1.0.15")
@@ -51,7 +51,7 @@ The default release process consists of the following tasks:
  1. Ask the user for the `release version` and the `next development version`. Sensible defaults are provided.
  1. Run `clean`.
  1. Run `test:test`, if any test fails, the release process is aborted.
- 1. Write `version in ThisBuild := "$releaseVersion"` to the file `version.sbt` and also apply this setting to the current [build state](http://www.scala-sbt.org/release/docs/Build-State.html).
+ 1. Write `version in ThisBuild := "$releaseVersion"` to the file `version.sbt` and also apply this setting to the current [build state](https://www.scala-sbt.org/release/docs/Build-State.html).
  1. Commit the changes in `version.sbt`.
  1. Tag the previous commit with `v$version` (eg. `v1.2`, `v1.2.3`).
  1. Run `publish`.
@@ -93,7 +93,7 @@ For that emergency release at 2am on a Sunday, you can optionally avoid running 
 
 ### Cross building during a release
 
-Since version 0.7, *sbt-release* comes with built-in support for [cross building](http://www.scala-sbt.org/release/docs/Cross-Build.html) and cross publishing. A cross release can be triggered in two ways:
+Since version 0.7, *sbt-release* comes with built-in support for [cross building](https://www.scala-sbt.org/release/docs/Cross-Build.html) and cross publishing. A cross release can be triggered in two ways:
 
  1. via the setting `releaseCrossBuild` (by default set to `false`)
  1. by using the option `cross` for the `release` command
@@ -193,7 +193,7 @@ The release process can be customized to the project's needs.
   * Want to check for the existence of release notes at the start of the release and then publish it with [posterous-sbt](https://github.com/n8han/posterous-sbt) at the end? Just add the release step.
 
 
-The release process is defined by [State](http://www.scala-sbt.org/release/api/sbt/State.html) transformation functions (`State => State`), for which *sbt-release* defines this case class:
+The release process is defined by [State](https://www.scala-sbt.org/release/api/sbt/State.html) transformation functions (`State => State`), for which *sbt-release* defines this case class:
 
 ```scala
 case class ReleaseStep (
@@ -207,7 +207,7 @@ The function `action` is used to perform the actual release step. Additionally, 
 
 The sequence of `ReleaseStep`s that make up the release process is stored in the setting `releaseProcess: SettingKey[Seq[ReleaseStep]]`.
 
-The state transformations functions used in *sbt-release* are the same as the action/body part of a no-argument command.  You can read more about [building commands](http://www.scala-sbt.org/release/docs/Commands.html) in the sbt website.
+The state transformations functions used in *sbt-release* are the same as the action/body part of a no-argument command.  You can read more about [building commands](https://www.scala-sbt.org/release/docs/Commands.html) in the sbt website.
 
 ### Release Steps
 
@@ -255,7 +255,7 @@ releaseProcess := Seq[ReleaseStep](
 )
 ```
 
-I highly recommend to make yourself familiar with the [State API](http://www.scala-sbt.org/release/api/sbt/State.html) before you continue your journey to a fully customized release process.
+I highly recommend to make yourself familiar with the [State API](https://www.scala-sbt.org/release/api/sbt/State.html) before you continue your journey to a fully customized release process.
 
 ### Can we finally customize that release process, please?
 
@@ -285,7 +285,7 @@ releaseProcess := Seq[ReleaseStep](
 
 The names of the individual steps of the release process are pretty much self-describing.
 Notice how we can just reuse the `publish` task by utilizing the `releaseTask` helper function,
-but keep in mind that it needs to be properly scoped (more info on [Scopes](http://www.scala-sbt.org/release/docs/Scopes.html)).
+but keep in mind that it needs to be properly scoped (more info on [Scopes](https://www.scala-sbt.org/release/docs/Scopes.html)).
 
 Note, the `commitReleaseVersion` step requires that the working directory has no untracked files by default. It will abort the release in this case. You may disable this check
 by setting the `releaseIgnoreUntrackedFiles` key to `true`.
@@ -360,4 +360,4 @@ Thank you, [Jason](https://github.com/retronym) and [Mark](https://github.com/ha
 ## License
 Copyright (c) 2011-2014 Gerolf Seitz
 
-Published under the [Apache License 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt)
+Published under the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0.txt)
