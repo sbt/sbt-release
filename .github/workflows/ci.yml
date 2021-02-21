@@ -13,8 +13,6 @@ jobs:
       matrix:
         include:
           - java: 8
-            sbt_version: "0.13.18"
-          - java: 8
             sbt_version: "1.2.8"
           - java: 8
           - java: 11
