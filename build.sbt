@@ -1,6 +1,6 @@
 lazy val `sbt-release` = project in file(".")
 
-organization := "com.github.gseitz"
+organization := "com.github.sbt"
 name := "sbt-release"
 
 homepage := Some(url("https://github.com/sbt/sbt-release"))
@@ -8,37 +8,24 @@ licenses := Seq("Apache-2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0"
 
 // Don't update crossSbtVersions!
 // https://github.com/sbt/sbt/issues/5049
-crossSbtVersions := Vector("0.13.18", "1.1.6")
-publishMavenStyle := false
+crossSbtVersions := Vector("1.1.6")
+publishMavenStyle := true
 scalacOptions ++= Seq("-deprecation", "-feature", "-language:implicitConversions")
 
 val unusedWarnings = Seq("-Ywarn-unused:imports")
 
-scalacOptions ++= PartialFunction.condOpt(CrossVersion.partialVersion(scalaVersion.value)){
-  case Some((2, v)) if v >= 11 => unusedWarnings
-}.toList.flatten
+scalacOptions ++= unusedWarnings
 
 Seq(Compile, Test).flatMap(c =>
-  scalacOptions in (c, console) --= unusedWarnings
+  c / console / scalacOptions --= unusedWarnings
 )
 
-val tagName = Def.setting{
-  s"v${if (releaseUseGlobalVersion.value) (version in ThisBuild).value else version.value}"
-}
-val tagOrHash = Def.setting{
-  if(isSnapshot.value)
-    sys.process.Process("git rev-parse HEAD").lineStream_!.head
-  else
-    tagName.value
-}
+def hash(): String = sys.process.Process("git rev-parse HEAD").lineStream_!.head
 
-releaseTagName := tagName.value
-
-scalacOptions in (Compile, doc) ++= {
-  val tag = tagOrHash.value
+Compile / doc / scalacOptions ++= {
   Seq(
-    "-sourcepath", (baseDirectory in LocalRootProject).value.getAbsolutePath,
-    "-doc-source-url", s"https://github.com/sbt/sbt-release/tree/${tag}€{FILE_PATH}.scala"
+    "-sourcepath", (LocalRootProject / baseDirectory).value.getAbsolutePath,
+    "-doc-source-url", s"https://github.com/sbt/sbt-release/tree/${hash()}€{FILE_PATH}.scala"
   )
 }
 
@@ -51,26 +38,16 @@ scriptedLaunchOpts := {
 }
 scriptedBufferLog := false
 
-// Bintray
-bintrayOrganization := Some("sbt")
-bintrayRepository := "sbt-plugin-releases"
-bintrayPackage := "sbt-release"
-bintrayReleaseOnPublish := false
-
-// Release
-import ReleaseTransformations._
-releaseProcess := Seq[ReleaseStep](
-  checkSnapshotDependencies,
-  inquireVersions,
-  runClean,
-  releaseStepCommandAndRemaining("^ test"),
-  releaseStepCommandAndRemaining("^ scripted"),
-  setReleaseVersion,
-  commitReleaseVersion,
-  tagRelease,
-  releaseStepCommandAndRemaining("^ publishSigned"),
-  releaseStepTask(bintrayRelease in `sbt-release`),
-  setNextVersion,
-  commitNextVersion,
-  pushChanges
-)
+pomExtra := {
+  <developers>{
+    Seq(
+      ("xuwei-k", "Kenji Yoshida"),
+    ).map { case (id, name) =>
+      <developer>
+        <id>{id}</id>
+        <name>{name}</name>
+        <url>https://github.com/{id}</url>
+      </developer>
+    }
+  }</developers>
+}

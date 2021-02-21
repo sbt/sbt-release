@@ -13,13 +13,13 @@ jobs:
       matrix:
         include:
           - java: 8
-            sbt_version: "0.13.18"
-          - java: 8
             sbt_version: "1.2.8"
           - java: 8
           - java: 11
     steps:
     - uses: actions/checkout@v2.3.4
+      with:
+        fetch-depth: 0
     - uses: olafurpg/setup-scala@v10
       with:
         java-version: "adopt@1.${{ matrix.java }}"
