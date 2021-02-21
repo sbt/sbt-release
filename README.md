@@ -30,7 +30,7 @@ This sbt plugin provides a customizable release process that you can add to your
 Add the following lines to `./project/plugins.sbt`. See the section [Using Plugins](http://www.scala-sbt.org/release/docs/Using-Plugins.html) in the sbt website for more information.
 
 ```scala
-addSbtPlugin("com.github.gseitz" % "sbt-release" % "1.0.13")
+addSbtPlugin("com.github.sbt" % "sbt-release" % "1.0.14")
 ```
 
 ## version.sbt
