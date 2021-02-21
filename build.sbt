@@ -53,3 +53,5 @@ pomExtra := {
     }
   }</developers>
 }
+
+publishMavenStyle := true
