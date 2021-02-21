@@ -39,7 +39,7 @@ Since the build definition is actual Scala code, it's not as straight forward to
 
 For this reason, *sbt-release* won't ever touch your build definition files, but instead writes the new release or development version to a file defined by the setting `release-version-file`, which is set to **`file("version.sbt")`** by default and points to `$PROJECT_ROOT/version.sbt`.
 
-By default the version is set on the build level (using `version in ThisBuild`). This behavior can be controlled by setting `releaseUseGlobalVersion` to `false`, after which a version like `version := "1.2.3"` will be written to `version.sbt`.
+By default the version is set on the build level (using `ThisBuild / version`). This behavior can be controlled by setting `releaseUseGlobalVersion` to `false`, after which a version like `version := "1.2.3"` will be written to `version.sbt`.
 
 
 ## Release Process
@@ -51,11 +51,11 @@ The default release process consists of the following tasks:
  1. Ask the user for the `release version` and the `next development version`. Sensible defaults are provided.
  1. Run `clean`.
  1. Run `test:test`, if any test fails, the release process is aborted.
- 1. Write `version in ThisBuild := "$releaseVersion"` to the file `version.sbt` and also apply this setting to the current [build state](https://www.scala-sbt.org/release/docs/Build-State.html).
+ 1. Write `ThisBuild / version := "$releaseVersion"` to the file `version.sbt` and also apply this setting to the current [build state](https://www.scala-sbt.org/release/docs/Build-State.html).
  1. Commit the changes in `version.sbt`.
  1. Tag the previous commit with `v$version` (eg. `v1.2`, `v1.2.3`).
  1. Run `publish`.
- 1. Write `version in ThisBuild := "nextVersion"` to the file `version.sbt` and also apply this setting to the current build state.
+ 1. Write `ThisBuild / version := "nextVersion"` to the file `version.sbt` and also apply this setting to the current build state.
  1. Commit the changes in `version.sbt`.
 
 In case of a failure of a task, the release process is aborted.
@@ -168,9 +168,9 @@ val releaseCommitMessage     : TaskKey[String]
 val releaseNextCommitMessage : TaskKey[String]
 
 // defaults
-releaseTagComment        := s"Releasing ${(version in ThisBuild).value}",
-releaseCommitMessage     := s"Setting version to ${(version in ThisBuild).value}",
-releaseNextCommitMessage := s"Setting version to ${(version in ThisBuild).value}",
+releaseTagComment        := s"Releasing ${(ThisBuild / version).value}",
+releaseCommitMessage     := s"Setting version to ${(ThisBuild / version).value}",
+releaseNextCommitMessage := s"Setting version to ${(ThisBuild / version).value}",
 ```
 
 ### Publishing signed releases
