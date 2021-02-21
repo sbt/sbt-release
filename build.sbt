@@ -19,14 +19,14 @@ scalacOptions ++= PartialFunction.condOpt(CrossVersion.partialVersion(scalaVersi
 }.toList.flatten
 
 Seq(Compile, Test).flatMap(c =>
-  scalacOptions in (c, console) --= unusedWarnings
+  c / console / scalacOptions --= unusedWarnings
 )
 
 def hash(): String = sys.process.Process("git rev-parse HEAD").lineStream_!.head
 
-scalacOptions in (Compile, doc) ++= {
+Compile / doc / scalacOptions ++= {
   Seq(
-    "-sourcepath", (baseDirectory in LocalRootProject).value.getAbsolutePath,
+    "-sourcepath", (LocalRootProject / baseDirectory).value.getAbsolutePath,
     "-doc-source-url", s"https://github.com/sbt/sbt-release/tree/${hash()}€{FILE_PATH}.scala"
   )
 }
