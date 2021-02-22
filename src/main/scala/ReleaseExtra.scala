@@ -311,8 +311,8 @@ object ReleaseStateTransformations {
 
     // We don't want even want to be able to save the settings that are applied to the session during the release cycle.
     // Just using an empty string works fine and in case the user calls `session save`, empty lines will be generated.
-		val newSession = session.appendSettings( append map (a => (a, List.empty[String])))
-		BuiltinCommands.reapply(newSession, structure, state)
+    val newSession = session.appendSettings( append map (a => (a, List.empty[String])))
+    BuiltinCommands.reapply(newSession, structure, state)
   }
 
   def crossExclude(s: Setting[_]): Boolean = Compat.excludeKeys(Set(scalaVersion.key, scalaHome.key))(s)
@@ -380,7 +380,7 @@ object Utilities {
   implicit def stateW(st: State): StateW = new StateW(st)
 
   private[sbtrelease] def resolve[T](key: ScopedKey[T], extracted: Extracted): ScopedKey[T] =
-		Project.mapScope(Scope.resolveScope(GlobalScope, extracted.currentRef.build, extracted.rootProject) )( key.scopedKey )
+    Project.mapScope(Scope.resolveScope(GlobalScope, extracted.currentRef.build, extracted.rootProject) )( key.scopedKey )
 
   object Yes {
     def unapply(s: Option[String]) = s.exists(_.toLowerCase == "y")
