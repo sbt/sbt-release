@@ -43,7 +43,7 @@ object Compat {
     val ref = ex.get(thisProjectRef)
     val (_, skipPublish) = ex.runTask(ref / publish / skip, st)
     if (!skipPublish) {
-      Classpaths.getPublishTo(ex.runTask((publishTo in Global in ref), st)._2)
+      Classpaths.getPublishTo(ex.runTask(ref / (Global / publishTo), st)._2)
     }
     st
   }
