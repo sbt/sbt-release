@@ -256,7 +256,7 @@ I highly recommend to make yourself familiar with the [State API](https://www.sc
 
 ### Can we finally customize that release process, please?
 
-Yes, and as a start, let's take a look at the [default definition](https://github.com/sbt/sbt-release/blob/v1.0.13/src/main/scala/ReleasePlugin.scala#L250) of `releaseProcess`:
+Yes, and as a start, let's take a look at the [default definition](https://github.com/sbt/sbt-release/blob/v1.0.15/src/main/scala/ReleasePlugin.scala#L250) of `releaseProcess`:
 
 #### The default release process
 
