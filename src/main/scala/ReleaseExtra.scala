@@ -59,7 +59,7 @@ object ReleaseStateTransformations {
     action = { st: State =>
       val extracted = Project.extract(st)
       val ref = extracted.get(thisProjectRef)
-      extracted.runAggregated(clean in Global in ref, st)
+      extracted.runAggregated(ref / (Global / clean), st)
     }
   )
 
@@ -290,7 +290,7 @@ object ReleaseStateTransformations {
   private[sbtrelease] lazy val runPublishArtifactsAction = { st: State =>
     val extracted = st.extract
     val ref = extracted.get(thisProjectRef)
-    extracted.runAggregated(releasePublishArtifactsAction in Global in ref, st)
+    extracted.runAggregated(ref / (Global / releasePublishArtifactsAction), st)
   }
 
   def readVersion(ver: String, prompt: String, useDef: Boolean, commandLineVersion: Option[String]): String = {
