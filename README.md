@@ -34,7 +34,7 @@ addSbtPlugin("com.github.sbt" % "sbt-release" % "1.0.15")
 
 Since the build definition is actual Scala code, it's not as straight forward to change something in the middle of it as it is with an XML definition.
 
-For this reason, *sbt-release* won't ever touch your build definition files, but instead writes the new release or development version to a file defined by the setting `release-version-file`, which is set to **`file("version.sbt")`** by default and points to `$PROJECT_ROOT/version.sbt`.
+For this reason, *sbt-release* won't ever touch your build definition files, but instead writes the new release or development version to a file defined by the setting `releaseVersionFile`, which is set to **`file("version.sbt")`** by default and points to `$PROJECT_ROOT/version.sbt`.
 
 By default the version is set on the build level (using `ThisBuild / version`). This behavior can be controlled by setting `releaseUseGlobalVersion` to `false`, after which a version like `version := "1.2.3"` will be written to `version.sbt`.
 
