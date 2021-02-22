@@ -41,7 +41,7 @@ object Compat {
     // getPublishTo fails if no publish repository is set up for projects with `skip in publish := false`.
     val ex = st.extract
     val ref = ex.get(thisProjectRef)
-    val (_, skipPublish) = ex.runTask(skip in publish in ref, st)
+    val (_, skipPublish) = ex.runTask(ref / publish / skip, st)
     if (!skipPublish) {
       Classpaths.getPublishTo(ex.runTask((publishTo in Global in ref), st)._2)
     }
@@ -65,9 +65,9 @@ object Compat {
 
   private def crossVersions(extracted: Extracted, proj: ProjectRef): Seq[String] = {
     import extracted._
-    (crossScalaVersions in proj get structure.data) getOrElse {
+    ((proj / crossScalaVersions) get structure.data) getOrElse {
       // reading scalaVersion is a one-time deal
-      (scalaVersion in proj get structure.data).toSeq
+      ((proj / scalaVersion) get structure.data).toSeq
     }
   }
 

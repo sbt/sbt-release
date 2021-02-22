@@ -14,7 +14,7 @@ object ReleaseStateTransformations {
 
   lazy val checkSnapshotDependencies: ReleaseStep = ReleaseStep({ st: State =>
     val thisRef = st.extract.get(thisProjectRef)
-    val (newSt, result) = Compat.runTaskAggregated(releaseSnapshotDependencies in thisRef, st)
+    val (newSt, result) = Compat.runTaskAggregated(thisRef / releaseSnapshotDependencies, st)
     val snapshotDeps = result match {
       case Value(value) => value.flatMap(_.value)
       case Inc(cause) => sys.error("Error checking for snapshot dependencies: " + cause)
@@ -69,7 +69,7 @@ object ReleaseStateTransformations {
       if (!st.get(skipTests).getOrElse(false)) {
         val extracted = Project.extract(st)
         val ref = extracted.get(thisProjectRef)
-        extracted.runAggregated(test in Test in ref, st)
+        extracted.runAggregated(ref / Test / test, st)
       } else st
     },
     enableCrossBuild = true
@@ -103,7 +103,7 @@ object ReleaseStateTransformations {
     writeVersion(st, versionStr)
 
     reapply(Seq(
-      if (useGlobal) version in ThisBuild := selected
+      if (useGlobal) ThisBuild / version := selected
       else version := selected
     ), st)
   }
@@ -322,7 +322,7 @@ object ReleaseStateTransformations {
     val x = Project.extract(state)
     import x._
     state.log.info("Setting scala version to " + version)
-    val add = (scalaVersion in GlobalScope := version) :: (scalaHome in GlobalScope := None) :: Nil
+    val add = (GlobalScope / scalaVersion := version) :: (GlobalScope / scalaHome := None) :: Nil
     val cleared = session.mergeSettings.filterNot(crossExclude)
     val newStructure = Load.reapply(add ++ cleared, structure)
     Project.setProject(session, newStructure, state)
@@ -332,7 +332,7 @@ object ReleaseStateTransformations {
     val x = Project.extract(state)
     import x._
     val versions = Compat.crossVersions(state)
-    val current = scalaVersion in currentRef get structure.data
+    val current = (currentRef / scalaVersion) get structure.data
     val finalS = versions.foldLeft(state) {
       case (s, v) => func(switchScalaVersion(s, v))
     }

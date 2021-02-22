@@ -211,14 +211,14 @@ object ReleasePlugin extends AutoPlugin {
   override def trigger = allRequirements
 
   val runtimeVersion = Def.task {
-    val v1 = (version in ThisBuild).value
+    val v1 = (ThisBuild / version).value
     val v2 = version.value
     if (releaseUseGlobalVersion.value) v1 else v2
   }
 
   override def projectSettings = Seq[Setting[_]](
     releaseSnapshotDependencies := {
-      val moduleIds = (managedClasspath in Runtime).value.flatMap(_.get(moduleID.key))
+      val moduleIds = (Runtime / managedClasspath).value.flatMap(_.get(moduleID.key))
       val snapshots = moduleIds.filter(m => m.isChanging || m.revision.endsWith("-SNAPSHOT"))
       snapshots
     },
