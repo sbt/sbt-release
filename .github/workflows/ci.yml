@@ -30,3 +30,4 @@ jobs:
         echo '[ui]' > "$HOME/.hgrc"
         echo 'username = example <example@example.com>' >> "$HOME/.hgrc"
     - run: sbt -v $(if [[ "${{matrix.sbt_version}}" != "" ]] ; then echo "^^${{matrix.sbt_version}}" ; fi) test scripted
+    - run: rm -rf "$HOME/.ivy2/local" || true
