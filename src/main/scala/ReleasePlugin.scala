@@ -83,7 +83,7 @@ object ReleasePlugin extends AutoPlugin {
     def releaseStepCommand(command: Command, input: String = ""): State => State = { st: State =>
       Parser.parse(input, command.parser(st)) match {
         case Right(cmd) => cmd()
-        case Left(msg) => throw sys.error(s"Invalid programmatic input:\n$msg")
+        case Left(msg) => sys.error(s"Invalid programmatic input:\n$msg")
       }
     }
 
@@ -93,7 +93,7 @@ object ReleasePlugin extends AutoPlugin {
     def releaseStepCommand(command: String): State => State = { st: State =>
       Parser.parse(command, st.combinedParser) match {
         case Right(cmd) => cmd()
-        case Left(msg) => throw sys.error(s"Invalid programmatic input:\n$msg")
+        case Left(msg) => sys.error(s"Invalid programmatic input:\n$msg")
       }
     }
 
@@ -106,7 +106,7 @@ object ReleasePlugin extends AutoPlugin {
       def runCommand(command: Compat.Command, state: State): State = {
         val nextState = Parser.parse(command, state.combinedParser) match {
           case Right(cmd) => cmd()
-          case Left(msg) => throw sys.error(s"Invalid programmatic input:\n$msg")
+          case Left(msg) => sys.error(s"Invalid programmatic input:\n$msg")
         }
         nextState.remainingCommands.toList match {
           case Nil => nextState.copy(remainingCommands = initState.remainingCommands)
