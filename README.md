@@ -1,6 +1,8 @@
 # sbt-release
 This sbt plugin provides a customizable release process that you can add to your project.
 
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.sbt/sbt-release/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.github.sbt/sbt-release/)
+
 **Notice:** This README contains information for the latest release. Please refer to the documents for a specific version by looking up the respective [tag](https://github.com/sbt/sbt-release/tags).
 
 ## Requirements
