@@ -5,5 +5,7 @@ $ exec git init .
 $ exec git add .
 $ exec git commit -m init
 
+> reload
+
 -> release
 > release with-defaults

@@ -5,5 +5,7 @@ $ exec hg init .
 $ exec hg add .
 $ exec hg commit -m init
 
+> reload
+
 > release with-defaults
 $ exists target/scala-2.11

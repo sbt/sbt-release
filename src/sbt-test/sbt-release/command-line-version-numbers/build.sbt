@@ -1,6 +1,8 @@
 import ReleaseTransformations._
 import sbt.complete.DefaultParsers._
 
+name := "command-line-version-numbers"
+
 publishTo := Some(Resolver.file("file",  new File( "." )) )
 
 releaseProcess := Seq[ReleaseStep](
