@@ -5,6 +5,8 @@ $ exec git init .
 $ exec git add .
 $ exec git commit -m init
 
+> reload
+
 #prerequisite for the use case covered
 $ exec git tag v0.1.0
 
