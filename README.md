@@ -1,7 +1,7 @@
 # sbt-release
 This sbt plugin provides a customizable release process that you can add to your project.
 
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.sbt/sbt-release/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.github.sbt/sbt-release/)
+[![sbt-release Scala version support](https://index.scala-lang.org/sbt/sbt-release/sbt-release/latest-by-scala-version.svg?targetType=Sbt)](https://index.scala-lang.org/sbt/sbt-release/sbt-release)
 
 **Notice:** This README contains information for the latest release. Please refer to the documents for a specific version by looking up the respective [tag](https://github.com/sbt/sbt-release/tags).
 
