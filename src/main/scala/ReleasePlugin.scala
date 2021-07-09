@@ -3,6 +3,7 @@ package sbtrelease
 import java.io.Serializable
 
 import sbt._
+import sbt.plugins._
 import Keys._
 import sbt.complete.DefaultParsers._
 import sbt.complete.Parser
@@ -209,6 +210,8 @@ object ReleasePlugin extends AutoPlugin {
   import ReleaseStateTransformations._
 
   override def trigger = allRequirements
+  
+  override def requires = JvmPlugin
 
   val runtimeVersion = Def.task {
     val v1 = (ThisBuild / version).value
