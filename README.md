@@ -50,7 +50,7 @@ The default release process consists of the following tasks:
  1. Ask the user for the `release version` and the `next development version`. Sensible defaults are provided.
  1. Run `clean`.
  1. Run `test:test`, if any test fails, the release process is aborted.
- 1. Write `ThisBuild / version := "$releaseVersion"` to the file `version.sbt` and also apply this setting to the current [build state](https://www.scala-sbt.org/release/docs/Build-State.html).
+ 1. Write `ThisBuild / version := "$releaseVersion"` to the file `version.sbt` and also apply this setting to the current [build state](https://www.scala-sbt.org/1.x/docs/Core-Principles.html#Introduction+to+build+state).
  1. Commit the changes in `version.sbt`.
  1. Tag the previous commit with `v$version` (eg. `v1.2`, `v1.2.3`).
  1. Run `publish`.
