@@ -21,12 +21,12 @@ This sbt plugin provides a customizable release process that you can add to your
      * 1-BETA17
      * 1.2.3.4.5
      * 1.2.3.4.5-SNAPSHOT
- * A [publish repository](https://www.scala-sbt.org/release/docs/Publishing.html) configured. (Required only for the default release process. See further below for release process customizations.)
+ * A [publish repository](https://www.scala-sbt.org/1.x/docs/Publishing.html) configured. (Required only for the default release process. See further below for release process customizations.)
  * git [optional]
 
 ## Usage
 
-Add the following lines to `./project/plugins.sbt`. See the section [Using Plugins](https://www.scala-sbt.org/release/docs/Using-Plugins.html) in the sbt website for more information.
+Add the following lines to `./project/plugins.sbt`. See the section [Using Plugins](https://www.scala-sbt.org/1.x/docs/Using-Plugins.html) in the sbt website for more information.
 
 ```scala
 addSbtPlugin("com.github.sbt" % "sbt-release" % "1.1.0")
@@ -92,7 +92,7 @@ For that emergency release at 2am on a Sunday, you can optionally avoid running 
 
 ### Cross building during a release
 
-Since version 0.7, *sbt-release* comes with built-in support for [cross building](https://www.scala-sbt.org/release/docs/Cross-Build.html) and cross publishing. A cross release can be triggered in two ways:
+Since version 0.7, *sbt-release* comes with built-in support for [cross building](https://www.scala-sbt.org/1.x/docs/Cross-Build.html) and cross publishing. A cross release can be triggered in two ways:
 
  1. via the setting `releaseCrossBuild` (by default set to `false`)
  1. by using the option `cross` for the `release` command
@@ -206,7 +206,7 @@ The function `action` is used to perform the actual release step. Additionally, 
 
 The sequence of `ReleaseStep`s that make up the release process is stored in the setting `releaseProcess: SettingKey[Seq[ReleaseStep]]`.
 
-The state transformations functions used in *sbt-release* are the same as the action/body part of a no-argument command.  You can read more about [building commands](https://www.scala-sbt.org/release/docs/Commands.html) in the sbt website.
+The state transformations functions used in *sbt-release* are the same as the action/body part of a no-argument command.  You can read more about [building commands](https://www.scala-sbt.org/1.x/docs/Commands.html) in the sbt website.
 
 ### Release Steps
 
@@ -284,7 +284,7 @@ releaseProcess := Seq[ReleaseStep](
 
 The names of the individual steps of the release process are pretty much self-describing.
 Notice how we can just reuse the `publish` task by utilizing the `releaseTask` helper function,
-but keep in mind that it needs to be properly scoped (more info on [Scopes](https://www.scala-sbt.org/release/docs/Scopes.html)).
+but keep in mind that it needs to be properly scoped (more info on [Scopes](https://www.scala-sbt.org/1.x/docs/Scopes.html)).
 
 Note, the `commitReleaseVersion` step requires that the working directory has no untracked files by default. It will abort the release in this case. You may disable this check
 by setting the `releaseIgnoreUntrackedFiles` key to `true`.
