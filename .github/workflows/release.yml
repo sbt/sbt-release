@@ -12,7 +12,7 @@ jobs:
           fetch-depth: 0
       - uses: olafurpg/setup-scala@v13
       - run: sbt ci-release
-        if: ${{ !github.event.repository.fork }}
+        if: ${{ github.repository_owner == 'sbt' }}
         env:
           PGP_PASSPHRASE: ${{ secrets.PGP_PASSPHRASE }}
           PGP_SECRET: ${{ secrets.PGP_SECRET }}
