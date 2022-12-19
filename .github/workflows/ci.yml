@@ -17,14 +17,14 @@ jobs:
           - java: 8
           - java: 11
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b # v3.2.0
       with:
         fetch-depth: 0
-    - uses: actions/setup-java@v3
+    - uses: actions/setup-java@1df8dbefe2a8cbc99770194893dd902763bee34b # v3.9.0
       with:
         java-version: ${{matrix.java}}
         distribution: temurin
-    - uses: coursier/cache-action@v6
+    - uses: coursier/cache-action@60455feeb7a70875fc37e0228606262bbf361990 # v6.4.1
     - run: |
         git config --global user.email "example@example.com"
         git config --global user.name "example"
