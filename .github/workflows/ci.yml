@@ -24,7 +24,7 @@ jobs:
       with:
         java-version: ${{matrix.java}}
         distribution: temurin
-    - uses: coursier/cache-action@045c1dab7ed65bc3fdec6b16c413c8d0001f9217 # v6.4.2
+    - uses: coursier/cache-action@d1039466d0812d6370649b9afb02bbf5f646bacf # v6.4.3
     - run: |
         git config --global user.email "example@example.com"
         git config --global user.name "example"
