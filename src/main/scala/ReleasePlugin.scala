@@ -223,7 +223,12 @@ object ReleasePlugin extends AutoPlugin {
       snapshots
     },
 
-    releaseVersion := { ver => Version(ver).map(_.withoutQualifier.string).getOrElse(versionFormatError(ver)) },
+    releaseVersion := {
+      releaseVersionBump.value match {
+        case _ @ Version.Bump.NextWithQualifier => { ver => Version(ver).map(_.withoutSnapshot.string).getOrElse(versionFormatError(ver)) }
+        case _ => { ver => Version(ver).map(_.withoutQualifier.string).getOrElse(versionFormatError(ver)) }
+      }
+    },
     releaseVersionBump := Version.Bump.default,
     releaseNextVersion := {
       ver => Version(ver).map(_.bump(releaseVersionBump.value).asSnapshot.string).getOrElse(versionFormatError(ver))

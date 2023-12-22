@@ -117,8 +117,8 @@ As of version 0.8, *sbt-release* comes with some strategies for computing the ne
  * `Minor`: always bumps the *minor* part of the version
  * `Bugfix`: always bumps the *bugfix* part of the version
  * `Nano`: always bumps the *nano* part of the version
- * `Next`: bumps the last version part (e.g. `0.17` -> `0.18`, `0.11.7` -> `0.11.8`, `3.22.3.4.91` -> `3.22.3.4.92`)
-
+ * `Next`: bumps the last version part, excluding the qualifier (e.g. `0.17` -> `0.18`, `0.11.7` -> `0.11.8`, `3.22.3.4.91` -> `3.22.3.4.92`, `1.0.0-RC1` -> `1.0.1`)
+ * `NextWithQualifer`: bumps the last version part, including the qualifier (e.g. `0.17` -> `0.18`, `0.11.7` -> `0.11.8`, `3.22.3.4.91` -> `3.22.3.4.92`, `1.0.0-RC1` -> `1.0.0-RC2`)   
 Example:
 
     releaseVersionBump := sbtrelease.Version.Bump.Major
@@ -139,16 +139,19 @@ val releaseNextVersion : SettingKey[String => String]
 The default settings make use of the helper class [`Version`](https://github.com/sbt/sbt-release/blob/master/src/main/scala/Version.scala) that ships with *sbt-release*.
 
 ```scala
-// strip the qualifier off the input version, eg. 1.2.1-SNAPSHOT -> 1.2.1
-releaseVersion     := { ver => Version(ver).map(_.withoutQualifier.string).getOrElse(versionFormatError(ver)) }
 
-// strip the snapshot off the input version, eg. 1.2.1-SNAPSHOT -> 1.2.1
-releaseVersion     := { ver => Version(ver).map(_.withoutSnapshot.string).getOrElse(versionFormatError(ver)) }
-
+releaseVersion := {
+  releaseVersionBump.value match {
+    // strip the snapshot off the input version, eg. 1.2.1-RC1-SNAPSHOT -> 1.2.1-RC1
+    case _ @ Version.Bump.NextWithQualifier => { ver => Version(ver).map(_.withoutSnapshot.string).getOrElse(versionFormatError(ver)) }
+    // strip the whole qualifier off the input version, eg. 1.2.1-RC1-SNAPSHOT -> 1.2.1
+    case _ => { ver => Version(ver).map(_.withoutQualifier.string).getOrElse(versionFormatError(ver)) }
+  }
+},
 // bump the version and append '-SNAPSHOT', eg. 1.2.1 -> 1.3.0-SNAPSHOT
 releaseNextVersion := {
   ver => Version(ver).map(_.bump(releaseVersionBump.value).asSnapshot.string).getOrElse(versionFormatError(ver))
-},
+}
 ```
 
 If you want to customize the versioning, keep the following in mind:
