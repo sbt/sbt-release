@@ -24,20 +24,22 @@ object VersionSpec extends Specification {
     "bump the nano version if there's only a nano version" in {
       bump("1.2.3.4") must_== "1.2.3.5"
     }
-    "drop the qualifier if it's a pre release" in {
-      bump("1-rc1") must_== "1"
-      bump("1.2-rc1") must_== "1.2"
-      bump("1.2.3-rc1") must_== "1.2.3"
-
+    "drop the qualifier if it's a pre release and there is no version number at the end" in {
       bump("1-rc") must_== "1"
-      bump("1-RC1") must_== "1"
-      bump("1-M1") must_== "1"
-      bump("1-rc-1") must_== "1"
-      bump("1-rc.1") must_== "1"
       bump("1-beta") must_== "1"
-      bump("1-beta-1") must_== "1"
-      bump("1-beta.1") must_== "1"
       bump("1-alpha") must_== "1"
+    }
+    "bump the qualifier if it's a pre release and there is a version number at the end" in {
+      bump("1-rc1") must_== "1-rc2"
+      bump("1.2-rc1") must_== "1.2-rc2"
+      bump("1.2.3-rc1") must_== "1.2.3-rc2"
+
+      bump("1-RC1") must_== "1-RC2"
+      bump("1-M1") must_== "1-M2"
+      bump("1-rc-1") must_== "1-rc-2"
+      bump("1-rc.1") must_== "1-rc.2"
+      bump("1-beta-1") must_== "1-beta-2"
+      bump("1-beta.1") must_== "1-beta.2"
     }
     "not drop the qualifier if it's not a pre release" in {
       bump("1.2.3-Final") must_== "1.2.4-Final"
@@ -91,5 +93,13 @@ object VersionSpec extends Specification {
       bumpSubversion("1.2.3.4.5-alpha")(2) must_== "1.2.3.5.0-alpha"
     }
   }
-
+  "Version as snapshot" should {
+    def snapshot(v: String) = version(v).asSnapshot.string
+    "include qualifier if it exists" in {
+      snapshot("1.0.0-RC1") must_== "1.0.0-RC1-SNAPSHOT"
+    }
+    "have no qualifier if none exists" in {
+      snapshot("1.0.0") must_== "1.0.0-SNAPSHOT"
+    }
+  }
 }
