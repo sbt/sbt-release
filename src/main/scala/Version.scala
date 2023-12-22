@@ -13,19 +13,19 @@ object Version {
     /**
      * Strategy to always bump the major version by default. Ex. 1.0.0 would be bumped to 2.0.0
      */
-    case object Major extends Bump { def bump = _.bumpMajor }
+    case object Major extends Bump { def bump: Version => Version = _.bumpMajor }
     /**
      * Strategy to always bump the minor version by default. Ex. 1.0.0 would be bumped to 1.1.0
      */
-    case object Minor extends Bump { def bump = _.bumpMinor }
+    case object Minor extends Bump { def bump: Version => Version = _.bumpMinor }
     /**
      * Strategy to always bump the bugfix version by default. Ex. 1.0.0 would be bumped to 1.0.1
      */
-    case object Bugfix extends Bump { def bump = _.bumpBugfix }
+    case object Bugfix extends Bump { def bump: Version => Version = _.bumpBugfix }
     /**
      * Strategy to always bump the nano version by default. Ex. 1.0.0.0 would be bumped to 1.0.0.1
      */
-    case object Nano extends Bump { def bump = _.bumpNano }
+    case object Nano extends Bump { def bump: Version => Version = _.bumpNano }
     /**
      * Strategy to always increment to the next version from smallest to greatest. This strategy is the default.
      * Ex:
@@ -36,13 +36,13 @@ object Version {
      * Qualifier with version number: 1.0-RC1 becomes 1.0-RC2
      * Qualifier without version number: 1.0-alpha becomes 1.0
      */
-    case object Next extends Bump { def bump = _.bump }
+    case object Next extends Bump { def bump: Version => Version = _.bump }
 
     val default: Bump = Next
   }
 
   val VersionR: Regex = """([0-9]+)((?:\.[0-9]+)+)?([\.\-0-9a-zA-Z]*)?""".r
-  private val PreReleaseQualifierR = """[\.-](?i:rc|m|alpha|beta)[\.-]?[0-9]*""".r
+  val PreReleaseQualifierR: Regex = """[\.-](?i:rc|m|alpha|beta)[\.-]?[0-9]*""".r
 
   def apply(s: String): Option[Version] = {
     allCatch opt {
@@ -88,7 +88,7 @@ case class Version(major: Int, subversions: Seq[Int], qualifier: Option[String])
   def bumpNano: Version = maybeBumpSubversion(2)
   def maybeBumpSubversion(idx: Int): Version = bumpSubversionOpt(idx) getOrElse this
 
-  private def bumpSubversionOpt(idx: Int) = {
+  private def bumpSubversionOpt(idx: Int): Option[Version] = {
     val bumped = subversions.drop(idx)
     val reset = bumped.drop(1).length
     bumped.headOption map { head =>
