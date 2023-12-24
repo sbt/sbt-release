@@ -117,7 +117,7 @@ As of version 0.8, *sbt-release* comes with some strategies for computing the ne
  * `Minor`: always bumps the *minor* part of the version
  * `Bugfix`: always bumps the *bugfix* part of the version
  * `Nano`: always bumps the *nano* part of the version
- * `Next`: bumps the last version part (e.g. `0.17` -> `0.18`, `0.11.7` -> `0.11.8`, `3.22.3.4.91` -> `3.22.3.4.92`)
+ * `Next`: bumps the last version part (e.g. `0.17` -> `0.18`, `0.11.7` -> `0.11.8`, `3.22.3.4.91` -> `3.22.3.4.92`, `2.0.0-RC1` -> `2.0.0-RC2`)
 
 Example:
 
