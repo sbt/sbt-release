@@ -5,7 +5,6 @@ name := "sbt-release"
 
 homepage := Some(url("https://github.com/sbt/sbt-release"))
 licenses := Seq("Apache-2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0"))
-scalaVersion := "2.12.18"
 publishMavenStyle := true
 scalacOptions ++= Seq("-deprecation", "-feature", "-language:implicitConversions")
 
