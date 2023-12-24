@@ -72,7 +72,7 @@ case class Version(major: Int, subversions: Seq[Int], qualifier: Option[String])
           newQualifier = rawQualifier.replaceFirst(versionNumberQualifierStr, newVersionNumber.toString)
         } yield Version(major, subversions, Some(newQualifier))
 
-        opt.getOrElse(withoutQualifier)
+        opt.getOrElse(copy(qualifier = None))
     }
     def maybeBumpedLastSubversion = bumpSubversionOpt(subversions.length-1)
     def bumpedMajor = copy(major = major + 1)
@@ -99,10 +99,22 @@ case class Version(major: Int, subversions: Seq[Int], qualifier: Option[String])
 
   def bump(bumpType: Version.Bump): Version = bumpType.bump(this)
 
+  @deprecated("Use .withoutSnapshot to remove the snapshot part of the qualifier, the most common original use case for .withoutQualifier. If removing the full qualifier is really intended, simply construct a new Version class without a qualifier.")
   def withoutQualifier: Version = copy(qualifier = None)
+
   def asSnapshot: Version = copy(qualifier = qualifier.map { qualifierStr =>
     s"$qualifierStr-SNAPSHOT"
   }.orElse(Some("-SNAPSHOT")))
+
+  def withoutSnapshot: Version = copy(qualifier = qualifier.flatMap { qualifierStr =>
+    val snapshotRegex = """-SNAPSHOT""".r
+    val newQualifier = snapshotRegex.replaceFirstIn(qualifierStr, "")
+    if (newQualifier == qualifierStr) {
+      None
+    } else {
+      Some(newQualifier)
+    }
+  })
 
   def string: String = "" + major + mkString(subversions) + qualifier.getOrElse("")
 
