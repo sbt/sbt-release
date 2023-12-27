@@ -73,7 +73,7 @@ object ReleasePlugin extends AutoPlugin {
       withStreams(extracted.structure, st) { str =>
         val nv = nodeView(st, str, key :: Nil)
         val (newS, result) = runTask(task, st, str, extracted.structure.index.triggers, config)(nv)
-        (newS, processResult2(result))
+        (newS, processResult(result, newS.log))
       }._1
     }
 
@@ -223,7 +223,7 @@ object ReleasePlugin extends AutoPlugin {
       snapshots
     },
 
-    releaseVersion := { ver => Version(ver).map(_.withoutSnapshot.string).getOrElse(versionFormatError(ver)) },
+    releaseVersion := { ver => Version(ver).map(_.withoutQualifier.string).getOrElse(versionFormatError(ver)) },
     releaseVersionBump := Version.Bump.default,
     releaseNextVersion := {
       ver => Version(ver).map(_.bump(releaseVersionBump.value).asSnapshot.string).getOrElse(versionFormatError(ver))
