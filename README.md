@@ -142,6 +142,9 @@ The default settings make use of the helper class [`Version`](https://github.com
 // strip the qualifier off the input version, eg. 1.2.1-SNAPSHOT -> 1.2.1
 releaseVersion     := { ver => Version(ver).map(_.withoutQualifier.string).getOrElse(versionFormatError(ver)) }
 
+// strip the snapshot off the input version, eg. 1.2.1-SNAPSHOT -> 1.2.1
+releaseVersion     := { ver => Version(ver).map(_.withoutSnapshot.string).getOrElse(versionFormatError(ver)) }
+
 // bump the version and append '-SNAPSHOT', eg. 1.2.1 -> 1.3.0-SNAPSHOT
 releaseNextVersion := {
   ver => Version(ver).map(_.bump(releaseVersionBump.value).asSnapshot.string).getOrElse(versionFormatError(ver))
