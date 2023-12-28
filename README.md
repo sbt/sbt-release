@@ -6,7 +6,7 @@ This sbt plugin provides a customizable release process that you can add to your
 **Notice:** This README contains information for the latest release. Please refer to the documents for a specific version by looking up the respective [tag](https://github.com/sbt/sbt-release/tags).
 
 ## Requirements
- * sbt 0.13.5+
+ * sbt 1.x
  * The version of the project should follow the semantic versioning scheme on [semver.org](https://www.semver.org) with the following additions:
    * The minor and bugfix (and beyond) part of the version are optional.
    * There is no limit to the number of subversions you may have.
@@ -29,7 +29,7 @@ This sbt plugin provides a customizable release process that you can add to your
 Add the following lines to `./project/plugins.sbt`. See the section [Using Plugins](https://www.scala-sbt.org/1.x/docs/Using-Plugins.html) in the sbt website for more information.
 
 ```scala
-addSbtPlugin("com.github.sbt" % "sbt-release" % "1.1.0")
+addSbtPlugin("com.github.sbt" % "sbt-release" % "1.3.0")
 ```
 
 ## version.sbt
@@ -111,7 +111,7 @@ In the section *Customizing the release process* we take a look at how to define
 
 ### Convenient versioning
 
-As of version 0.8, *sbt-release* comes with four strategies for computing the next snapshot version via the `releaseVersionBump` setting. These strategies are defined in `sbtrelease.Version.Bump`. By default, the `Next` strategy is used:
+As of version 0.8, *sbt-release* comes with some strategies for computing the next snapshot version via the `releaseVersionBump` setting. These strategies are defined in `sbtrelease.Version.Bump`. By default, the `Next` strategy is used:
 
  * `Major`: always bumps the *major* part of the version
  * `Minor`: always bumps the *minor* part of the version
