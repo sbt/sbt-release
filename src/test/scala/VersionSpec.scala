@@ -8,9 +8,8 @@ object VersionSpec extends Specification {
     case Some(parsed) => parsed
     case None => sys.error("Can't parse version " + v)
   }
-
-  "Version bumping with Qualifier" should {
-    def bump(v: String) = version(v).bumpWithQualifier.string
+  "Version bumping" should {
+    def bump(v: String) = version(v).bump.string
 
     "bump the major version if there's only a major version" in {
       bump("1") must_== "2"
@@ -40,44 +39,6 @@ object VersionSpec extends Specification {
       bump("1-rc.1") must_== "1-rc.2"
       bump("1-beta-1") must_== "1-beta-2"
       bump("1-beta.1") must_== "1-beta.2"
-    }
-    "not drop the qualifier if it's not a pre release" in {
-      bump("1.2.3-Final") must_== "1.2.4-Final"
-    }
-    "not drop the post-nano qualifier if it's not a pre release" in {
-      bump("1.2.3.4-Final") must_== "1.2.3.5-Final"
-    }
-  }
-
-  "Version bumping" should {
-    def bump(v: String) = version(v).bump.string
-
-    "bump the major version if there's only a major version" in {
-      bump("1") must_== "2"
-    }
-    "bump the minor version if there's only a minor version" in {
-      bump("1.2") must_== "1.3"
-    }
-    "bump the bugfix version if there's only a bugfix version" in {
-      bump("1.2.3") must_== "1.2.4"
-    }
-    "bump the nano version if there's only a nano version" in {
-      bump("1.2.3.4") must_== "1.2.3.5"
-    }
-    "drop the qualifier if it's a pre release" in {
-      bump("1-rc1") must_== "1"
-      bump("1.2-rc1") must_== "1.2"
-      bump("1.2.3-rc1") must_== "1.2.3"
-
-      bump("1-rc") must_== "1"
-      bump("1-RC1") must_== "1"
-      bump("1-M1") must_== "1"
-      bump("1-rc-1") must_== "1"
-      bump("1-rc.1") must_== "1"
-      bump("1-beta") must_== "1"
-      bump("1-beta-1") must_== "1"
-      bump("1-beta.1") must_== "1"
-      bump("1-alpha") must_== "1"
     }
     "not drop the qualifier if it's not a pre release" in {
       bump("1.2.3-Final") must_== "1.2.4-Final"
@@ -131,14 +92,32 @@ object VersionSpec extends Specification {
       bumpSubversion("1.2.3.4.5-alpha")(2) must_== "1.2.3.5.0-alpha"
     }
   }
-
-  "Version as snapshot" should {
+  "#isSnapshot" should {
+    "return true when -SNAPSHOT is appended with another qualifier" in {
+      version("1.0.0-RC1-SNAPSHOT").isSnapshot must_== true
+    }
+    "return false when -SNAPSHOT is not appended but another qualifier exists" in {
+      version("1.0.0-RC1").isSnapshot must_== false
+    }
+    "return false when neither -SNAPSHOT nor qualifier are appended" in {
+      version("1.0.0").isSnapshot must_== false
+    }
+  }
+  "#asSnapshot" should {
     def snapshot(v: String) = version(v).asSnapshot.string
     "include qualifier if it exists" in {
       snapshot("1.0.0-RC1") must_== "1.0.0-RC1-SNAPSHOT"
     }
     "have no qualifier if none exists" in {
       snapshot("1.0.0") must_== "1.0.0-SNAPSHOT"
+    }
+  }
+  "#withoutSnapshot" should {
+    "remove the snapshot normally" in {
+      version("1.0.0-SNAPSHOT").withoutSnapshot.string must_== "1.0.0"
+    }
+    "remove the snapshot without removing the qualifier" in {
+      version("1.0.0-RC1-SNAPSHOT").withoutSnapshot.string must_== "1.0.0-RC1"
     }
   }
 }

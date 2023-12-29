@@ -109,21 +109,27 @@ A cross release behaves analogous to using the `+` command:
 
 In the section *Customizing the release process* we take a look at how to define a `ReleaseStep` to participate in a cross build.
 
-### Convenient versioning
+### Versioning Strategies
 
-As of version 0.8, *sbt-release* comes with some strategies for computing the next snapshot version via the `releaseVersionBump` setting. These strategies are defined in `sbtrelease.Version.Bump`. By default, the `Next` strategy is used:
+As of version 0.8, *sbt-release* comes with several strategies for computing the next snapshot version via the `releaseVersionBump` setting. These strategies are defined in `sbtrelease.Version.Bump`. By default, the `Next` strategy is used:
 
  * `Major`: always bumps the *major* part of the version
  * `Minor`: always bumps the *minor* part of the version
  * `Bugfix`: always bumps the *bugfix* part of the version
  * `Nano`: always bumps the *nano* part of the version
- * `Next`: bumps the last version part, excluding the qualifier (e.g. `0.17` -> `0.18`, `0.11.7` -> `0.11.8`, `3.22.3.4.91` -> `3.22.3.4.92`, `1.0.0-RC1` -> `1.0.1`)
- * `NextWithQualifer`: bumps the last version part, including the qualifier (e.g. `0.17` -> `0.18`, `0.11.7` -> `0.11.8`, `3.22.3.4.91` -> `3.22.3.4.92`, `1.0.0-RC1` -> `1.0.0-RC2`)   
+ * `Next`: bumps the last version part, excluding the qualifier (e.g. `0.17` -> `0.18`, `0.11.7` -> `0.11.8`, `3.22.3.4.91` -> `3.22.3.4.92`, `1.0.0-RC1` -> `1.0.1`, `1.0.0-RC1` -> `1.0.0-RC2`)
 Example:
 
     releaseVersionBump := sbtrelease.Version.Bump.Major
 
-### Custom versioning
+### Default Versioning
+
+The default settings make use of the helper class [`Version`](https://github.com/sbt/sbt-release/blob/master/src/main/scala/Version.scala) that ships with *sbt-release*.
+
+`releaseVersion`: The current version in version.sbt, without the "-SNAPSHOT" ending,
+`releaseNextVersion`: The "bumped" version according to the "Next" strategy (explained above)
+
+### Custom Versioning
 
 *sbt-release* comes with two settings for deriving the release version and the next development version from a given version.
 
@@ -134,24 +140,6 @@ Let's take a look at the types:
 ```scala
 val releaseVersion     : SettingKey[String => String]
 val releaseNextVersion : SettingKey[String => String]
-```
-
-The default settings make use of the helper class [`Version`](https://github.com/sbt/sbt-release/blob/master/src/main/scala/Version.scala) that ships with *sbt-release*.
-
-```scala
-
-releaseVersion := {
-  releaseVersionBump.value match {
-    // strip the snapshot off the input version, eg. 1.2.1-RC1-SNAPSHOT -> 1.2.1-RC1
-    case _ @ Version.Bump.NextWithQualifier => { ver => Version(ver).map(_.withoutSnapshot.string).getOrElse(versionFormatError(ver)) }
-    // strip the whole qualifier off the input version, eg. 1.2.1-RC1-SNAPSHOT -> 1.2.1
-    case _ => { ver => Version(ver).map(_.withoutQualifier.string).getOrElse(versionFormatError(ver)) }
-  }
-},
-// bump the version and append '-SNAPSHOT', eg. 1.2.1 -> 1.3.0-SNAPSHOT
-releaseNextVersion := {
-  ver => Version(ver).map(_.bump(releaseVersionBump.value).asSnapshot.string).getOrElse(versionFormatError(ver))
-}
 ```
 
 If you want to customize the versioning, keep the following in mind:

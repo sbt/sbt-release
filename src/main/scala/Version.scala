@@ -1,6 +1,7 @@
 package sbtrelease
 
-import util.control.Exception._
+import scala.util.matching.Regex
+import util.control.Exception.*
 
 object Version {
   sealed trait Bump {
@@ -26,7 +27,6 @@ object Version {
      */
     case object Nano extends Bump { def bump: Version => Version = _.bumpNano }
 
-    case object Next extends Bump { def bump: Version => Version = _.bump }
     /**
      * Strategy to always increment to the next version from smallest to greatest
      * Ex:
@@ -37,13 +37,13 @@ object Version {
      * Qualifier with version number: 1.0-RC1 becomes 1.0-RC2
      * Qualifier without version number: 1.0-alpha becomes 1.0
      */
-    case object NextWithQualifier extends Bump { def bump: Version => Version = _.bumpWithQualifier }
+    case object Next extends Bump { def bump: Version => Version = _.bump }
 
-    val default = Next
+    val default: Bump = Next
   }
 
-  val VersionR = """([0-9]+)((?:\.[0-9]+)+)?([\.\-0-9a-zA-Z]*)?""".r
-  val PreReleaseQualifierR = """[\.-](?i:rc|m|alpha|beta)[\.-]?[0-9]*""".r
+  val VersionR: Regex = """([0-9]+)((?:\.[0-9]+)+)?([\.\-0-9a-zA-Z]*)?""".r
+  val PreReleaseQualifierR: Regex = """[\.-](?i:rc|m|alpha|beta)[\.-]?[0-9]*""".r
 
   def apply(s: String): Option[Version] = {
     allCatch opt {
@@ -59,20 +59,9 @@ object Version {
 }
 
 case class Version(major: Int, subversions: Seq[Int], qualifier: Option[String]) {
-  def bump = {
-    val maybeBumpedPrerelease = qualifier.collect {
-      case Version.PreReleaseQualifierR() => withoutQualifier
-    }
-    def maybeBumpedLastSubversion = bumpSubversionOpt(subversions.length-1)
-    def bumpedMajor = copy(major = major + 1)
 
-    maybeBumpedPrerelease
-      .orElse(maybeBumpedLastSubversion)
-      .getOrElse(bumpedMajor)
-  }
-
-  def bumpWithQualifier = {
-    val maybeBumpedPrerelease = qualifier.collect {
+  def bump: Version = {
+    val bumpedPrereleaseVersionOpt = qualifier.collect {
       case rawQualifier @ Version.PreReleaseQualifierR() =>
         val qualifierEndsWithNumberRegex = """[0-9]*$""".r
 
@@ -87,20 +76,22 @@ case class Version(major: Int, subversions: Seq[Int], qualifier: Option[String])
 
         opt.getOrElse(copy(qualifier = None))
     }
-    def maybeBumpedLastSubversion = bumpSubversionOpt(subversions.length-1)
+
+    def maybeBumpedLastSubversion = bumpSubversionOpt(subversions.length - 1)
+
     def bumpedMajor = copy(major = major + 1)
 
-    maybeBumpedPrerelease
+    bumpedPrereleaseVersionOpt
       .orElse(maybeBumpedLastSubversion)
       .getOrElse(bumpedMajor)
   }
 
-  def bumpMajor  = copy(major = major + 1, subversions = Seq.fill(subversions.length)(0))
-  def bumpMinor  = maybeBumpSubversion(0)
-  def bumpBugfix = maybeBumpSubversion(1)
-  def bumpNano   = maybeBumpSubversion(2)
+  def bumpMajor: Version = copy(major = major + 1, subversions = Seq.fill(subversions.length)(0))
+  def bumpMinor: Version = maybeBumpSubversion(0)
+  def bumpBugfix: Version = maybeBumpSubversion(1)
+  def bumpNano: Version = maybeBumpSubversion(2)
 
-  def maybeBumpSubversion(idx: Int) = bumpSubversionOpt(idx) getOrElse this
+  def maybeBumpSubversion(idx: Int): Version = bumpSubversionOpt(idx) getOrElse this
 
   private def bumpSubversionOpt(idx: Int) = {
     val bumped = subversions.drop(idx)
@@ -113,10 +104,16 @@ case class Version(major: Int, subversions: Seq[Int], qualifier: Option[String])
 
   def bump(bumpType: Version.Bump): Version = bumpType.bump(this)
 
-  def withoutQualifier = copy(qualifier = None)
-  def asSnapshot = copy(qualifier = qualifier.map { qualifierStr =>
+  @deprecated("Use .withoutSnapshot going forward if your goal is simply to remove the snapshot (the original main use case for .withoutQualifier). If removing all qualifiers (including prereleases, etc.) is really your goal, construct this manually by creating a new Version class and setting the qualifier to None.")
+  def withoutQualifier: Version = copy(qualifier = None)
+  def asSnapshot: Version = copy(qualifier = qualifier.map { qualifierStr =>
     s"$qualifierStr-SNAPSHOT"
   }.orElse(Some("-SNAPSHOT")))
+
+  def isSnapshot: Boolean = qualifier.exists { qualifierStr =>
+    val snapshotRegex = """(^.*)-SNAPSHOT$""".r
+    qualifierStr.matches(snapshotRegex.regex)
+  }
 
   def withoutSnapshot: Version = copy(qualifier = qualifier.flatMap { qualifierStr =>
     val snapshotRegex = """-SNAPSHOT""".r
@@ -128,7 +125,7 @@ case class Version(major: Int, subversions: Seq[Int], qualifier: Option[String])
     }
   })
 
-  def string = "" + major + mkString(subversions) + qualifier.getOrElse("")
+  def string: String = "" + major + mkString(subversions) + qualifier.getOrElse("")
 
   private def mkString(parts: Seq[Int]) = parts.map("."+_).mkString
 }
