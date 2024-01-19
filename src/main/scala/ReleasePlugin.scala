@@ -1,11 +1,13 @@
 package sbtrelease
 
 import java.io.Serializable
-
-import sbt._
-import Keys._
-import sbt.complete.DefaultParsers._
+import sbt.*
+import Keys.*
+import sbt.complete.DefaultParsers.*
 import sbt.complete.Parser
+import sbtrelease.Version.Bump
+
+import scala.annotation.nowarn
 
 object ReleasePlugin extends AutoPlugin {
 
@@ -73,7 +75,7 @@ object ReleasePlugin extends AutoPlugin {
       withStreams(extracted.structure, st) { str =>
         val nv = nodeView(st, str, key :: Nil)
         val (newS, result) = runTask(task, st, str, extracted.structure.index.triggers, config)(nv)
-        (newS, processResult(result, newS.log))
+        (newS, processResult2(result))
       }._1
     }
 
@@ -216,20 +218,27 @@ object ReleasePlugin extends AutoPlugin {
     if (releaseUseGlobalVersion.value) v1 else v2
   }
 
+  @nowarn("msg=object Next in object Bump is deprecated*")
   override def projectSettings = Seq[Setting[_]](
     releaseSnapshotDependencies := {
       val moduleIds = (Runtime / managedClasspath).value.flatMap(_.get(moduleID.key))
       val snapshots = moduleIds.filter(m => m.isChanging || m.revision.endsWith("-SNAPSHOT"))
       snapshots
     },
-
     releaseVersion := { rawVersion =>
-      val version = Version(rawVersion).getOrElse(versionFormatError(rawVersion))
-      if (version.isSnapshot) {
-        version.withoutSnapshot.string
-      } else {
-        expectedSnapshotVersionError(version.string)
+
+      Version(rawVersion).map { version =>
+        releaseVersionBump.value match {
+          case Bump.NextPrerelease | Bump.Next =>
+            if (version.isSnapshot) {
+              version.withoutSnapshot.string
+            } else {
+              expectedSnapshotVersionError(rawVersion)
+            }
+          case _ => version.withoutQualifier.string
+        }
       }
+      .getOrElse(versionFormatError(rawVersion))
     },
     releaseVersionBump := Version.Bump.default,
     releaseNextVersion := {

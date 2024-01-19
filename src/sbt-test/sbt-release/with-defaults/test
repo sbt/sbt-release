@@ -1,11 +1,41 @@
-$ exec git init .
+# Test Suite Preparation
+    $ exec git init .
+    > update
+    $ exec git add .
+    $ exec git commit -m init
+    > reload
 
-> update
+# SCENARIO: When no release versions are specified in the release command
+    # TEST: Should fail to release if "with-defaults" is not specified
+        -> release
 
-$ exec git add .
-$ exec git commit -m init
+    # TEST: Should succeed if "with-defaults" is specified
+        > release with-defaults
 
-> reload
+# SCENARIO: When default bumping strategy is used
+    # Test Scenario Preparation
+        > 'release release-version 0.9.9 next-version 1.0.0-RC1-SNAPSHOT'
+        > reload
+        > checkContentsOfVersionSbt 1.0.0-RC1-SNAPSHOT
 
--> release
-> release with-defaults
+    # TEST: Snapshot version should be correctly set
+        > release with-defaults
+        > checkContentsOfVersionSbt 1.0.0-RC2-SNAPSHOT
+
+    # TEST: Release version should be correctly set
+        $ exec git reset --hard HEAD~1
+        > reload
+        > checkContentsOfVersionSbt 1.0.0-RC1
+
+# SCENARIO: When NextStable bumping strategy is used
+    # TEST: Snapshot version should be correctly set
+        $ exec git reset --hard HEAD~1
+        > set releaseVersionBump := sbtrelease.Version.Bump.NextStable
+        > release with-defaults
+        > checkContentsOfVersionSbt 1.0.1-SNAPSHOT
+
+    # TEST: Release version should be correctly set
+        $ exec git reset --hard HEAD~1
+        > reload
+        > checkContentsOfVersionSbt 1.0.0
+

@@ -117,17 +117,21 @@ As of version 0.8, *sbt-release* comes with several strategies for computing the
  * `Minor`: always bumps the *minor* part of the version
  * `Bugfix`: always bumps the *bugfix* part of the version
  * `Nano`: always bumps the *nano* part of the version
- * `Next`: bumps the last version part, excluding the qualifier (e.g. `0.17` -> `0.18`, `0.11.7` -> `0.11.8`, `3.22.3.4.91` -> `3.22.3.4.92`, `1.0.0-RC1` -> `1.0.1`, `1.0.0-RC1` -> `1.0.0-RC2`)
-Example:
+ * `NextPrerelease` (**default**): bumps the last version part, including the qualifier (e.g. `0.17` -> `0.18`, `0.11.7` -> `0.11.8`, `3.22.3.4.91` -> `3.22.3.4.92`, `1.0.0-RC1` -> `1.0.0-RC2`)
+ * `NextStable`: bumps exactly like `NextPrerelease` except that the qualifier is excluded (e.g. `1.0.0-RC1` -> `1.0.0`)
 
-    releaseVersionBump := sbtrelease.Version.Bump.Major
+Users can set their preferred versioning strategy in `build.sbt` as follows:
+```sbt
+releaseVersionBump := sbtrelease.Version.Bump.Major
+```
 
 ### Default Versioning
 
 The default settings make use of the helper class [`Version`](https://github.com/sbt/sbt-release/blob/master/src/main/scala/Version.scala) that ships with *sbt-release*.
 
-`releaseVersion`: The current version in version.sbt, without the "-SNAPSHOT" ending,
-`releaseNextVersion`: The "bumped" version according to the "Next" strategy (explained above)
+`releaseVersion`: The current version in version.sbt, without the "-SNAPSHOT" ending. So, if `version.sbt` contains `1.0.0-SNAPSHOT`, the release version will be set to `1.0.0`.
+
+`releaseNextVersion`: The "bumped" version according to the versioning strategy (explained above), including the `-SNAPSHOT` ending. So, if `releaseVersion` is `1.0.0`, `releaseNextVersion` will be `1.0.1-SNAPSHOT`.
 
 ### Custom Versioning
 
