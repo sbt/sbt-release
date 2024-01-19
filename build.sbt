@@ -35,8 +35,6 @@ scriptedLaunchOpts := {
 }
 
 scriptedBufferLog := false
-scriptedParallelInstances := 9 //Set to be equal to the number of scripted tests
-scriptedBatchExecution := true
 
 pomExtra := {
   <developers>{
