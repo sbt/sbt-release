@@ -7,8 +7,6 @@ import sbt.complete.DefaultParsers.*
 import sbt.complete.Parser
 import sbtrelease.Version.Bump
 
-import scala.annotation.nowarn
-
 object ReleasePlugin extends AutoPlugin {
 
   object autoImport {
@@ -218,7 +216,6 @@ object ReleasePlugin extends AutoPlugin {
     if (releaseUseGlobalVersion.value) v1 else v2
   }
 
-  @nowarn("msg=object Next in object Bump is deprecated*")
   override def projectSettings = Seq[Setting[_]](
     releaseSnapshotDependencies := {
       val moduleIds = (Runtime / managedClasspath).value.flatMap(_.get(moduleID.key))
