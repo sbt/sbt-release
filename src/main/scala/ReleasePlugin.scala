@@ -226,23 +226,22 @@ object ReleasePlugin extends AutoPlugin {
       snapshots
     },
     releaseVersion := { rawVersion =>
-
       Version(rawVersion).map { version =>
         releaseVersionBump.value match {
-          case Bump.NextPrerelease | Bump.Next =>
+          case Bump.Next =>
             if (version.isSnapshot) {
-              version.withoutSnapshot.string
+              version.withoutSnapshot.unapply
             } else {
               expectedSnapshotVersionError(rawVersion)
             }
-          case _ => version.withoutQualifier.string
+          case _ => version.withoutQualifier.unapply
         }
       }
       .getOrElse(versionFormatError(rawVersion))
     },
     releaseVersionBump := Version.Bump.default,
     releaseNextVersion := {
-      ver => Version(ver).map(_.bump(releaseVersionBump.value).asSnapshot.string).getOrElse(versionFormatError(ver))
+      ver => Version(ver).map(_.bump(releaseVersionBump.value).asSnapshot.unapply).getOrElse(versionFormatError(ver))
     },
     releaseUseGlobalVersion := true,
     releaseCrossBuild := false,

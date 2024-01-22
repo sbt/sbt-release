@@ -28,9 +28,6 @@ object Version {
     case object Nano extends Bump { def bump: Version => Version = _.bumpNano }
 
 
-    @deprecated("Use NextStable or NextPrerelease for a more specific bumping strategy. Deprecated Next points by default to NextPrerelease")
-    case object Next extends Bump { def bump: Version => Version = _.bumpPrerelease }
-
     /**
      * Strategy to always increment to the next version from smallest to greatest, including prerelease versions
      * Ex:
@@ -41,7 +38,7 @@ object Version {
      * Qualifier with version number: 1.0-RC1 becomes 1.0-RC2
      * Qualifier without version number: 1.0-alpha becomes 1.0
      */
-    case object NextPrerelease extends Bump { def bump: Version => Version = _.bumpPrerelease }
+    case object Next extends Bump { def bump: Version => Version = _.bumpNext }
 
     /**
      * Strategy to always increment to the next version from smallest to greatest, excluding prerelease versions
@@ -53,9 +50,9 @@ object Version {
      * Qualifier with version number: 1.0-RC1 becomes 1.0
      * Qualifier without version number: 1.0-alpha becomes 1.0
      */
-    case object NextStable extends Bump { def bump: Version => Version = _.bumpStable }
+    case object NextStable extends Bump { def bump: Version => Version = _.bumpNextStable }
 
-    val default: Bump = NextPrerelease
+    val default: Bump = Next
   }
 
   val VersionR: Regex = """([0-9]+)((?:\.[0-9]+)+)?([\.\-0-9a-zA-Z]*)?""".r
@@ -76,26 +73,10 @@ object Version {
 
 case class Version(major: Int, subversions: Seq[Int], qualifier: Option[String]) {
 
-  @deprecated("Use .bumpStable or .bumpPrerelease")
-  def bump: Version = bumpPrerelease
-  private def bumpNext(bumpedPrereleaseVersionOpt: Option[Version]): Version = {
-    def maybeBumpedLastSubversion = bumpSubversionOpt(subversions.length - 1)
+  @deprecated("Use .bumpNext or .bumpNextStable instead")
+  def bump: Version = bumpNext
 
-    def bumpedMajor = copy(major = major + 1)
-
-    bumpedPrereleaseVersionOpt
-      .orElse(maybeBumpedLastSubversion)
-      .getOrElse(bumpedMajor)
-  }
-
-  def bumpStable: Version = {
-    val bumpedPrereleaseVersionOpt = qualifier.collect {
-      case Version.PreReleaseQualifierR() => withoutQualifier
-    }
-    bumpNext(bumpedPrereleaseVersionOpt)
-  }
-
-  def bumpPrerelease: Version = {
+  def bumpNext: Version = {
     val bumpedPrereleaseVersionOpt = qualifier.collect {
       case rawQualifier @ Version.PreReleaseQualifierR() =>
         val qualifierEndsWithNumberRegex = """[0-9]*$""".r
@@ -112,7 +93,23 @@ case class Version(major: Int, subversions: Seq[Int], qualifier: Option[String])
         opt.getOrElse(this.withoutQualifier)
     }
 
-    bumpNext(bumpedPrereleaseVersionOpt)
+    bumpNextGeneric(bumpedPrereleaseVersionOpt)
+  }
+  private def bumpNextGeneric(bumpedPrereleaseVersionOpt: Option[Version]): Version = {
+    def maybeBumpedLastSubversion = bumpSubversionOpt(subversions.length - 1)
+
+    def bumpedMajor = copy(major = major + 1)
+
+    bumpedPrereleaseVersionOpt
+      .orElse(maybeBumpedLastSubversion)
+      .getOrElse(bumpedMajor)
+  }
+
+  def bumpNextStable: Version = {
+    val bumpedPrereleaseVersionOpt = qualifier.collect {
+      case Version.PreReleaseQualifierR() => withoutQualifier
+    }
+    bumpNextGeneric(bumpedPrereleaseVersionOpt)
   }
 
   def bumpMajor: Version = copy(major = major + 1, subversions = Seq.fill(subversions.length)(0))
@@ -153,7 +150,10 @@ case class Version(major: Int, subversions: Seq[Int], qualifier: Option[String])
     }
   })
 
-  def string: String = "" + major + mkString(subversions) + qualifier.getOrElse("")
+  @deprecated("Use .unapply instead")
+  def string: String = unapply
+
+  def unapply: String = "" + major + mkString(subversions) + qualifier.getOrElse("")
 
   private def mkString(parts: Seq[Int]) = parts.map("."+_).mkString
 }

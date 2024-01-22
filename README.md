@@ -117,8 +117,8 @@ As of version 0.8, *sbt-release* comes with several strategies for computing the
  * `Minor`: always bumps the *minor* part of the version
  * `Bugfix`: always bumps the *bugfix* part of the version
  * `Nano`: always bumps the *nano* part of the version
- * `NextPrerelease` (**default**): bumps the last version part, including the qualifier (e.g. `0.17` -> `0.18`, `0.11.7` -> `0.11.8`, `3.22.3.4.91` -> `3.22.3.4.92`, `1.0.0-RC1` -> `1.0.0-RC2`)
- * `NextStable`: bumps exactly like `NextPrerelease` except that the qualifier is excluded (e.g. `1.0.0-RC1` -> `1.0.0`)
+ * `Next` (**default**): bumps the last version part, including the qualifier (e.g. `0.17` -> `0.18`, `0.11.7` -> `0.11.8`, `3.22.3.4.91` -> `3.22.3.4.92`, `1.0.0-RC1` -> `1.0.0-RC2`)
+ * `NextStable`: bumps exactly like `Next` except that any prerelease qualifier is excluded (e.g. `1.0.0-RC1` -> `1.0.0`)
 
 Users can set their preferred versioning strategy in `build.sbt` as follows:
 ```sbt
@@ -142,8 +142,8 @@ These derived versions are used for the suggestions/defaults in the prompt and f
 Let's take a look at the types:
 
 ```scala
-val releaseVersion     : SettingKey[String => String]
-val releaseNextVersion : SettingKey[String => String]
+val releaseVersion     : TaskKey[String => String]
+val releaseNextVersion : TaskKey[String => String]
 ```
 
 If you want to customize the versioning, keep the following in mind:
