@@ -1,11 +1,11 @@
 package sbtrelease
 
 import java.io.Serializable
-
-import sbt._
-import Keys._
-import sbt.complete.DefaultParsers._
+import sbt.*
+import Keys.*
+import sbt.complete.DefaultParsers.*
 import sbt.complete.Parser
+import sbtrelease.Version.Bump
 
 object ReleasePlugin extends AutoPlugin {
 
@@ -73,7 +73,7 @@ object ReleasePlugin extends AutoPlugin {
       withStreams(extracted.structure, st) { str =>
         val nv = nodeView(st, str, key :: Nil)
         val (newS, result) = runTask(task, st, str, extracted.structure.index.triggers, config)(nv)
-        (newS, processResult(result, newS.log))
+        (newS, processResult2(result))
       }._1
     }
 
@@ -222,11 +222,23 @@ object ReleasePlugin extends AutoPlugin {
       val snapshots = moduleIds.filter(m => m.isChanging || m.revision.endsWith("-SNAPSHOT"))
       snapshots
     },
-
-    releaseVersion := { ver => Version(ver).map(_.withoutQualifier.string).getOrElse(versionFormatError(ver)) },
+    releaseVersion := { rawVersion =>
+      Version(rawVersion).map { version =>
+        releaseVersionBump.value match {
+          case Bump.Next =>
+            if (version.isSnapshot) {
+              version.withoutSnapshot.unapply
+            } else {
+              expectedSnapshotVersionError(rawVersion)
+            }
+          case _ => version.withoutQualifier.unapply
+        }
+      }
+      .getOrElse(versionFormatError(rawVersion))
+    },
     releaseVersionBump := Version.Bump.default,
     releaseNextVersion := {
-      ver => Version(ver).map(_.bump(releaseVersionBump.value).asSnapshot.string).getOrElse(versionFormatError(ver))
+      ver => Version(ver).map(_.bump(releaseVersionBump.value).asSnapshot.unapply).getOrElse(versionFormatError(ver))
     },
     releaseUseGlobalVersion := true,
     releaseCrossBuild := false,

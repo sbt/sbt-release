@@ -109,21 +109,31 @@ A cross release behaves analogous to using the `+` command:
 
 In the section *Customizing the release process* we take a look at how to define a `ReleaseStep` to participate in a cross build.
 
-### Convenient versioning
+### Versioning Strategies
 
-As of version 0.8, *sbt-release* comes with some strategies for computing the next snapshot version via the `releaseVersionBump` setting. These strategies are defined in `sbtrelease.Version.Bump`. By default, the `Next` strategy is used:
+As of version 0.8, *sbt-release* comes with several strategies for computing the next snapshot version via the `releaseVersionBump` setting. These strategies are defined in `sbtrelease.Version.Bump`. By default, the `Next` strategy is used:
 
  * `Major`: always bumps the *major* part of the version
  * `Minor`: always bumps the *minor* part of the version
  * `Bugfix`: always bumps the *bugfix* part of the version
  * `Nano`: always bumps the *nano* part of the version
- * `Next`: bumps the last version part (e.g. `0.17` -> `0.18`, `0.11.7` -> `0.11.8`, `3.22.3.4.91` -> `3.22.3.4.92`)
+ * `Next` (**default**): bumps the last version part, including the qualifier (e.g. `0.17` -> `0.18`, `0.11.7` -> `0.11.8`, `3.22.3.4.91` -> `3.22.3.4.92`, `1.0.0-RC1` -> `1.0.0-RC2`)
+ * `NextStable`: bumps exactly like `Next` except that any prerelease qualifier is excluded (e.g. `1.0.0-RC1` -> `1.0.0`)
 
-Example:
+Users can set their preferred versioning strategy in `build.sbt` as follows:
+```sbt
+releaseVersionBump := sbtrelease.Version.Bump.Major
+```
 
-    releaseVersionBump := sbtrelease.Version.Bump.Major
+### Default Versioning
 
-### Custom versioning
+The default settings make use of the helper class [`Version`](https://github.com/sbt/sbt-release/blob/master/src/main/scala/Version.scala) that ships with *sbt-release*.
+
+`releaseVersion`: The current version in version.sbt, without the "-SNAPSHOT" ending. So, if `version.sbt` contains `1.0.0-SNAPSHOT`, the release version will be set to `1.0.0`.
+
+`releaseNextVersion`: The "bumped" version according to the versioning strategy (explained above), including the `-SNAPSHOT` ending. So, if `releaseVersion` is `1.0.0`, `releaseNextVersion` will be `1.0.1-SNAPSHOT`.
+
+### Custom Versioning
 
 *sbt-release* comes with two settings for deriving the release version and the next development version from a given version.
 
@@ -132,20 +142,8 @@ These derived versions are used for the suggestions/defaults in the prompt and f
 Let's take a look at the types:
 
 ```scala
-val releaseVersion     : SettingKey[String => String]
-val releaseNextVersion : SettingKey[String => String]
-```
-
-The default settings make use of the helper class [`Version`](https://github.com/sbt/sbt-release/blob/master/src/main/scala/Version.scala) that ships with *sbt-release*.
-
-```scala
-// strip the qualifier off the input version, eg. 1.2.1-SNAPSHOT -> 1.2.1
-releaseVersion     := { ver => Version(ver).map(_.withoutQualifier.string).getOrElse(versionFormatError(ver)) }
-
-// bump the version and append '-SNAPSHOT', eg. 1.2.1 -> 1.3.0-SNAPSHOT
-releaseNextVersion := {
-  ver => Version(ver).map(_.bump(releaseVersionBump.value).asSnapshot.string).getOrElse(versionFormatError(ver))
-},
+val releaseVersion     : TaskKey[String => String]
+val releaseNextVersion : TaskKey[String => String]
 ```
 
 If you want to customize the versioning, keep the following in mind:
