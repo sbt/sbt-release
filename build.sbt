@@ -26,7 +26,7 @@ Compile / doc / scalacOptions ++= {
   )
 }
 
-libraryDependencies ++= Seq("org.specs2" %% "specs2-core" % "4.20.6" % "test")
+libraryDependencies ++= Seq("org.specs2" %% "specs2-core" % "4.20.7" % "test")
 
 // Scripted
 enablePlugins(SbtPlugin)
