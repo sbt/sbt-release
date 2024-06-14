@@ -346,6 +346,32 @@ ReleaseKeys.releaseProcess <<= thisProjectRef apply { ref =>
 The `check` part of the release step is run at the start, to make sure we have everything set up to post the release notes later on.
 After publishing the actual build artifacts, we also publish the release notes.
 
+#### GitFlow
+[Gitflow](http://nvie.com/posts/a-successful-git-branching-model/) is a very popular Git branching method for creating
+releases. This involves creating a new release branch from the develop branch.
+
+    import ReleaseTransformations._
+    import sbtrelease._
+
+    // ...
+
+    releaseProcess := Seq[ReleaseStep](
+        checkSnapshotDependencies,
+        inquireVersions,
+        inquireBranches,
+        setReleaseVersion,
+        commitReleaseVersion,
+        setReleaseBranch,
+        pushChanges,
+        setNextBranch,
+        setNextVersion,
+        commitNextVersion,
+        pushChanges
+    )
+
+`inquireBranches` will ask for a release branch name where the release version will get pushed. It will then
+switch back to the current branch before committing and pushing next version.
+
 ## Credits
 Thank you, [Jason](https://github.com/retronym) and [Mark](https://github.com/harrah), for your feedback and ideas.
 

@@ -54,6 +54,16 @@ object ReleaseStateTransformations {
 
   }
 
+  lazy val inquireBranches: ReleaseStep = { st: State =>
+    val releaseBranch = st.get(commandLineReleaseBranch).flatten.getOrElse(SimpleReader.readLine("Release branch : ") match {
+      case Some(input) => input.trim
+      case None => sys.error("No branch provided!")
+    })
+    val nextBranch = st.get(commandLineNextBranch).flatten.getOrElse(vcs(st).currentBranch)
+
+    st.put(branches, (releaseBranch, nextBranch))
+  }
+
 
   lazy val runClean : ReleaseStep = ReleaseStep(
     action = { st: State =>
@@ -106,6 +116,23 @@ object ReleaseStateTransformations {
       if (useGlobal) ThisBuild / version := selected
       else version := selected
     ), st)
+  }
+
+  lazy val setReleaseBranch: ReleaseStep = setBranch(_._1)
+  lazy val setNextBranch: ReleaseStep = setBranch(_._2)
+  private[sbtrelease] def setBranch(selectBranch: Branches => String): ReleaseStep = { st: State =>
+    val vs = st.get(branches).getOrElse(sys.error("No branches are set! Was this release part executed before inquireBranches?"))
+    val selected = selectBranch(vs)
+
+    st.log.info(s"Checking out $selected")
+    val vc = vcs(st)
+    val processLogger: ProcessLogger = if (vc.isInstanceOf[Git]) {
+      // Git outputs to standard error, so use a logger that redirects stderr to info
+      vc.stdErrorToStdOut(st.log)
+    } else st.log
+    vc.setBranch(selected) !! processLogger
+
+    st
   }
 
   private def vcs(st: State): Vcs = {
@@ -230,9 +257,6 @@ object ReleaseStateTransformations {
 
   lazy val pushChanges: ReleaseStep = ReleaseStep(pushChangesAction, checkUpstream)
   private[sbtrelease] lazy val checkUpstream = { st: State =>
-    if (!vcs(st).hasUpstream) {
-      sys.error("No tracking branch is set up. Either configure a remote tracking branch, or remove the pushChanges release part.")
-    }
     val defaultChoice = extractDefault(st, "n")
 
     val log = toProcessLogger(st)
@@ -267,18 +291,18 @@ object ReleaseStateTransformations {
 
     val vc = vcs(st)
     if (vc.hasUpstream) {
-      defaultChoice orElse SimpleReader.readLine("Push changes to the remote repository (y/n)? [y] ") match {
-        case Yes() | Some("") =>
-          val processLogger: ProcessLogger = if (vc.isInstanceOf[Git]) {
-            // Git outputs to standard error, so use a logger that redirects stderr to info
-            vc.stdErrorToStdOut(log)
-          } else log
-          vc.pushChanges !! processLogger
-        case _ => st.log.warn("Remember to push the changes yourself!")
-      }
+       defaultChoice orElse SimpleReader.readLine("Push changes to the remote repository (y/n)? [y] ") match {
+      case Yes() | Some("") =>
+        val processLogger: ProcessLogger = if (vc.isInstanceOf[Git]) {
+          // Git outputs to standard error, so use a logger that redirects stderr to info
+          vc.stdErrorToStdOut(st.log)
+        } else st.log
+        vc.pushChanges(!vc.hasUpstream) !! processLogger
+      case _ => st.log.warn("Remember to push the changes yourself!")
     } else {
       st.log.info("Changes were NOT pushed, because no upstream branch is configured for the local branch [%s]" format vcs(st).currentBranch)
     }
+
     st
   }
 
@@ -352,11 +376,20 @@ object ExtraReleaseCommands {
   private lazy val inquireVersionsCommandKey = "release-inquire-versions"
   lazy val inquireVersionsCommand = Command.command(inquireVersionsCommandKey)(inquireVersions)
 
+  private lazy val inquireBranchesCommandKey = "release-branches-versions"
+  lazy val inquireBranchesCommand = Command.command(inquireBranchesCommandKey)(inquireBranches)
+
   private lazy val setReleaseVersionCommandKey = "release-set-release-version"
   lazy val setReleaseVersionCommand = Command.command(setReleaseVersionCommandKey)(setReleaseVersion)
 
   private lazy val setNextVersionCommandKey = "release-set-next-version"
   lazy val setNextVersionCommand = Command.command(setNextVersionCommandKey)(setNextVersion)
+
+  private lazy val setReleaseBranchCommandKey = "release-set-release-branch"
+  lazy val setReleaseBranchCommand = Command.command(setReleaseBranchCommandKey)(setReleaseBranch)
+
+  private lazy val setNextBranchCommandKey = "release-set-next-branch"
+  lazy val setNextBranchCommand = Command.command(setNextBranchCommandKey)(setNextBranch)
 
   private lazy val commitReleaseVersionCommandKey = "release-commit-release-version"
   lazy val commitReleaseVersionCommand =  Command.command(commitReleaseVersionCommandKey)(commitReleaseVersion)
