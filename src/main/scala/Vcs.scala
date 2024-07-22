@@ -22,8 +22,9 @@ trait Vcs {
   def hasUpstream: Boolean
   def trackingRemote: String
   def isBehindRemote: Boolean
-  def pushChanges: ProcessBuilder
+  def pushChanges(withUpstream: Boolean): ProcessBuilder
   def currentBranch: String
+  def setBranch(branch: String): ProcessBuilder
   def hasUntrackedFiles: Boolean = untrackedFiles.nonEmpty
   def untrackedFiles: Seq[String]
   def hasModifiedFiles: Boolean = modifiedFiles.nonEmpty
@@ -107,9 +108,11 @@ class Mercurial(val baseDir: File) extends Vcs with GitLike {
 
   def isBehindRemote = cmd("incoming", "-b", ".", "-q") ! devnull == 0
 
-  def pushChanges = cmd("push", "-b", ".")
+  def pushChanges(withUpstream: Boolean) = cmd("push", "-b", ".")
 
   def currentBranch = cmd("branch").!!.trim
+
+  def setBranch(branch: String) = throw sys.error("Branch switching not currently supported in hg")
 
   // FIXME: This is utterly bogus, but I cannot find a good way...
   def checkRemote(remote: String) = cmd("id", "-n")
@@ -131,12 +134,20 @@ class Git(val baseDir: File) extends Vcs with GitLike {
   private lazy val trackingBranchCmd = cmd("config", "branch.%s.merge" format currentBranch)
   private def trackingBranch: String = trackingBranchCmd.!!.trim.stripPrefix("refs/heads/")
 
-  private lazy val trackingRemoteCmd: ProcessBuilder = cmd("config", "branch.%s.remote" format currentBranch)
-  def trackingRemote: String = trackingRemoteCmd.!!.trim
+  private def trackingRemoteCmd(branch: String): ProcessBuilder = cmd("config", "branch.%s.remote" format branch)
+  def trackingRemote: String = (trackingRemoteCmd(currentBranch) !!) trim
 
-  def hasUpstream = trackingRemoteCmd ! devnull == 0 && trackingBranchCmd ! devnull == 0
+  def hasUpstream = trackingRemoteCmd(currentBranch) ! devnull == 0 && trackingBranchCmd ! devnull == 0
 
   def currentBranch =  cmd("symbolic-ref", "HEAD").!!.trim.stripPrefix("refs/heads/")
+
+  def setBranch(branch: String) = {
+    if (trackingRemoteCmd(branch) ! devnull != 0) {
+      val currentRemote = trackingRemote
+      cmd("checkout", "-b", branch).!!
+      cmd("config", "--add", "branch.%s.remote".format(branch), currentRemote)
+    } else cmd("checkout", branch)
+  }
 
   def currentHash = revParse("HEAD")
 
@@ -170,11 +181,13 @@ class Git(val baseDir: File) extends Vcs with GitLike {
 
   def status = cmd("status", "--porcelain")
 
-  def pushChanges = pushCurrentBranch #&& pushTags
+  def pushChanges(setUpstream: Boolean)  = pushCurrentBranch(setUpstream) #&& pushTags
 
-  private def pushCurrentBranch = {
+  private def pushCurrentBranch(setUpstream: Boolean) = {
     val localBranch = currentBranch
-    cmd("push", trackingRemote, "%s:%s" format (localBranch, trackingBranch))
+    if (setUpstream) {
+      cmd ("push", "-u", trackingRemote, localBranch)
+    } else cmd("push", trackingRemote, "%s:%s" format (localBranch, trackingBranch))
   }
 
   private def pushTags = cmd("push", "--tags", trackingRemote)
@@ -211,7 +224,9 @@ class Subversion(val baseDir: File) extends Vcs {
 
   override def currentBranch: String = workingDirSvnUrl.substring(workingDirSvnUrl.lastIndexOf("/") + 1)
 
-  override def pushChanges: ProcessBuilder = commit("push changes", false, false)
+  def setBranch(branch: String) = throw sys.error("Branch switching not currently supported in svn")
+
+  override def pushChanges(withUpstream: Boolean): ProcessBuilder = commit("push changes", false, false)
 
   override def isBehindRemote: Boolean = false
 

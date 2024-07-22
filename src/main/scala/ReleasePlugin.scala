@@ -120,8 +120,11 @@ object ReleasePlugin extends AutoPlugin {
     object ReleaseKeys {
 
       val versions = AttributeKey[Versions]("releaseVersions")
+      val branches = AttributeKey[Branches]("releaseBranches")
       val commandLineReleaseVersion = AttributeKey[Option[String]]("release-input-release-version")
       val commandLineNextVersion = AttributeKey[Option[String]]("release-input-next-version")
+      val commandLineReleaseBranch = AttributeKey[Option[String]]("release-input-release-branch")
+      val commandLineNextBranch = AttributeKey[Option[String]]("release-input-next-branch")
       val useDefaults = AttributeKey[Boolean]("releaseUseDefaults")
       val skipTests = AttributeKey[Boolean]("releaseSkipTests")
       val cross = AttributeKey[Boolean]("releaseCross")
@@ -140,6 +143,10 @@ object ReleasePlugin extends AutoPlugin {
         (Space ~> token("release-version") ~> Space ~> token(StringBasic, "<release version>")) map ParseResult.ReleaseVersion
       private[this] val NextVersion: Parser[ParseResult] =
         (Space ~> token("next-version") ~> Space ~> token(StringBasic, "<next version>")) map ParseResult.NextVersion
+      private[this] val ReleaseBranch: Parser[ParseResult] =
+        (Space ~> token("release-branch") ~> Space ~> token(StringBasic, "<release branch>")) map ParseResult.ReleaseBranch
+      private[this] val NextBranch: Parser[ParseResult] =
+        (Space ~> token("next-branch") ~> Space ~> token(StringBasic, "<next branch>")) map ParseResult.NextBranch
       private[this] val TagDefault: Parser[ParseResult] =
         (Space ~> token("default-tag-exists-answer") ~> Space ~> token(StringBasic, "o|k|a|<tag-name>")) map ParseResult.TagDefault
 
@@ -148,13 +155,15 @@ object ReleasePlugin extends AutoPlugin {
       private[this] object ParseResult {
         final case class ReleaseVersion(value: String) extends ParseResult
         final case class NextVersion(value: String) extends ParseResult
+        final case class ReleaseBranch(value: String) extends ParseResult
+        final case class NextBranch(value: String) extends ParseResult
         final case class TagDefault(value: String) extends ParseResult
         case object WithDefaults extends ParseResult
         case object SkipTests extends ParseResult
         case object CrossBuild extends ParseResult
       }
 
-      private[this] val releaseParser: Parser[Seq[ParseResult]] = (ReleaseVersion | NextVersion | WithDefaults | SkipTests | CrossBuild | TagDefault).*
+      private[this] val releaseParser: Parser[Seq[ParseResult]] = (ReleaseVersion | NextVersion | ReleaseBranch | NextBranch | WithDefaults | SkipTests | CrossBuild | TagDefault).*
 
       val releaseCommand: Command = Command(releaseCommandKey)(_ => releaseParser) { (st, args) =>
         val extracted = Project.extract(st)
@@ -169,6 +178,8 @@ object ReleasePlugin extends AutoPlugin {
           .put(tagDefault, args.collectFirst{case ParseResult.TagDefault(value) => value})
           .put(commandLineReleaseVersion, args.collectFirst{case ParseResult.ReleaseVersion(value) => value})
           .put(commandLineNextVersion, args.collectFirst{case ParseResult.NextVersion(value) => value})
+          .put(commandLineReleaseBranch, args.collectFirst{case ParseResult.ReleaseBranch(value) => value})
+          .put(commandLineNextBranch, args.collectFirst{case ParseResult.NextBranch(value) => value})
 
         val initialChecks = releaseParts.map(_.check)
 
