@@ -12,7 +12,7 @@ import sys.process.ProcessLogger
 object ReleaseStateTransformations {
   import Utilities._
 
-  lazy val checkSnapshotDependencies: ReleaseStep = ReleaseStep({ st: State =>
+  lazy val checkSnapshotDependencies: ReleaseStep = ReleaseStep({ (st: State) =>
     val thisRef = st.extract.get(thisProjectRef)
     val (newSt, result) = Compat.runTaskAggregated(thisRef / releaseSnapshotDependencies, st)
     val snapshotDeps = result match {
@@ -31,7 +31,7 @@ object ReleaseStateTransformations {
   }, enableCrossBuild = true)
 
 
-  lazy val inquireVersions: ReleaseStep = { st: State =>
+  lazy val inquireVersions: ReleaseStep = { (st: State) =>
 
     val extracted = Project.extract(st)
 
@@ -56,7 +56,7 @@ object ReleaseStateTransformations {
 
 
   lazy val runClean : ReleaseStep = ReleaseStep(
-    action = { st: State =>
+    action = { (st: State) =>
       val extracted = Project.extract(st)
       val ref = extracted.get(thisProjectRef)
       extracted.runAggregated(ref / (Global / clean), st)
@@ -65,7 +65,7 @@ object ReleaseStateTransformations {
 
 
   lazy val runTest: ReleaseStep = ReleaseStep(
-    action = { st: State =>
+    action = { (st: State) =>
       if (!st.get(skipTests).getOrElse(false)) {
         val extracted = Project.extract(st)
         val ref = extracted.get(thisProjectRef)
@@ -80,7 +80,7 @@ object ReleaseStateTransformations {
   val globalVersionString = "ThisBuild / version := \"%s\""
   private[this] val globalVersionStringOldSyntax = "version in ThisBuild := \"%s\""
   val versionString = "version := \"%s\""
-  private[sbtrelease] def setVersion(selectVersion: Versions => String): ReleaseStep =  { st: State =>
+  private[sbtrelease] def setVersion(selectVersion: Versions => String): ReleaseStep =  { (st: State) =>
     val vs = st.get(versions).getOrElse(sys.error("No versions are set! Was this release part executed before inquireVersions?"))
     val selected = selectVersion(vs)
 
@@ -117,7 +117,7 @@ object ReleaseStateTransformations {
     IO.writeLines(file, Seq(versionString))
   }
 
-  private[sbtrelease] lazy val initialVcsChecks = { st: State =>
+  private[sbtrelease] lazy val initialVcsChecks = { (st: State) =>
     val extracted = Project.extract( st )
 
     val hasUntrackedFiles = vcs(st).hasUntrackedFiles
@@ -147,7 +147,7 @@ object ReleaseStateTransformations {
   }
 
   lazy val commitReleaseVersion = ReleaseStep(commitReleaseVersionAction, initialVcsChecks)
-  private[sbtrelease] lazy val commitReleaseVersionAction = { st: State =>
+  private[sbtrelease] lazy val commitReleaseVersionAction = { (st: State) =>
     val newState = commitVersion(st, releaseCommitMessage)
     reapply(Seq[Setting[_]](
       packageOptions += ManifestAttributes(
@@ -156,7 +156,7 @@ object ReleaseStateTransformations {
     ), newState)
   }
 
-  lazy val commitNextVersion = {st: State => commitVersion(st, releaseNextCommitMessage)}
+  lazy val commitNextVersion = { (st: State) => commitVersion(st, releaseNextCommitMessage)}
 
   private[sbtrelease] def commitVersion = { (st: State, commitMessage: TaskKey[String]) =>
     val log = toProcessLogger(st)
@@ -180,7 +180,7 @@ object ReleaseStateTransformations {
     newState
   }
 
-  lazy val tagRelease: ReleaseStep = { st: State =>
+  lazy val tagRelease: ReleaseStep = { (st: State) =>
     val defaultChoice =
       st.get(tagDefault) match {
         case Some(Some(td)) => Some(td)
@@ -229,7 +229,7 @@ object ReleaseStateTransformations {
   }
 
   lazy val pushChanges: ReleaseStep = ReleaseStep(pushChangesAction, checkUpstream)
-  private[sbtrelease] lazy val checkUpstream = { st: State =>
+  private[sbtrelease] lazy val checkUpstream = { (st: State) =>
     if (!vcs(st).hasUpstream) {
       sys.error("No tracking branch is set up. Either configure a remote tracking branch, or remove the pushChanges release part.")
     }
@@ -260,7 +260,7 @@ object ReleaseStateTransformations {
     override def buffer[T](f: => T): T = st.log.buffer(f)
   }
 
-  private[sbtrelease] lazy val pushChangesAction = { st: State =>
+  private[sbtrelease] lazy val pushChangesAction = { (st: State) =>
     val defaultChoice = extractDefault(st, "y")
 
     val log = toProcessLogger(st)
@@ -287,7 +287,7 @@ object ReleaseStateTransformations {
     check = Compat.checkPublishTo,
     enableCrossBuild = true
   )
-  private[sbtrelease] lazy val runPublishArtifactsAction = { st: State =>
+  private[sbtrelease] lazy val runPublishArtifactsAction = { (st: State) =>
     val extracted = st.extract
     val ref = extracted.get(thisProjectRef)
     extracted.runAggregated(ref / (Global / releasePublishArtifactsAction), st)

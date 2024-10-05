@@ -40,28 +40,28 @@ object ReleasePlugin extends AutoPlugin {
     }
 
     @deprecated("Use releaseStepTaskAggregated", "1.0.0")
-    def releaseTask[T](key: TaskKey[T]) = { st: State =>
+    def releaseTask[T](key: TaskKey[T]) = { (st: State) =>
       Project.extract(st).runAggregated(key, st)
     }
 
     /**
      * Convert the given task key to a release step action.
      */
-    def releaseStepTask[T](key: TaskKey[T]) = { st: State =>
+    def releaseStepTask[T](key: TaskKey[T]) = { (st: State) =>
       Project.extract(st).runTask(key, st)._1
     }
 
     /**
      * Convert the given task key to a release step action that gets run aggregated.
      */
-    def releaseStepTaskAggregated[T](key: TaskKey[T]): State => State = { st: State =>
+    def releaseStepTaskAggregated[T](key: TaskKey[T]): State => State = { (st: State) =>
       Project.extract(st).runAggregated(key, st)
     }
 
     /**
      * Convert the given input task key and input to a release step action.
      */
-    def releaseStepInputTask[T](key: InputKey[T], input: String = ""): State => State = { st: State =>
+    def releaseStepInputTask[T](key: InputKey[T], input: String = ""): State => State = { (st: State) =>
       import EvaluateTask._
       val extracted = Project.extract(st)
       val inputTask = extracted.get(Scoped.scopedSetting(key.scope, key.key))
@@ -80,7 +80,7 @@ object ReleasePlugin extends AutoPlugin {
     /**
      * Convert the given command and input to a release step action
      */
-    def releaseStepCommand(command: Command, input: String = ""): State => State = { st: State =>
+    def releaseStepCommand(command: Command, input: String = ""): State => State = { (st: State) =>
       Parser.parse(input, command.parser(st)) match {
         case Right(cmd) => cmd()
         case Left(msg) => sys.error(s"Invalid programmatic input:\n$msg")
@@ -90,7 +90,7 @@ object ReleasePlugin extends AutoPlugin {
     /**
      * Convert the given command string to a release step action
      */
-    def releaseStepCommand(command: String): State => State = { st: State =>
+    def releaseStepCommand(command: String): State => State = { (st: State) =>
       Parser.parse(command, st.combinedParser) match {
         case Right(cmd) => cmd()
         case Left(msg) => sys.error(s"Invalid programmatic input:\n$msg")
@@ -100,7 +100,7 @@ object ReleasePlugin extends AutoPlugin {
     /**
      * Convert the given command string to a release step action, preserving and invoking remaining commands
      */
-    def releaseStepCommandAndRemaining(command: String): State => State = { initState: State =>
+    def releaseStepCommandAndRemaining(command: String): State => State = { (initState: State) =>
       import Compat._
       @annotation.tailrec
       def runCommand(command: Compat.Command, state: State): State = {
@@ -179,14 +179,14 @@ object ReleasePlugin extends AutoPlugin {
           }
         }
 
-        val removeFailureCommand = { s: State =>
+        val removeFailureCommand = { (s: State) =>
           s.remainingCommands match {
             case FailureCommand :: tail => s.copy(remainingCommands = tail)
             case _ => s
           }
         }
 
-        val failureCheck = { s: State =>
+        val failureCheck = { (s: State) =>
           filterFailure(_.copy(onFailure = Some(FailureCommand)))(s)
         }
 
