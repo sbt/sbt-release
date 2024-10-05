@@ -4,7 +4,6 @@ import sbt._
 import java.io.File
 
 import sys.process.{ Process, ProcessBuilder, ProcessLogger }
-import Compat._
 
 trait Vcs {
   val commandName: String
