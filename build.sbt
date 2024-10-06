@@ -9,12 +9,19 @@ licenses := Seq("Apache-2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0"
 publishMavenStyle := true
 scalacOptions ++= Seq("-deprecation", "-feature", "-language:implicitConversions")
 
-val unusedWarnings = Seq("-Ywarn-unused:imports")
+val unusedWarnings = Def.setting(
+  scalaBinaryVersion.value match {
+    case "2.12" =>
+      Seq("-Ywarn-unused:imports")
+    case _ =>
+      Seq("-Wunused:imports")
+  }
+)
 
-scalacOptions ++= unusedWarnings
+scalacOptions ++= unusedWarnings.value
 
 Seq(Compile, Test).flatMap(c =>
-  c / console / scalacOptions --= unusedWarnings
+  c / console / scalacOptions --= unusedWarnings.value
 )
 
 def hash(): String = sys.process.Process("git rev-parse HEAD").lineStream_!.head
