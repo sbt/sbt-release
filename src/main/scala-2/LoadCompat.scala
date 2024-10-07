@@ -6,7 +6,7 @@ import sbt.Def.ScopedKey
 
 // sbt.Load was made private in sbt 1.0
 // the core developers recommend copying the required methods: https://github.com/sbt/sbt/issues/3296#issuecomment-315218050
-object Load {
+object LoadCompat {
 
   import Compat._
 

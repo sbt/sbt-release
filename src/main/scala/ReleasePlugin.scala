@@ -10,14 +10,22 @@ import sbtrelease.Version.Bump
 object ReleasePlugin extends AutoPlugin {
 
   object autoImport {
+    @transient
     val releaseSnapshotDependencies = taskKey[Seq[ModuleID]]("Calculate the snapshot dependencies for a build")
     val releaseProcess = settingKey[Seq[ReleaseStep]]("The release process")
+    @transient
     val releaseVersion = taskKey[String => String]("The release version")
+    @transient
     val releaseNextVersion = taskKey[String => String]("The next release version")
+    @transient
     val releaseVersionBump = taskKey[Version.Bump]("How the version should be incremented")
+    @transient
     val releaseTagName = taskKey[String]("The name of the tag")
+    @transient
     val releaseTagComment = taskKey[String]("The comment to use when tagging")
+    @transient
     val releaseCommitMessage = taskKey[String]("The commit message to use when tagging")
+    @transient
     val releaseNextCommitMessage = taskKey[String]("The commit message to use for next iteration")
     val releaseCrossBuild = settingKey[Boolean]("Whether the release should be cross built")
     val releaseVersionFile = settingKey[File]("The file to write the version to")
@@ -221,7 +229,7 @@ object ReleasePlugin extends AutoPlugin {
 
   override def projectSettings = Seq[Setting[?]](
     releaseSnapshotDependencies := {
-      val moduleIds = (Runtime / managedClasspath).value.flatMap(_.get(moduleID.key))
+      val moduleIds = ReleasePluginCompat.moduleIds.value
       val snapshots = moduleIds.filter(m => m.isChanging || m.revision.endsWith("-SNAPSHOT"))
       snapshots
     },

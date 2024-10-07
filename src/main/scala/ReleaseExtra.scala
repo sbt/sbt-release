@@ -69,7 +69,7 @@ object ReleaseStateTransformations {
       if (!st.get(skipTests).getOrElse(false)) {
         val extracted = Project.extract(st)
         val ref = extracted.get(thisProjectRef)
-        extracted.runAggregated(ref / Test / test, st)
+        extracted.runAggregated(ref / Test / ReleasePluginCompat.testTask, st)
       } else st
     },
     enableCrossBuild = true
@@ -307,7 +307,7 @@ object ReleaseStateTransformations {
     val extracted = state.extract
     import extracted._
 
-    val append = Load.transformSettings(Compat.projectScope(currentRef), currentRef.build, rootProject, settings)
+    val append = LoadCompat.transformSettings(Compat.projectScope(currentRef), currentRef.build, rootProject, settings)
 
     // We don't want even want to be able to save the settings that are applied to the session during the release cycle.
     // Just using an empty string works fine and in case the user calls `session save`, empty lines will be generated.
@@ -320,11 +320,11 @@ object ReleaseStateTransformations {
   // This is a copy of the state function for the command Cross.switchVersion
   private[sbtrelease] def switchScalaVersion(state: State, version: String): State = {
     val x = Project.extract(state)
-    import x._
+    import x.{*, given}
     state.log.info("Setting scala version to " + version)
     val add = (GlobalScope / scalaVersion := version) :: (GlobalScope / scalaHome := None) :: Nil
     val cleared = session.mergeSettings.filterNot(crossExclude)
-    val newStructure = Load.reapply(add ++ cleared, structure)
+    val newStructure = LoadCompat.reapply(add ++ cleared, structure)
     Project.setProject(session, newStructure, state)
   }
 
