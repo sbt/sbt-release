@@ -147,8 +147,11 @@ object ReleasePlugin extends AutoPlugin {
       private[this] sealed abstract class ParseResult extends Product with Serializable
       private[this] object ParseResult {
         final case class ReleaseVersion(value: String) extends ParseResult
+        object ReleaseVersion extends (String => ParseResult)
         final case class NextVersion(value: String) extends ParseResult
+        object NextVersion extends (String => ParseResult)
         final case class TagDefault(value: String) extends ParseResult
+        object TagDefault extends (String => ParseResult)
         case object WithDefaults extends ParseResult
         case object SkipTests extends ParseResult
         case object CrossBuild extends ParseResult
