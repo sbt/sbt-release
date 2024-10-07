@@ -3,6 +3,17 @@ lazy val `sbt-release` = project in file(".")
 organization := "com.github.sbt"
 name := "sbt-release"
 
+crossScalaVersions += "3.7.2"
+
+pluginCrossBuild / sbtVersion := {
+  scalaBinaryVersion.value match {
+    case "2.12" =>
+      (pluginCrossBuild / sbtVersion).value
+    case _ =>
+      "2.0.0-RC3"
+  }
+}
+
 homepage := Some(url("https://github.com/sbt/sbt-release"))
 licenses := Seq("Apache-2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0"))
 
@@ -38,7 +49,11 @@ libraryDependencies ++= Seq("org.specs2" %% "specs2-core" % "4.21.0" % "test")
 // Scripted
 enablePlugins(SbtPlugin)
 scriptedLaunchOpts := {
-  scriptedLaunchOpts.value ++ Seq("-Xmx1024M", "-Dplugin.version=" + version.value)
+  scriptedLaunchOpts.value ++ Seq(
+    "-Xmx1024M",
+    "-Dsbt.build.onchange=warn",
+    "-Dplugin.version=" + version.value
+  )
 }
 scriptedBufferLog := false
 
@@ -55,3 +70,26 @@ pomExtra := {
     }
   }</developers>
 }
+
+TaskKey[Unit]("scriptedTestSbt2") := Def.taskDyn {
+  val values = sbtTestDirectory.value
+    .listFiles(_.isDirectory)
+    .flatMap { dir1 =>
+      dir1.listFiles(_.isDirectory).map { dir2 =>
+        dir1.getName -> dir2.getName
+      }
+    }
+    .toList
+  val log = streams.value.log
+  // TODO enable all tests
+  val exclude: Set[(String, String)] = Set(
+    "command-line-version-numbers",
+    "cross",
+    "mercurial",
+    "tasks-as-steps",
+  ).map("sbt-release" -> _)
+  val args = values.filterNot(exclude).map { case (x1, x2) => s"${x1}/${x2}" }
+  val arg = args.mkString(" ", " ", "")
+  log.info("scripted" + arg)
+  scripted.toTask(arg)
+}.value
