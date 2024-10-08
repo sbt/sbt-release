@@ -130,10 +130,10 @@ class Git(val baseDir: File) extends Vcs with GitLike {
 
   import Git.GitFlag
 
-  private lazy val trackingBranchCmd = cmd("config", "branch.%s.merge" format currentBranch)
+  private lazy val trackingBranchCmd = cmd("config", s"branch.${currentBranch}.merge")
   private def trackingBranch: String = trackingBranchCmd.!!.trim.stripPrefix("refs/heads/")
 
-  private lazy val trackingRemoteCmd: ProcessBuilder = cmd("config", "branch.%s.remote" format currentBranch)
+  private lazy val trackingRemoteCmd: ProcessBuilder = cmd("config", s"branch.${currentBranch}.remote")
   def trackingRemote: String = trackingRemoteCmd.!!.trim
 
   def hasUpstream = trackingRemoteCmd ! devnull == 0 && trackingBranchCmd ! devnull == 0
@@ -144,7 +144,7 @@ class Git(val baseDir: File) extends Vcs with GitLike {
 
   private def revParse(name: String) = cmd("rev-parse", name).!!.trim
 
-  def isBehindRemote = (cmd("rev-list", "%s..%s/%s".format(currentBranch, trackingRemote, trackingBranch)) !! devnull).trim.nonEmpty
+  def isBehindRemote = (cmd("rev-list", s"${currentBranch}..${trackingRemote}/${trackingBranch}") !! devnull).trim.nonEmpty
 
   private def withFlags(flags: Seq[GitFlag])(args: String*): Seq[String] = {
     val appended = flags.collect {
@@ -174,7 +174,7 @@ class Git(val baseDir: File) extends Vcs with GitLike {
 
   private def pushCurrentBranch = {
     val localBranch = currentBranch
-    cmd("push", trackingRemote, "%s:%s" format (localBranch, trackingBranch))
+    cmd("push", trackingRemote, s"${localBranch}:${trackingBranch}")
   }
 
   private def pushTags = cmd("push", "--tags", trackingRemote)
