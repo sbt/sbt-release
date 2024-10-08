@@ -13,7 +13,7 @@ jobs:
       matrix:
         include:
           - java: 8
-            sbt_version: "1.4.0"
+            sbt_version: "1.4.9"
           - java: 8
           - java: 21
     steps:
