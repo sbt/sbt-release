@@ -84,7 +84,7 @@ object ReleaseStateTransformations {
     val vs = st.get(versions).getOrElse(sys.error("No versions are set! Was this release part executed before inquireVersions?"))
     val selected = selectVersion(vs)
 
-    st.log.info("Setting version to '%s'." format selected)
+    st.log.info(s"Setting version to '${selected}'.")
     val useGlobal = st.extract.get(releaseUseGlobalVersion)
     val versionStr = (
       if (useGlobal) {
@@ -164,7 +164,7 @@ object ReleaseStateTransformations {
     val base = vcs(st).baseDir.getCanonicalFile
     val sign = st.extract.get(releaseVcsSign)
     val signOff = st.extract.get(releaseVcsSignOff)
-    val relativePath = IO.relativize(base, file).getOrElse("Version file [%s] is outside of this VCS repository with base directory [%s]!" format(file, base))
+    val relativePath = IO.relativize(base, file).getOrElse(s"Version file [${file}] is outside of this VCS repository with base directory [${base}]!")
 
     vcs(st).add(relativePath) !! log
     val status = vcs(st).status.!!.trim
@@ -190,16 +190,16 @@ object ReleaseStateTransformations {
     @tailrec
     def findTag(tag: String): Option[String] = {
       if (vcs(st).existsTag(tag)) {
-        defaultChoice orElse SimpleReader.readLine("Tag [%s] exists! Overwrite, keep or abort or enter a new tag (o/k/a)? [a] " format tag) match {
+        defaultChoice orElse SimpleReader.readLine(s"Tag [${tag}] exists! Overwrite, keep or abort or enter a new tag (o/k/a)? [a] ") match {
           case Some("" | "a" | "A") =>
-            sys.error("Tag [%s] already exists. Aborting release!" format tag)
+            sys.error(s"Tag [${tag}] already exists. Aborting release!")
 
           case Some("k" | "K") =>
-            st.log.warn("The current tag [%s] does not point to the commit for this release!" format tag)
+            st.log.warn(s"The current tag [${tag}] does not point to the commit for this release!")
             None
 
           case Some("o" | "O") =>
-            st.log.warn("Overwriting a tag can cause problems if others have already seen the tag (see `%s help tag`)!" format vcs(st).commandName)
+            st.log.warn(s"Overwriting a tag can cause problems if others have already seen the tag (see `${vcs(st).commandName} help tag`)!")
             Some(tag)
 
           case Some(newTag) =>
@@ -237,7 +237,7 @@ object ReleaseStateTransformations {
 
     val log = toProcessLogger(st)
 
-    st.log.info("Checking remote [%s] ..." format vcs(st).trackingRemote)
+    st.log.info(s"Checking remote [${vcs(st).trackingRemote}] ...")
     if (vcs(st).checkRemote(vcs(st).trackingRemote) ! log != 0) {
       defaultChoice orElse SimpleReader.readLine("Error while checking remote. Still continue (y/n)? [n] ") match {
         case Yes() => // do nothing
@@ -277,7 +277,7 @@ object ReleaseStateTransformations {
         case _ => st.log.warn("Remember to push the changes yourself!")
       }
     } else {
-      st.log.info("Changes were NOT pushed, because no upstream branch is configured for the local branch [%s]" format vcs(st).currentBranch)
+      st.log.info(s"Changes were NOT pushed, because no upstream branch is configured for the local branch [${vcs(st).currentBranch}]")
     }
     st
   }
