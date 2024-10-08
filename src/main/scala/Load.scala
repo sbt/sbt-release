@@ -16,10 +16,20 @@ object Load {
   def reapply(newSettings: Seq[Setting[_]], structure: BuildStructure)(implicit display: Show[ScopedKey[_]]): BuildStructure =
   {
     val transformed = finalTransforms(newSettings)
-    val newData = Def.make(transformed)(structure.delegates, structure.scopeLocal, display)
+    val (compiledMap, newData) = Def.makeWithCompiledMap(transformed)(structure.delegates, structure.scopeLocal, display)
     val newIndex = structureIndex(newData, transformed, index => BuildUtil(structure.root, structure.units, index, newData), structure.units)
     val newStreams = BuildStreams.mkStreams(structure.units, structure.root, newData)
-    new BuildStructure(units = structure.units, root = structure.root, settings = transformed, data = newData, index = newIndex, streams = newStreams, delegates = structure.delegates, scopeLocal = structure.scopeLocal)
+    new BuildStructure(
+      units = structure.units,
+      root = structure.root,
+      settings = transformed,
+      data = newData,
+      index = newIndex,
+      streams = newStreams,
+      delegates = structure.delegates,
+      scopeLocal = structure.scopeLocal,
+      compiledMap = compiledMap,
+    )
   }
 
   // map dependencies on the special tasks:
