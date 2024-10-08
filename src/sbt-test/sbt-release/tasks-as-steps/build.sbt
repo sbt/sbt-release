@@ -50,7 +50,7 @@ commands ++= Seq(myCommand, myInputCommand, myCommand2, myInputCommand2)
 
 releaseProcess := Seq[ReleaseStep](
   releaseStepTask(myTask),
-  releaseStepTaskAggregated(myAggregatedTask in root),
+  releaseStepTaskAggregated(root / myAggregatedTask),
   releaseStepInputTask(myInputTask),
   releaseStepInputTask(myInputTask, " custominputtask"),
   releaseStepCommand(myCommand),
