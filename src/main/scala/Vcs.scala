@@ -121,11 +121,14 @@ object Git extends VcsCompanion {
   protected val markerDirectory = ".git"
 
   def mkVcs(baseDir: File) = new Git(baseDir)
+
+  private final case class GitFlag(on: Boolean, flag: String)
 }
 
 class Git(val baseDir: File) extends Vcs with GitLike {
   val commandName = "git"
 
+  import Git.GitFlag
 
   private lazy val trackingBranchCmd = cmd("config", "branch.%s.merge" format currentBranch)
   private def trackingBranch: String = trackingBranchCmd.!!.trim.stripPrefix("refs/heads/")
@@ -142,8 +145,6 @@ class Git(val baseDir: File) extends Vcs with GitLike {
   private def revParse(name: String) = cmd("rev-parse", name).!!.trim
 
   def isBehindRemote = (cmd("rev-list", "%s..%s/%s".format(currentBranch, trackingRemote, trackingBranch)) !! devnull).trim.nonEmpty
-
-  private final case class GitFlag(on: Boolean, flag: String)
 
   private def withFlags(flags: Seq[GitFlag])(args: String*): Seq[String] = {
     val appended = flags.collect {
