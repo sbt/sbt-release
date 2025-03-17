@@ -24,7 +24,7 @@ jobs:
       with:
         java-version: ${{matrix.java}}
         distribution: temurin
-    - uses: sbt/setup-sbt@8ee7ec888f2a1af33ba66f994c4fb05aaf23e7d0 # v1.1.6
+    - uses: sbt/setup-sbt@26ab4b0fa1c47fa62fc1f6e51823a658fb6c760c # v1.1.7
     - uses: coursier/cache-action@142d2738bd29f0eb9d44610828acb3a19809feab # v6.4.6
     - run: |
         git config --global user.email "example@example.com"
