@@ -10,10 +10,10 @@ object Load {
 
   import Compat._
 
-  def transformSettings(thisScope: Scope, uri: URI, rootProject: URI => String, settings: Seq[Setting[_]]): Seq[Setting[_]] =
+  def transformSettings(thisScope: Scope, uri: URI, rootProject: URI => String, settings: Seq[Setting[?]]): Seq[Setting[?]] =
     Project.transform(Scope.resolveScope(thisScope, uri, rootProject), settings)
   // Reevaluates settings after modifying them.  Does not recompile or reload any build components.
-  def reapply(newSettings: Seq[Setting[_]], structure: BuildStructure)(implicit display: Show[ScopedKey[_]]): BuildStructure =
+  def reapply(newSettings: Seq[Setting[?]], structure: BuildStructure)(implicit display: Show[ScopedKey[?]]): BuildStructure =
   {
     val transformed = finalTransforms(newSettings)
     val (compiledMap, newData) = Def.makeWithCompiledMap(transformed)(structure.delegates, structure.scopeLocal, display)
@@ -37,9 +37,9 @@ object Load {
   // 2. the defining key is stored on constructed tasks: used for error reporting among other things
   // 3. resolvedScoped is replaced with the defining key as a value
   // Note: this must be idempotent.
-  def finalTransforms(ss: Seq[Setting[_]]): Seq[Setting[_]] =
+  def finalTransforms(ss: Seq[Setting[?]]): Seq[Setting[?]] =
   {
-    def mapSpecial(to: ScopedKey[_]) = new (ScopedKey ~> ScopedKey) {
+    def mapSpecial(to: ScopedKey[?]) = new (ScopedKey ~> ScopedKey) {
       def apply[T](key: ScopedKey[T]) =
         if (key.key == streams.key)
           ScopedKey(Scope.fillTaskAxis(Scope.replaceThis(to.scope)(key.scope), to.key), key.key)
@@ -50,7 +50,7 @@ object Load {
       case ik: InputTask[t] => ik.mapTask(tk => setDefinitionKey(tk, key)).asInstanceOf[T]
       case _                => value
     }
-    def setResolved(defining: ScopedKey[_]) = new (ScopedKey ~> Option) {
+    def setResolved(defining: ScopedKey[?]) = new (ScopedKey ~> Option) {
       def apply[T](key: ScopedKey[T]): Option[T] =
         key.key match {
           case resolvedScoped.key => Some(defining.asInstanceOf[T])
@@ -59,7 +59,7 @@ object Load {
     }
     ss.map(s => s mapConstant setResolved(s.key) mapReferenced mapSpecial(s.key) mapInit setDefining)
   }
-  def structureIndex(data: Settings[Scope], settings: Seq[Setting[_]], extra: KeyIndex => BuildUtil[_], projects: Map[URI, LoadedBuildUnit]): StructureIndex =
+  def structureIndex(data: Settings[Scope], settings: Seq[Setting[?]], extra: KeyIndex => BuildUtil[?], projects: Map[URI, LoadedBuildUnit]): StructureIndex =
   {
     val keys = Index.allKeys(settings)
     val attributeKeys = Index.attributeKeys(data) ++ keys.map(_.key)
@@ -72,10 +72,10 @@ object Load {
     new StructureIndex(Index.stringToKeyMap(attributeKeys), Index.taskToKeyMap(data), Index.triggers(data), keyIndex, aggIndex)
   }
 
-  def setDefinitionKey[T](tk: Task[T], key: ScopedKey[_]): Task[T] =
+  def setDefinitionKey[T](tk: Task[T], key: ScopedKey[?]): Task[T] =
     if (isDummy(tk)) tk else Task(tk.info.set(Keys.taskDefinitionKey, key), tk.work)
 
-  private def isDummy(t: Task[_]): Boolean = t.info.attributes.get(isDummyTask) getOrElse false
+  private def isDummy(t: Task[?]): Boolean = t.info.attributes.get(isDummyTask) getOrElse false
   private val Invisible = Int.MaxValue
   private val isDummyTask = AttributeKey[Boolean]("is-dummy-task", "Internal: used to identify dummy tasks.  sbt injects values for these tasks at the start of task execution.", Invisible)
 }

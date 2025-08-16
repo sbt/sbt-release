@@ -219,7 +219,7 @@ object ReleasePlugin extends AutoPlugin {
     if (releaseUseGlobalVersion.value) v1 else v2
   }
 
-  override def projectSettings = Seq[Setting[_]](
+  override def projectSettings = Seq[Setting[?]](
     releaseSnapshotDependencies := {
       val moduleIds = (Runtime / managedClasspath).value.flatMap(_.get(moduleID.key))
       val snapshots = moduleIds.filter(m => m.isChanging || m.revision.endsWith("-SNAPSHOT"))
@@ -282,7 +282,7 @@ object ReleasePlugin extends AutoPlugin {
   lazy val extraReleaseCommands = {
     import ExtraReleaseCommands._
 
-    Seq[Setting[_]](
+    Seq[Setting[?]](
       commands ++= Seq(
         checkSnapshotDependenciesCommand,
         inquireVersionsCommand,

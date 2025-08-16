@@ -149,7 +149,7 @@ object ReleaseStateTransformations {
   lazy val commitReleaseVersion = ReleaseStep(commitReleaseVersionAction, initialVcsChecks)
   private[sbtrelease] lazy val commitReleaseVersionAction = { (st: State) =>
     val newState = commitVersion(st, releaseCommitMessage)
-    reapply(Seq[Setting[_]](
+    reapply(Seq[Setting[?]](
       packageOptions += ManifestAttributes(
         "Vcs-Release-Hash" -> vcs(st).currentHash
       )
@@ -222,7 +222,7 @@ object ReleaseStateTransformations {
 
 
     tagToUse map (t =>
-      reapply(Seq[Setting[_]](
+      reapply(Seq[Setting[?]](
         packageOptions += ManifestAttributes("Vcs-Release-Tag" -> t)
       ), commentState)
     ) getOrElse commentState
@@ -303,7 +303,7 @@ object ReleaseStateTransformations {
     }
   }
 
-  def reapply(settings: Seq[Setting[_]], state: State): State = {
+  def reapply(settings: Seq[Setting[?]], state: State): State = {
     val extracted = state.extract
     import extracted._
 
@@ -315,7 +315,7 @@ object ReleaseStateTransformations {
     BuiltinCommands.reapply(newSession, structure, state)
   }
 
-  def crossExclude(s: Setting[_]): Boolean = Compat.excludeKeys(Set(scalaVersion.key, scalaHome.key))(s)
+  def crossExclude(s: Setting[?]): Boolean = Compat.excludeKeys(Set(scalaVersion.key, scalaHome.key))(s)
 
   // This is a copy of the state function for the command Cross.switchVersion
   private[sbtrelease] def switchScalaVersion(state: State, version: String): State = {
