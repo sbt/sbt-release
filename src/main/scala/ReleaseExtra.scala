@@ -15,9 +15,9 @@ object ReleaseStateTransformations {
   lazy val checkSnapshotDependencies: ReleaseStep = ReleaseStep({ (st: State) =>
     val thisRef = st.extract.get(thisProjectRef)
     val (newSt, result) = Compat.runTaskAggregated(thisRef / releaseSnapshotDependencies, st)
-    val snapshotDeps = result match {
-      case Value(value) => value.flatMap(_.value)
-      case Inc(cause) => sys.error("Error checking for snapshot dependencies: " + cause)
+    val snapshotDeps = result.toEither match {
+      case Right(value) => value.flatMap(_.value)
+      case Left(cause) => sys.error("Error checking for snapshot dependencies: " + cause)
     }
     if (snapshotDeps.nonEmpty) {
       val useDefaults = extractDefault(newSt, "n")
