@@ -72,8 +72,10 @@ object Compat {
   }
 
   type Command = sbt.Exec
-  implicit def command2String(command: Command): String = command.commandLine
-  implicit def string2Exex(s: String): Command = sbt.Exec(s, None, None)
+  @deprecated("will be removed")
+  private[sbtrelease] def command2String(command: Command): String = command.commandLine
+  @deprecated("will be removed")
+  private[sbtrelease] def string2Exex(s: String): Command = sbt.Exec(s, None, None)
 
   // type aliases
   type StructureIndex = sbt.internal.StructureIndex

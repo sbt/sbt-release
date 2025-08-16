@@ -104,7 +104,7 @@ object ReleasePlugin extends AutoPlugin {
       import Compat._
       @annotation.tailrec
       def runCommand(command: Compat.Command, state: State): State = {
-        val nextState = Parser.parse(command, state.combinedParser) match {
+        val nextState = Parser.parse(command.commandLine, state.combinedParser) match {
           case Right(cmd) => cmd()
           case Left(msg) => sys.error(s"Invalid programmatic input:\n$msg")
         }
@@ -114,7 +114,7 @@ object ReleasePlugin extends AutoPlugin {
           case head :: tail => runCommand(head, nextState.copy(remainingCommands = tail))
         }
       }
-      runCommand(command, initState.copy(remainingCommands = Nil))
+      runCommand(Exec(command, None, None), initState.copy(remainingCommands = Nil))
     }
 
     object ReleaseKeys {
