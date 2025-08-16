@@ -50,7 +50,7 @@ object Compat {
 
   val FailureCommand = sbt.Exec("--failure--", None, None)
 
-  def excludeKeys(keys: Set[AttributeKey[_]]): Setting[_] => Boolean =
+  def excludeKeys(keys: Set[AttributeKey[?]]): Setting[?] => Boolean =
     _.key match {
       case ScopedKey(Scope(_, Zero, Zero, _), key) if keys.contains(key) => true
       case _ => false
@@ -88,14 +88,14 @@ object Compat {
 
   // https://github.com/sbt/sbt/issues/3792
   private[sbtrelease] def keyIndexApply(
-    known: Iterable[ScopedKey[_]],
+    known: Iterable[ScopedKey[?]],
     projects: Map[URI, Set[String]],
     configurations: Map[String, Seq[Configuration]]
   ): ExtendableKeyIndex = try {
     // for sbt 1.1
     KeyIndex.asInstanceOf[{
       def apply(
-        known: Iterable[ScopedKey[_]],
+        known: Iterable[ScopedKey[?]],
         projects: Map[URI, Set[String]],
         configurations: Map[String, Seq[Configuration]]
       ): ExtendableKeyIndex
@@ -105,22 +105,22 @@ object Compat {
       // for sbt 1.0.x
       KeyIndex.asInstanceOf[{
         def apply(
-          known: Iterable[ScopedKey[_]],
+          known: Iterable[ScopedKey[?]],
           projects: Map[URI, Set[String]],
         ): ExtendableKeyIndex
       }].apply(known = known, projects = projects)
   }
 
   // https://github.com/sbt/sbt/issues/3792
-  private[sbtrelease] def keyIndexAggregate(known: Iterable[ScopedKey[_]],
-                extra: BuildUtil[_],
+  private[sbtrelease] def keyIndexAggregate(known: Iterable[ScopedKey[?]],
+                extra: BuildUtil[?],
                 projects: Map[URI, Set[String]],
                 configurations: Map[String, Seq[Configuration]]) = try {
     // for sbt 1.1
     KeyIndex.asInstanceOf[{
       def aggregate(
-        known: Iterable[ScopedKey[_]],
-        extra: BuildUtil[_],
+        known: Iterable[ScopedKey[?]],
+        extra: BuildUtil[?],
         projects: Map[URI, Set[String]],
         configurations: Map[String, Seq[Configuration]]
       ): ExtendableKeyIndex
@@ -130,8 +130,8 @@ object Compat {
       // for sbt 1.0.x
       KeyIndex.asInstanceOf[{
         def aggregate(
-          known: Iterable[ScopedKey[_]],
-          extra: BuildUtil[_],
+          known: Iterable[ScopedKey[?]],
+          extra: BuildUtil[?],
           projects: Map[URI, Set[String]]
         ): ExtendableKeyIndex
       }].aggregate(known = known, extra = extra, projects = projects)
