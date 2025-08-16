@@ -374,10 +374,11 @@ object ExtraReleaseCommands {
 
 object Utilities {
 
-  class StateW(st: State) {
+  implicit class StateW(st: State) {
     def extract = Project.extract(st)
   }
-  implicit def stateW(st: State): StateW = new StateW(st)
+  @deprecated("will be removed")
+  private[sbtrelease] def stateW(st: State): StateW = new StateW(st)
 
   private[sbtrelease] def resolve[T](key: ScopedKey[T], extracted: Extracted): ScopedKey[T] =
     Project.mapScope(Scope.resolveScope(GlobalScope, extracted.currentRef.build, extracted.rootProject) )( key.scopedKey )
