@@ -16,7 +16,7 @@ object Load {
   def reapply(newSettings: Seq[Setting[?]], structure: BuildStructure)(implicit display: Show[ScopedKey[?]]): BuildStructure =
   {
     val transformed = finalTransforms(newSettings)
-    val (compiledMap, newData) = Def.makeWithCompiledMap(transformed)(structure.delegates, structure.scopeLocal, display)
+    val (compiledMap, newData) = Def.makeWithCompiledMap(transformed)(using structure.delegates, structure.scopeLocal, display)
     val newIndex = structureIndex(newData, transformed, index => BuildUtil(structure.root, structure.units, index, newData), structure.units)
     val newStreams = BuildStreams.mkStreams(structure.units, structure.root, newData)
     new BuildStructure(
@@ -64,7 +64,7 @@ object Load {
     val keys = Index.allKeys(settings)
     val attributeKeys = Index.attributeKeys(data) ++ keys.map(_.key)
     val scopedKeys = keys ++ data.allKeys((s, k) => ScopedKey(s, k)).toVector
-    val projectsMap = projects.mapValues(_.defined.keySet)
+    val projectsMap = projects.map { case (k, v) => k -> v.defined.keySet }
     val configsMap: Map[String, Seq[Configuration]] =
       projects.values.flatMap(bu => bu.defined map { case (k, v) => (k, v.configurations) }).toMap
     val keyIndex = keyIndexApply(scopedKeys.toVector, projectsMap, configsMap)

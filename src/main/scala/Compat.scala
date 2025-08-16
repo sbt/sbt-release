@@ -29,7 +29,7 @@ object Compat {
 
     val (newS, result) = withStreams(extracted.structure, state){ str =>
       val transform = nodeView(state, str, roots, extra)
-      runTask(toRun, state,str, extracted.structure.index.triggers, config)(transform)
+      runTask(toRun, state,str, extracted.structure.index.triggers, config)(using transform)
     }
     (newS, result)
   }
