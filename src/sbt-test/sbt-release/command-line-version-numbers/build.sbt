@@ -13,7 +13,7 @@ releaseProcess := Seq[ReleaseStep](
   publishArtifacts,
   setNextVersion
 )
-scalaVersion := "2.10.7"
+scalaVersion := "2.13.16"
 
 
 val checkContentsOfVersionSbt = inputKey[Unit]("Check that the contents of version.sbt is as expected")

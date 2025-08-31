@@ -8,13 +8,13 @@ $ exec git commit -m init
 > reload
 
 > release with-defaults
-$ exists target/scala-2.11
--$ exists target/scala-2.10
+$ exists target/scala-2.13
+-$ exists target/scala-2.12
 
 > clean
--$ exists target/scala-2.11
--$ exists target/scala-2.10
+-$ exists target/scala-2.12
+-$ exists target/scala-2.13
 
 > release with-defaults cross
-$ exists target/scala-2.11
-$ exists target/scala-2.10
+$ exists target/scala-2.13
+$ exists target/scala-2.12

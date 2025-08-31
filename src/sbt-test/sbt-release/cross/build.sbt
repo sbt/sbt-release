@@ -1,10 +1,10 @@
 import sbtrelease.ReleaseStateTransformations._
 
-val Scala211 = "2.11.12"
+val Scala213 = "2.13.16"
 
-scalaVersion := Scala211
+scalaVersion := Scala213
 
-crossScalaVersions := Scala211 :: "2.10.7" :: Nil
+crossScalaVersions := Scala213 :: "2.12.20" :: Nil
 
 releaseCrossBuild := false
 
