@@ -1,7 +1,8 @@
 # sbt-release
 This sbt plugin provides a customizable release process that you can add to your project.
 
-[![sbt-release Scala version support](https://index.scala-lang.org/sbt/sbt-release/sbt-release/latest-by-scala-version.svg?targetType=Sbt)](https://index.scala-lang.org/sbt/sbt-release/sbt-release)
+[![sbt-release sbt 1](https://index.scala-lang.org/sbt/sbt-release/sbt-release/latest-by-scala-version.svg?platform=sbt1)](https://index.scala-lang.org/sbt/sbt-release/sbt-release)
+[![sbt-release sbt 2](https://index.scala-lang.org/sbt/sbt-release/sbt-release/latest-by-scala-version.svg?platform=sbt2)](https://index.scala-lang.org/sbt/sbt-release/sbt-release)
 
 **Notice:** This README contains information for the latest release. Please refer to the documents for a specific version by looking up the respective [tag](https://github.com/sbt/sbt-release/tags).
 
