@@ -248,8 +248,8 @@ For example:
 releaseProcess := Seq[ReleaseStep](
   releaseStepInputTask(testOnly, " com.example.MyTest"),
   releaseStepInputTask(scripted),
-  releaseStepTask(publish in subproject),
-  releaseStepCommand("sonatypeRelease")
+  releaseStepTask(subproject / publishSigned),
+  releaseStepCommand("sonaRelease")
 )
 ```
 
