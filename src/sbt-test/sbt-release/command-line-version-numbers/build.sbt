@@ -24,3 +24,15 @@ checkContentsOfVersionSbt := {
   val versionFile = baseDirectory.value / "version.sbt"
   assert(IO.read(versionFile).contains(expected), s"does not contains ${expected} in ${versionFile}")
 }
+
+InputKey[Unit]("checkJarFile") := {
+  val dir = file(
+    if (sbtVersion.value.startsWith("1")) {
+      s"target/scala-${scalaBinaryVersion.value}"
+    } else {
+      s"target/out/jvm/scala-${scalaVersion.value}/command-line-version-numbers"
+    }
+  )
+
+  assert((dir / "command-line-version-numbers_2.13-36.14.3.jar").isFile)
+}
