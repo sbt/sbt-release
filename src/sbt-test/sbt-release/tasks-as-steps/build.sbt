@@ -4,17 +4,19 @@ version := "1.2.3"
 lazy val myTask = taskKey[Unit]("My task")
 lazy val myAggregatedTask = taskKey[Unit]("My aggregated task")
 lazy val myInputTask = inputKey[Unit]("My input task")
+lazy val testOutputDir = settingKey[File]("")
 
 lazy val root: Project = (project in file("."))
   .aggregate(sub)
   .settings(
     myAggregatedTaskSetting,
+    testOutputDir := file("root-out"),
     myTask := {
-      IO.write(target.value / "mytask", "ran")
+      IO.write(testOutputDir.value / "mytask", "ran")
     },
     myInputTask := {
       val file = Def.spaceDelimited().parsed.headOption.getOrElse("myinputtask")
-      IO.write(target.value / file, "ran")
+      IO.write(testOutputDir.value / file, "ran")
     },
     commands ++= Seq(myCommand, myInputCommand, myCommand2, myInputCommand2),
     releaseProcess := Seq[ReleaseStep](
@@ -32,31 +34,34 @@ lazy val root: Project = (project in file("."))
   )
 
 lazy val sub = (project in file("sub"))
-  .settings(myAggregatedTaskSetting)
+  .settings(
+    myAggregatedTaskSetting,
+    testOutputDir := file("sub-out"),
+  )
 
 def myAggregatedTaskSetting = myAggregatedTask := {
-  IO.write(target.value / "myaggregatedtask", "ran")
+  IO.write(testOutputDir.value / "myaggregatedtask", "ran")
 }
 
 lazy val myCommand = Command.command("mycommand") { state =>
-  IO.write(Project.extract(state).get(target) / "mycommand", "ran")
+  IO.write(Project.extract(state).get(testOutputDir) / "mycommand", "ran")
   state
 }
 lazy val myInputCommand = Command.make("myinputcommand") { state =>
   Def.spaceDelimited().map { args => () =>
     val file = args.headOption.getOrElse("myinputcommand")
-    IO.write(Project.extract(state).get(target) / file, "ran")
+    IO.write(Project.extract(state).get(testOutputDir) / file, "ran")
     state
   }
 }
 lazy val myCommand2 = Command.command("mycommand2") { state =>
-  IO.write(Project.extract(state).get(target) / "mycommand2", "ran")
+  IO.write(Project.extract(state).get(testOutputDir) / "mycommand2", "ran")
   state
 }
 lazy val myInputCommand2 = Command.make("myinputcommand2") { state =>
   Def.spaceDelimited().map { args => () =>
     val file = args.headOption.getOrElse("myinputcommand2")
-    IO.write(Project.extract(state).get(target) / file, "ran")
+    IO.write(Project.extract(state).get(testOutputDir) / file, "ran")
     state
   }
 }

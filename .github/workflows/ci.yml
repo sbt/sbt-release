@@ -37,6 +37,6 @@ jobs:
       if: ${{ matrix.sbt_version != '' && matrix.sbt_version != '2' }}
     - run: sbt -v test scripted
       if: ${{ matrix.sbt_version == '' }}
-    - run: sbt -v "++ 3.x" Test/compile test scriptedTestSbt2
+    - run: sbt -v "++ 3.x" Test/compile test scripted
       if: ${{ matrix.sbt_version == '2' }}
     - run: rm -rf "$HOME/.ivy2/local" || true
