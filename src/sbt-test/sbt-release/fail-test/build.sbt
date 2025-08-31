@@ -2,6 +2,6 @@ import ReleaseTransformations._
 
 releaseProcess := Seq[ReleaseStep](runTest, FailTest.createFile)
 
-scalaVersion := "2.10.7"
+scalaVersion := "2.13.16"
 
-libraryDependencies += "org.scalatest" % "scalatest_2.10" % "2.1.0" % "test"
+libraryDependencies += "org.scalatest" %% "scalatest-flatspec" % "3.2.19" % "test"

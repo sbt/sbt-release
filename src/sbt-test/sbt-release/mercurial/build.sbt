@@ -1,6 +1,6 @@
 import sbtrelease.ReleaseStateTransformations._
 
-scalaVersion := "2.11.12"
+scalaVersion := "2.13.16"
 
 releaseProcess := Seq(
   checkSnapshotDependencies,

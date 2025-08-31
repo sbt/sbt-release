@@ -1,6 +1,6 @@
-import org.scalatest._
+import org.scalatest.flatspec.AnyFlatSpec
 
-class FailSpec extends FlatSpec {
+class FailSpec extends AnyFlatSpec {
   "This test" should "fail" in {
     assert(false)
   }
