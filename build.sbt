@@ -25,7 +25,10 @@ val unusedWarnings = Def.setting(
     case "2.12" =>
       Seq("-Ywarn-unused:imports")
     case _ =>
-      Seq("-Wunused:imports")
+      Seq(
+        "-Wunused:imports",
+        "-Wconf:msg=is no longer supported for vararg splices:error",
+      )
   }
 )
 

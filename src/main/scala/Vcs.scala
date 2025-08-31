@@ -58,7 +58,7 @@ trait GitLike extends Vcs {
 
   def cmd(args: Any*): ProcessBuilder = Process(exec +: args.map(_.toString), baseDir)
 
-  def add(files: String*) = cmd(("add" +: files): _*)
+  def add(files: String*) = cmd(("add" +: files)*)
 }
 
 trait VcsCompanion {
@@ -156,11 +156,11 @@ class Git(val baseDir: File) extends Vcs with GitLike {
 
   def commit(message: String, sign: Boolean, signOff: Boolean) = {
     val gitFlags = List(GitFlag(sign, "S"), GitFlag(signOff, "s"))
-    cmd(withFlags(gitFlags)("commit", "-m", message): _*)
+    cmd(withFlags(gitFlags)("commit", "-m", message)*)
   }
 
   def tag(name: String, comment: String, sign: Boolean) =
-    cmd(withFlags(List(GitFlag(sign, "s")))("tag", "-f", "-a", name, "-m", comment): _*)
+    cmd(withFlags(List(GitFlag(sign, "s")))("tag", "-f", "-a", name, "-m", comment)*)
 
   def existsTag(name: String) = cmd("show-ref", "--quiet", "--tags", "--verify", "refs/tags/" + name) ! devnull == 0
 
@@ -200,7 +200,7 @@ class Subversion(val baseDir: File) extends Vcs {
 
   override def add(files: String*) = {
     val filesToAdd = files.filterNot(isFileUnderVersionControl)
-    if(!filesToAdd.isEmpty) cmd(("add" +: filesToAdd): _*) else noop
+    if(!filesToAdd.isEmpty) cmd(("add" +: filesToAdd)*) else noop
   }
 
   override def commit(message: String, sign: Boolean, signOff: Boolean) = {
