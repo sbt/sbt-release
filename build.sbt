@@ -87,7 +87,6 @@ TaskKey[Unit]("scriptedTestSbt2") := Def.taskDyn {
   // TODO enable all tests
   val exclude: Set[(String, String)] = Set(
     "command-line-version-numbers",
-    "mercurial",
     "tasks-as-steps",
   ).map("sbt-release" -> _)
   val args = values.filterNot(exclude).map { case (x1, x2) => s"${x1}/${x2}" }
