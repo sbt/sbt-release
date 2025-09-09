@@ -1,9 +1,10 @@
 package sbtrelease
 
-import sbt._
 import java.io.File
-
-import sys.process.{ Process, ProcessBuilder, ProcessLogger }
+import sbt.*
+import sys.process.Process
+import sys.process.ProcessBuilder
+import sys.process.ProcessLogger
 
 trait Vcs {
   val commandName: String
@@ -31,7 +32,7 @@ trait Vcs {
   protected def executableName(command: String) = {
     val maybeOsName = sys.props.get("os.name").map(_.toLowerCase)
     val maybeIsWindows = maybeOsName.filter(_.contains("windows"))
-    maybeIsWindows.map(_ => command+".exe").getOrElse(command)
+    maybeIsWindows.map(_ => command + ".exe").getOrElse(command)
   }
 
   protected val devnull: ProcessLogger = new ProcessLogger {
@@ -72,7 +73,6 @@ trait VcsCompanion {
   def mkVcs(baseDir: File): Vcs
 }
 
-
 object Mercurial extends VcsCompanion {
   protected val markerDirectory = ".hg"
 
@@ -92,7 +92,7 @@ class Mercurial(val baseDir: File) extends Vcs with GitLike {
 
   def currentHash = cmd("identify", "-i").!!.trim
 
-  def existsTag(name: String) = cmd("tags").!!.linesIterator.exists(_.endsWith(" "+name))
+  def existsTag(name: String) = cmd("tags").!!.linesIterator.exists(_.endsWith(" " + name))
 
   def commit(message: String, sign: Boolean, signOff: Boolean) =
     andSign(sign, cmd("commit", "-m", message))
@@ -138,17 +138,18 @@ class Git(val baseDir: File) extends Vcs with GitLike {
 
   def hasUpstream = trackingRemoteCmd ! devnull == 0 && trackingBranchCmd ! devnull == 0
 
-  def currentBranch =  cmd("symbolic-ref", "HEAD").!!.trim.stripPrefix("refs/heads/")
+  def currentBranch = cmd("symbolic-ref", "HEAD").!!.trim.stripPrefix("refs/heads/")
 
   def currentHash = revParse("HEAD")
 
   private def revParse(name: String) = cmd("rev-parse", name).!!.trim
 
-  def isBehindRemote = (cmd("rev-list", s"${currentBranch}..${trackingRemote}/${trackingBranch}") !! devnull).trim.nonEmpty
+  def isBehindRemote =
+    (cmd("rev-list", s"${currentBranch}..${trackingRemote}/${trackingBranch}") !! devnull).trim.nonEmpty
 
   private def withFlags(flags: Seq[GitFlag])(args: String*): Seq[String] = {
-    val appended = flags.collect {
-      case GitFlag(true, flag) => s"-$flag"
+    val appended = flags.collect { case GitFlag(true, flag) =>
+      s"-$flag"
     }
 
     args ++ appended
@@ -200,7 +201,7 @@ class Subversion(val baseDir: File) extends Vcs {
 
   override def add(files: String*) = {
     val filesToAdd = files.filterNot(isFileUnderVersionControl)
-    if(!filesToAdd.isEmpty) cmd(("add" +: filesToAdd)*) else noop
+    if (!filesToAdd.isEmpty) cmd(("add" +: filesToAdd)*) else noop
   }
 
   override def commit(message: String, sign: Boolean, signOff: Boolean) = {
@@ -222,7 +223,7 @@ class Subversion(val baseDir: File) extends Vcs {
   override def tag(name: String, comment: String, sign: Boolean): ProcessBuilder = {
     require(!sign, "Signing not supported in Subversion.")
     val tagUrl = getSvnTagUrl(name)
-    if(existsTag(name)) {
+    if (existsTag(name)) {
       val deleteTagComment = comment + ", \ndelete tag " + name + " to create a new one."
       cmd("del", tagUrl, "-m", deleteTagComment).!!
     }
@@ -239,20 +240,23 @@ class Subversion(val baseDir: File) extends Vcs {
 
   override def status: ProcessBuilder = cmd("status", "-q")
 
-  lazy val workingDirSvnUrl:String = {
+  lazy val workingDirSvnUrl: String = {
     val svnInfo = cmd("info").!!
     val svnInfoUrlKey = "URL: "
     val urlStartIdx = svnInfo.indexOf(svnInfoUrlKey) + svnInfoUrlKey.length
-    svnInfo.substring(urlStartIdx, svnInfo.indexOf('\n', urlStartIdx)-1)
+    svnInfo.substring(urlStartIdx, svnInfo.indexOf('\n', urlStartIdx) - 1)
   }
 
-  lazy val repoRoot:String = {
+  lazy val repoRoot: String = {
     val svnBaseUrlEndIdxOptions = List(
       workingDirSvnUrl.indexOf("/trunk"),
       workingDirSvnUrl.indexOf("/branches"),
       workingDirSvnUrl.indexOf("/tags")
     ).filter(_ >= 0)
-    require(!svnBaseUrlEndIdxOptions.isEmpty, "No /trunk, /branches or /tags part found in svn url. Base url cannot be extracted.")
+    require(
+      !svnBaseUrlEndIdxOptions.isEmpty,
+      "No /trunk, /branches or /tags part found in svn url. Base url cannot be extracted."
+    )
     val svnBaseUrlEndIdx = svnBaseUrlEndIdxOptions.head
     workingDirSvnUrl.substring(0, svnBaseUrlEndIdx + 1)
   }
@@ -261,7 +265,7 @@ class Subversion(val baseDir: File) extends Vcs {
 
   private def isFileUnderVersionControl(file: String): Boolean = Try(cmd("info", file).!!).nonEmpty
 
-  private def noop:ProcessBuilder = status
+  private def noop: ProcessBuilder = status
 }
 
 private[sbtrelease] object Try {

@@ -34,16 +34,16 @@ val unusedWarnings = Def.setting(
 
 scalacOptions ++= unusedWarnings.value
 
-Seq(Compile, Test).flatMap(c =>
-  c / console / scalacOptions --= unusedWarnings.value
-)
+Seq(Compile, Test).flatMap(c => c / console / scalacOptions --= unusedWarnings.value)
 
 def hash(): String = sys.process.Process("git rev-parse HEAD").lineStream_!.head
 
 Compile / doc / scalacOptions ++= {
   Seq(
-    "-sourcepath", (LocalRootProject / baseDirectory).value.getAbsolutePath,
-    "-doc-source-url", s"https://github.com/sbt/sbt-release/tree/${hash()}€{FILE_PATH}.scala"
+    "-sourcepath",
+    (LocalRootProject / baseDirectory).value.getAbsolutePath,
+    "-doc-source-url",
+    s"https://github.com/sbt/sbt-release/tree/${hash()}€{FILE_PATH}.scala"
   )
 }
 

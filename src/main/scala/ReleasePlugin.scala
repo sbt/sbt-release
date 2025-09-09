@@ -2,7 +2,7 @@ package sbtrelease
 
 import java.io.Serializable
 import sbt.*
-import Keys.*
+import sbt.Keys.*
 import sbt.complete.DefaultParsers.*
 import sbt.complete.Parser
 import sbtrelease.Version.Bump
@@ -44,7 +44,7 @@ object ReleasePlugin extends AutoPlugin {
     object ReleaseStep {
       implicit def func2ReleasePart(f: State => State): ReleaseStep = ReleaseStep(f)
 
-      implicit def releasePart2Func(rp: ReleaseStep): State=>State = rp.action
+      implicit def releasePart2Func(rp: ReleaseStep): State => State = rp.action
     }
 
     @deprecated("Use releaseStepTaskAggregated", "1.0.0")
@@ -70,7 +70,7 @@ object ReleasePlugin extends AutoPlugin {
      * Convert the given input task key and input to a release step action.
      */
     def releaseStepInputTask[T](key: InputKey[T], input: String = ""): State => State = { (st: State) =>
-      import EvaluateTask._
+      import EvaluateTask.*
       val extracted = Project.extract(st)
       val inputTask = extracted.get(Scoped.scopedSetting(key.scope, key.key))
       val task = Parser.parse(input, inputTask.parser(st)) match {
@@ -109,7 +109,7 @@ object ReleasePlugin extends AutoPlugin {
      * Convert the given command string to a release step action, preserving and invoking remaining commands
      */
     def releaseStepCommandAndRemaining(command: String): State => State = { (initState: State) =>
-      import Compat._
+      import Compat.*
       @annotation.tailrec
       def runCommand(command: Compat.Command, state: State): State = {
         val nextState = Parser.parse(command.commandLine, state.combinedParser) match {
@@ -118,7 +118,8 @@ object ReleasePlugin extends AutoPlugin {
         }
         nextState.remainingCommands.toList match {
           case Nil => nextState.copy(remainingCommands = initState.remainingCommands)
-          case Compat.FailureCommand :: tail => nextState.copy(remainingCommands = FailureCommand +: initState.remainingCommands)
+          case Compat.FailureCommand :: tail =>
+            nextState.copy(remainingCommands = FailureCommand +: initState.remainingCommands)
           case head :: tail => runCommand(head, nextState.copy(remainingCommands = tail))
         }
       }
@@ -145,12 +146,17 @@ object ReleasePlugin extends AutoPlugin {
       private[this] val CrossBuild: Parser[ParseResult] =
         (Space ~> token("cross")) ^^^ ParseResult.CrossBuild
       private[this] val ReleaseVersion: Parser[ParseResult] =
-        (Space ~> token("release-version") ~> Space ~> token(StringBasic, "<release version>")) map ParseResult.ReleaseVersion
+        (Space ~> token("release-version") ~> Space ~> token(
+          StringBasic,
+          "<release version>"
+        )) map ParseResult.ReleaseVersion
       private[this] val NextVersion: Parser[ParseResult] =
         (Space ~> token("next-version") ~> Space ~> token(StringBasic, "<next version>")) map ParseResult.NextVersion
       private[this] val TagDefault: Parser[ParseResult] =
-        (Space ~> token("default-tag-exists-answer") ~> Space ~> token(StringBasic, "o|k|a|<tag-name>")) map ParseResult.TagDefault
-
+        (Space ~> token("default-tag-exists-answer") ~> Space ~> token(
+          StringBasic,
+          "o|k|a|<tag-name>"
+        )) map ParseResult.TagDefault
 
       private[this] sealed abstract class ParseResult extends Product with Serializable
       private[this] object ParseResult {
@@ -165,7 +171,8 @@ object ReleasePlugin extends AutoPlugin {
         case object CrossBuild extends ParseResult
       }
 
-      private[this] val releaseParser: Parser[Seq[ParseResult]] = (ReleaseVersion | NextVersion | WithDefaults | SkipTests | CrossBuild | TagDefault).*
+      private[this] val releaseParser: Parser[Seq[ParseResult]] =
+        (ReleaseVersion | NextVersion | WithDefaults | SkipTests | CrossBuild | TagDefault).*
 
       val releaseCommand: Command = Command(releaseCommandKey)(_ => releaseParser) { (st, args) =>
         val extracted = Project.extract(st)
@@ -177,9 +184,9 @@ object ReleasePlugin extends AutoPlugin {
           .put(useDefaults, args.contains(ParseResult.WithDefaults))
           .put(skipTests, args.contains(ParseResult.SkipTests))
           .put(cross, crossEnabled)
-          .put(tagDefault, args.collectFirst{case ParseResult.TagDefault(value) => value})
-          .put(commandLineReleaseVersion, args.collectFirst{case ParseResult.ReleaseVersion(value) => value})
-          .put(commandLineNextVersion, args.collectFirst{case ParseResult.NextVersion(value) => value})
+          .put(tagDefault, args.collectFirst { case ParseResult.TagDefault(value) => value })
+          .put(commandLineReleaseVersion, args.collectFirst { case ParseResult.ReleaseVersion(value) => value })
+          .put(commandLineNextVersion, args.collectFirst { case ParseResult.NextVersion(value) => value })
 
         val initialChecks = releaseParts.map(_.check)
 
@@ -215,9 +222,9 @@ object ReleasePlugin extends AutoPlugin {
     }
   }
 
-  import autoImport._
-  import autoImport.ReleaseKeys._
-  import ReleaseStateTransformations._
+  import ReleaseStateTransformations.*
+  import autoImport.*
+  import autoImport.ReleaseKeys.*
 
   override def trigger = allRequirements
 
@@ -244,32 +251,24 @@ object ReleasePlugin extends AutoPlugin {
             }
           case _ => version.withoutQualifier.unapply
         }
-      }
-      .getOrElse(versionFormatError(rawVersion))
+      }.getOrElse(versionFormatError(rawVersion))
     },
     releaseVersionBump := Version.Bump.default,
-    releaseNextVersion := {
-      ver => Version(ver).map(_.bump(releaseVersionBump.value).asSnapshot.unapply).getOrElse(versionFormatError(ver))
+    releaseNextVersion := { ver =>
+      Version(ver).map(_.bump(releaseVersionBump.value).asSnapshot.unapply).getOrElse(versionFormatError(ver))
     },
     releaseUseGlobalVersion := true,
     releaseCrossBuild := false,
-
     releaseTagName := s"v${runtimeVersion.value}",
     releaseTagComment := s"Releasing ${runtimeVersion.value}",
-
     releaseCommitMessage := s"Setting version to ${runtimeVersion.value}",
     releaseNextCommitMessage := s"Setting version to ${runtimeVersion.value}",
-
     releaseVcs := Vcs.detect(baseDirectory.value),
     releaseVcsSign := false,
     releaseVcsSignOff := false,
-
     releaseVersionFile := baseDirectory.value / "version.sbt",
-
     releasePublishArtifactsAction := publish.value,
-
     releaseIgnoreUntrackedFiles := false,
-
     releaseProcess := Seq[ReleaseStep](
       checkSnapshotDependencies,
       inquireVersions,
@@ -283,12 +282,11 @@ object ReleasePlugin extends AutoPlugin {
       commitNextVersion,
       pushChanges
     ),
-
     commands += releaseCommand
   )
 
   lazy val extraReleaseCommands = {
-    import ExtraReleaseCommands._
+    import ExtraReleaseCommands.*
 
     Seq[Setting[?]](
       commands ++= Seq(

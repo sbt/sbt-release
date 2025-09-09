@@ -33,6 +33,7 @@ jobs:
         git config --global user.name "example"
         echo '[ui]' > "$HOME/.hgrc"
         echo 'username = example <example@example.com>' >> "$HOME/.hgrc"
+    - run: sbt "+ scalafmtCheckAll" scalafmtSbtCheck
     - run: sbt -v "set pluginCrossBuild / sbtVersion := \"${{matrix.sbt_version}}\"" test scripted
       if: ${{ matrix.sbt_version != '' && matrix.sbt_version != '2' }}
     - run: sbt -v test scripted

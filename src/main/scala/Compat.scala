@@ -1,20 +1,25 @@
 package sbtrelease
 
-import sbt._
+import sbt.*
 import sbt.Def.ScopedKey
-import sbt.EvaluateTask.{extractedTaskConfig, nodeView, runTask, withStreams}
-import sbt.Keys._
+import sbt.EvaluateTask.extractedTaskConfig
+import sbt.EvaluateTask.nodeView
+import sbt.EvaluateTask.runTask
+import sbt.EvaluateTask.withStreams
+import sbt.Keys.*
+import sbt.internal.Act
+import sbt.internal.Aggregation
 import sbt.internal.Aggregation.KeyValue
-import sbt.internal.{Act, Aggregation, ExtendableKeyIndex}
+import sbt.internal.ExtendableKeyIndex
 import sbt.std.Transform.DummyTaskMap
 import scala.language.reflectiveCalls
 
 object Compat {
 
-  import Utilities._
+  import Utilities.*
 
   def runTaskAggregated[T](taskKey: TaskKey[T], state: State): (State, Result[Seq[KeyValue[T]]]) = {
-    import EvaluateTask._
+    import EvaluateTask.*
 
     val extra = DummyTaskMap(Nil)
     val extracted = state.extract
@@ -23,13 +28,12 @@ object Compat {
     val rkey = Utilities.resolve(taskKey.scopedKey, extracted)
     val keys = Aggregation.aggregate(rkey, ScopeMask(), extracted.structure.extra)
     val tasks = Act.keyValues(extracted.structure)(keys)
-    val toRun = tasks.map { case KeyValue(k,t) => t.map(v => KeyValue(k,v)) }.join
-    val roots = tasks.map { case KeyValue(k,_) => k }
+    val toRun = tasks.map { case KeyValue(k, t) => t.map(v => KeyValue(k, v)) }.join
+    val roots = tasks.map { case KeyValue(k, _) => k }
 
-
-    val (newS, result) = withStreams(extracted.structure, state){ str =>
+    val (newS, result) = withStreams(extracted.structure, state) { str =>
       val transform = nodeView(state, str, roots, extra)
-      runTask(toRun, state,str, extracted.structure.index.triggers, config)(using transform)
+      runTask(toRun, state, str, extracted.structure.index.triggers, config)(using transform)
     }
     (newS, result)
   }
@@ -59,12 +63,12 @@ object Compat {
   def crossVersions(st: State): Seq[String] = {
     // copied from https://github.com/sbt/sbt/blob/2d7ec47b13e02526174f897cca0aef585bd7b128/main/src/main/scala/sbt/Cross.scala#L40
     val proj = Project.extract(st)
-    import proj._
+    import proj.*
     crossVersions(proj, currentRef)
   }
 
   private def crossVersions(extracted: Extracted, proj: ProjectRef): Seq[String] = {
-    import extracted._
+    import extracted.*
     ((proj / crossScalaVersions) get structure.data) getOrElse {
       // reading scalaVersion is a one-time deal
       ((proj / scalaVersion) get structure.data).toSeq
@@ -95,48 +99,58 @@ object Compat {
     configurations: Map[String, Seq[Configuration]]
   ): ExtendableKeyIndex = try {
     // for sbt 1.1
-    KeyIndex.asInstanceOf[{
-      def apply(
-        known: Iterable[ScopedKey[?]],
-        projects: Map[URI, Set[String]],
-        configurations: Map[String, Seq[Configuration]]
-      ): ExtendableKeyIndex
-    }].apply(known = known, projects = projects, configurations = configurations)
-  } catch {
-    case _: NoSuchMethodException =>
-      // for sbt 1.0.x
-      KeyIndex.asInstanceOf[{
+    KeyIndex
+      .asInstanceOf[{
         def apply(
           known: Iterable[ScopedKey[?]],
           projects: Map[URI, Set[String]],
+          configurations: Map[String, Seq[Configuration]]
         ): ExtendableKeyIndex
-      }].apply(known = known, projects = projects)
-  }
-
-  // https://github.com/sbt/sbt/issues/3792
-  private[sbtrelease] def keyIndexAggregate(known: Iterable[ScopedKey[?]],
-                extra: BuildUtil[?],
-                projects: Map[URI, Set[String]],
-                configurations: Map[String, Seq[Configuration]]) = try {
-    // for sbt 1.1
-    KeyIndex.asInstanceOf[{
-      def aggregate(
-        known: Iterable[ScopedKey[?]],
-        extra: BuildUtil[?],
-        projects: Map[URI, Set[String]],
-        configurations: Map[String, Seq[Configuration]]
-      ): ExtendableKeyIndex
-    }].aggregate(known = known, extra = extra, projects = projects, configurations = configurations)
+      }]
+      .apply(known = known, projects = projects, configurations = configurations)
   } catch {
     case _: NoSuchMethodException =>
       // for sbt 1.0.x
-      KeyIndex.asInstanceOf[{
+      KeyIndex
+        .asInstanceOf[{
+          def apply(
+            known: Iterable[ScopedKey[?]],
+            projects: Map[URI, Set[String]],
+          ): ExtendableKeyIndex
+        }]
+        .apply(known = known, projects = projects)
+  }
+
+  // https://github.com/sbt/sbt/issues/3792
+  private[sbtrelease] def keyIndexAggregate(
+    known: Iterable[ScopedKey[?]],
+    extra: BuildUtil[?],
+    projects: Map[URI, Set[String]],
+    configurations: Map[String, Seq[Configuration]]
+  ) = try {
+    // for sbt 1.1
+    KeyIndex
+      .asInstanceOf[{
         def aggregate(
           known: Iterable[ScopedKey[?]],
           extra: BuildUtil[?],
-          projects: Map[URI, Set[String]]
+          projects: Map[URI, Set[String]],
+          configurations: Map[String, Seq[Configuration]]
         ): ExtendableKeyIndex
-      }].aggregate(known = known, extra = extra, projects = projects)
+      }]
+      .aggregate(known = known, extra = extra, projects = projects, configurations = configurations)
+  } catch {
+    case _: NoSuchMethodException =>
+      // for sbt 1.0.x
+      KeyIndex
+        .asInstanceOf[{
+          def aggregate(
+            known: Iterable[ScopedKey[?]],
+            extra: BuildUtil[?],
+            projects: Map[URI, Set[String]]
+          ): ExtendableKeyIndex
+        }]
+        .aggregate(known = known, extra = extra, projects = projects)
   }
 
 }

@@ -10,9 +10,11 @@ object VersionSpec extends Specification {
     case None => sys.error("Can't parse version " + v)
   }
   "Next Version bumping" should {
-    def testBumpNext(input: String, expectedOutput: String): MatchResult[Any] = version(input).bumpNext.unapply must_== expectedOutput
+    def testBumpNext(input: String, expectedOutput: String): MatchResult[Any] =
+      version(input).bumpNext.unapply must_== expectedOutput
 
-    def testBumpNextStable(input: String, expectedOutput: String): MatchResult[Any] = version(input).bumpNextStable.unapply must_== expectedOutput
+    def testBumpNextStable(input: String, expectedOutput: String): MatchResult[Any] =
+      version(input).bumpNextStable.unapply must_== expectedOutput
 
     def testBothBumpNextStrategies(input: String, expectedOutput: String): MatchResult[Any] = {
       testBumpNext(input, expectedOutput)
