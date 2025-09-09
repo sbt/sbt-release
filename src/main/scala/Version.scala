@@ -14,19 +14,21 @@ object Version {
      * Strategy to always bump the major version by default. Ex. 1.0.0 would be bumped to 2.0.0
      */
     case object Major extends Bump { def bump: Version => Version = _.bumpMajor }
+
     /**
      * Strategy to always bump the minor version by default. Ex. 1.0.0 would be bumped to 1.1.0
      */
     case object Minor extends Bump { def bump: Version => Version = _.bumpMinor }
+
     /**
      * Strategy to always bump the bugfix version by default. Ex. 1.0.0 would be bumped to 1.0.1
      */
     case object Bugfix extends Bump { def bump: Version => Version = _.bumpBugfix }
+
     /**
      * Strategy to always bump the nano version by default. Ex. 1.0.0.0 would be bumped to 1.0.0.1
      */
     case object Nano extends Bump { def bump: Version => Version = _.bumpNano }
-
 
     /**
      * Strategy to always increment to the next version from smallest to greatest, including prerelease versions
@@ -77,20 +79,23 @@ case class Version(major: Int, subversions: Seq[Int], qualifier: Option[String])
   def bump: Version = bumpNext
 
   def bumpNext: Version = {
-    val bumpedPrereleaseVersionOpt = qualifier.collect {
-      case rawQualifier @ Version.PreReleaseQualifierR() =>
-        val qualifierEndsWithNumberRegex = """[0-9]*$""".r
+    val bumpedPrereleaseVersionOpt = qualifier.collect { case rawQualifier @ Version.PreReleaseQualifierR() =>
+      val qualifierEndsWithNumberRegex = """[0-9]*$""".r
 
-        val opt = for {
-          versionNumberQualifierStr <- qualifierEndsWithNumberRegex.findFirstIn(rawQualifier)
-          versionNumber <- Try(versionNumberQualifierStr.toInt)
-            .toRight(new Exception(s"Version number not parseable to a number. Version number received: $versionNumberQualifierStr"))
-            .toOption
-          newVersionNumber = versionNumber + 1
-          newQualifier = rawQualifier.replaceFirst(versionNumberQualifierStr, newVersionNumber.toString)
-        } yield Version(major, subversions, Some(newQualifier))
+      val opt = for {
+        versionNumberQualifierStr <- qualifierEndsWithNumberRegex.findFirstIn(rawQualifier)
+        versionNumber <- Try(versionNumberQualifierStr.toInt)
+          .toRight(
+            new Exception(
+              s"Version number not parseable to a number. Version number received: $versionNumberQualifierStr"
+            )
+          )
+          .toOption
+        newVersionNumber = versionNumber + 1
+        newQualifier = rawQualifier.replaceFirst(versionNumberQualifierStr, newVersionNumber.toString)
+      } yield Version(major, subversions, Some(newQualifier))
 
-        opt.getOrElse(this.withoutQualifier)
+      opt.getOrElse(this.withoutQualifier)
     }
 
     bumpNextGeneric(bumpedPrereleaseVersionOpt)
@@ -100,14 +105,12 @@ case class Version(major: Int, subversions: Seq[Int], qualifier: Option[String])
 
     def bumpedMajor = copy(major = major + 1)
 
-    bumpedPrereleaseVersionOpt
-      .orElse(maybeBumpedLastSubversion)
-      .getOrElse(bumpedMajor)
+    bumpedPrereleaseVersionOpt.orElse(maybeBumpedLastSubversion).getOrElse(bumpedMajor)
   }
 
   def bumpNextStable: Version = {
-    val bumpedPrereleaseVersionOpt = qualifier.collect {
-      case Version.PreReleaseQualifierR() => withoutQualifier
+    val bumpedPrereleaseVersionOpt = qualifier.collect { case Version.PreReleaseQualifierR() =>
+      withoutQualifier
     }
     bumpNextGeneric(bumpedPrereleaseVersionOpt)
   }
@@ -123,7 +126,7 @@ case class Version(major: Int, subversions: Seq[Int], qualifier: Option[String])
     val bumped = subversions.drop(idx)
     val reset = bumped.drop(1).length
     bumped.headOption map { head =>
-      val patch = (head+1) +: Seq.fill(reset)(0)
+      val patch = (head + 1) +: Seq.fill(reset)(0)
       copy(subversions = subversions.patch(idx, patch, patch.length))
     }
   }
@@ -155,5 +158,5 @@ case class Version(major: Int, subversions: Seq[Int], qualifier: Option[String])
 
   def unapply: String = "" + major + mkString(subversions) + qualifier.getOrElse("")
 
-  private def mkString(parts: Seq[Int]) = parts.map("."+_).mkString
+  private def mkString(parts: Seq[Int]) = parts.map("." + _).mkString
 }
