@@ -7,4 +7,17 @@ $ exec git commit -m init
 
 > reload
 
-> checkExitCodes
+> set releaseProcess := Seq(sbtrelease.ReleaseStateTransformations.runTest)
+-> release with-defaults
+
+> set releaseProcess := Seq(releaseStepCommand("show version"))
+> release with-defaults
+
+> set releaseProcess := Seq(sbtrelease.ReleaseStateTransformations.runTest, releaseStepCommand("show version"))
+-> release with-defaults
+
+> set releaseProcess := Seq(releaseStepCommandAndRemaining("show version"))
+> release with-defaults
+
+> set releaseProcess := Seq(releaseStepCommandAndRemaining("failingTask"))
+-> release with-defaults
