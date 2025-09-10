@@ -35,6 +35,7 @@ object ReleasePlugin extends AutoPlugin {
     val releaseVcsSignOff = settingKey[Boolean]("Whether to signoff VCS commits")
 
     val releaseVcs = settingKey[Option[Vcs]]("The VCS to use")
+    @transient
     val releasePublishArtifactsAction = taskKey[Unit]("The action that should be performed to publish artifacts")
 
     lazy val ReleaseTransformations = sbtrelease.ReleaseStateTransformations
