@@ -32,7 +32,7 @@ InputKey[Unit]("checkTargetDir") := {
     case "not-exists" =>
       false
   }
-  val dir = file{
+  val dir = file {
     if (sbtVersion.value.startsWith("1")) {
       val scalaBinaryV = args(0)
       s"target/scala-${scalaBinaryV}/classes"
