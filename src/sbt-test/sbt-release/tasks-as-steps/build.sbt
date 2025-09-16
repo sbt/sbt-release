@@ -33,11 +33,10 @@ lazy val root: Project = (project in file("."))
     ),
   )
 
-lazy val sub = (project in file("sub"))
-  .settings(
-    myAggregatedTaskSetting,
-    testOutputDir := file("sub-out"),
-  )
+lazy val sub = (project in file("sub")).settings(
+  myAggregatedTaskSetting,
+  testOutputDir := file("sub-out"),
+)
 
 def myAggregatedTaskSetting = myAggregatedTask := {
   IO.write(testOutputDir.value / "myaggregatedtask", "ran")
