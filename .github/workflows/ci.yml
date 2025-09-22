@@ -17,7 +17,7 @@ jobs:
           - java: 8
             sbt_version: "2"
           - java: 8
-          - java: 21
+          - java: 25
     steps:
     - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
       with:
@@ -25,7 +25,7 @@ jobs:
     - uses: actions/setup-java@dded0888837ed1f317902acf8a20df0ad188d165 # v5.0.0
       with:
         java-version: ${{matrix.java}}
-        distribution: temurin
+        distribution: zulu
     - uses: sbt/setup-sbt@17575ea4e18dd928fe5968dbe32294b97923d65b # v1.1.13
     - uses: coursier/cache-action@4e2615869d13561d626ed48655e1a39e5b192b3c # v6.4.7
     - run: |
