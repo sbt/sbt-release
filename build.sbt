@@ -60,7 +60,7 @@ scriptedLaunchOpts := {
 }
 scriptedBufferLog := false
 
-pomExtra := {
+pomExtra := (
   <developers>{
     Seq(
       ("xuwei-k", "Kenji Yoshida"),
@@ -72,4 +72,4 @@ pomExtra := {
       </developer>
     }
   }</developers>
-}
+)
