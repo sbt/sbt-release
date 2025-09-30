@@ -14,7 +14,7 @@ releaseProcess := Seq[ReleaseStep](
   setNextVersion
 )
 
-scalaVersion := "2.13.16"
+scalaVersion := "2.13.17"
 
 val checkContentsOfVersionSbt = inputKey[Unit]("Check that the contents of version.sbt is as expected")
 val parser = Space ~> StringBasic
