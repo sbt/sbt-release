@@ -1,6 +1,11 @@
 import ReleaseTransformations._
 
-releaseProcess := Seq[ReleaseStep](runTest, FailTest.createFile)
+val createFile: ReleaseStep = { (st: State) =>
+  IO.touch(file("file"))
+  st
+}
+
+releaseProcess := Seq[ReleaseStep](runTest, createFile)
 
 scalaVersion := "2.13.17"
 
