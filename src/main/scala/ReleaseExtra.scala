@@ -316,14 +316,15 @@ object ReleaseStateTransformations {
   }
 
   def readVersion(ver: String, prompt: String, useDef: Boolean, commandLineVersion: Option[String]): String = {
-    if (commandLineVersion.isDefined) commandLineVersion.get
-    else if (useDef) ver
-    else
-      SimpleReader.readLine(prompt format ver) match {
-        case Some("") => ver
-        case Some(input) => Version(input).map(_.string).getOrElse(versionFormatError(input))
-        case None => sys.error("No version provided!")
-      }
+    commandLineVersion.getOrElse(
+      if (useDef) ver
+      else
+        SimpleReader.readLine(prompt format ver) match {
+          case Some("") => ver
+          case Some(input) => Version(input).map(_.string).getOrElse(versionFormatError(input))
+          case None => sys.error("No version provided!")
+        }
+    )
   }
 
   def reapply(settings: Seq[Setting[?]], state: State): State = {
