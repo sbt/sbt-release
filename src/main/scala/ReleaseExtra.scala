@@ -55,13 +55,7 @@ object ReleaseStateTransformations {
 
   }
 
-  lazy val runClean: ReleaseStep = ReleaseStep(
-    action = { (st: State) =>
-      val extracted = Project.extract(st)
-      val ref = extracted.get(thisProjectRef)
-      extracted.runAggregated(ref / (Global / clean), st)
-    }
-  )
+  lazy val runClean: ReleaseStep = ReleasePluginCompat.runClean
 
   lazy val runTest: ReleaseStep = ReleaseStep(
     action = { (st: State) =>
