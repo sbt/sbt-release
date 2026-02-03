@@ -27,7 +27,7 @@ jobs:
         java-version: ${{matrix.java}}
         distribution: zulu
     - uses: sbt/setup-sbt@a627500d27445f8c5021755a439829b6e78e3358 # v1.1.15
-    - uses: coursier/cache-action@bebeeb0e6f48ebad66d3783946588ecf43114433 # v6.4.8
+    - uses: coursier/cache-action@c5ca79321d170b8a18c288d9cadc2a6037166d0f # v6.4.8
     - run: |
         git config --global user.email "example@example.com"
         git config --global user.name "example"
