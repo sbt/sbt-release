@@ -14,7 +14,7 @@ jobs:
         include:
           - java: 8
             sbt_version: "1.4.9"
-          - java: 8
+          - java: 17
             sbt_version: "2"
           - java: 8
           - java: 25
