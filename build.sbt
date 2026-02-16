@@ -20,6 +20,15 @@ licenses := Seq("Apache-2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0"
 publishMavenStyle := true
 scalacOptions ++= Seq("-deprecation", "-feature", "-language:implicitConversions")
 
+scalacOptions ++= {
+  scalaBinaryVersion.value match {
+    case "3" =>
+      Nil
+    case _ =>
+      Seq("-release:8")
+  }
+}
+
 val unusedWarnings = Def.setting(
   scalaBinaryVersion.value match {
     case "2.12" =>
