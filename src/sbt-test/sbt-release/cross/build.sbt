@@ -1,6 +1,6 @@
 import sbtrelease.ReleaseStateTransformations._
 
-val Scala213 = "2.13.17"
+val Scala213 = "2.13.18"
 val Scala212 = "2.12.21"
 
 scalaVersion := Scala213
