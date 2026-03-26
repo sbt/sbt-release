@@ -3,14 +3,14 @@ lazy val `sbt-release` = project in file(".")
 organization := "com.github.sbt"
 name := "sbt-release"
 
-crossScalaVersions += "3.8.1"
+crossScalaVersions += "3.8.2"
 
 pluginCrossBuild / sbtVersion := {
   scalaBinaryVersion.value match {
     case "2.12" =>
       (pluginCrossBuild / sbtVersion).value
     case _ =>
-      "2.0.0-RC9"
+      "2.0.0-RC10"
   }
 }
 
