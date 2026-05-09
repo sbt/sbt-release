@@ -50,12 +50,21 @@ Seq(Compile, Test).flatMap(c => c / console / scalacOptions --= unusedWarnings.v
 def hash(): String = sys.process.Process("git rev-parse HEAD").lineStream_!.head
 
 Compile / doc / scalacOptions ++= {
-  Seq(
-    "-sourcepath",
-    (LocalRootProject / baseDirectory).value.getAbsolutePath,
-    "-doc-source-url",
-    s"https://github.com/sbt/sbt-release/tree/${hash()}€{FILE_PATH}.scala"
-  )
+  scalaBinaryVersion.value match {
+    case "2.12" =>
+      Seq(
+        "-sourcepath",
+        (LocalRootProject / baseDirectory).value.getAbsolutePath,
+        "-doc-source-url",
+        s"https://github.com/sbt/sbt-release/tree/${hash()}€{FILE_PATH}.scala"
+      )
+    case "3" =>
+      Seq(
+        "-source-links:github://sbt/sbt-release",
+        "-revision",
+        hash()
+      )
+  }
 }
 
 libraryDependencies ++= Seq("org.specs2" %% "specs2-core" % "4.23.0" % "test")
