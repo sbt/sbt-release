@@ -238,6 +238,48 @@ object ReleaseStateTransformations {
     ) getOrElse commentState
   }
 
+
+  lazy val updateReadme: ReleaseStep = ReleaseStep(updateReadmeStep)
+  private def updateReadmeStep(state: State): State = {
+    val extracted = Project.extract(state)
+    val releaseVersion = extracted.get(version)
+    val base = extracted.get(baseDirectory)
+    val readmeFile = base / "README.md"
+
+    val versionRegex = """(\d{1,2}\.\d{1,2}\.\d{1,2})""".r
+    val updatedReadmeContent = versionRegex.replaceAllIn(
+      IO.read(readmeFile),
+      releaseVersion
+    )
+
+    IO.write(readmeFile, updatedReadmeContent)
+    state
+  }
+
+  lazy val commitReadme: ReleaseStep = ReleaseStep(commitReadmeStep)
+  private def commitReadmeStep(state: State): State = {
+    val log = toProcessLogger(state)
+    val base = vcs(state).baseDir
+    val sign = Project.extract(state).get(releaseVcsSign)
+    val readmeFile = base / "README.md"
+
+    val relativePath = IO
+      .relativize(base, readmeFile)
+      .getOrElse(
+        "Version file [%s] is outside of this VCS repository with base directory [%s]!" format (readmeFile, base)
+      )
+
+    vcs(state).add(relativePath) !! log
+    val vcsAddOutput = (vcs(state).status !!).trim
+    if (vcsAddOutput.isEmpty) {
+      state.log.info("README.md hasn't been changed.")
+    } else {
+      vcs(state).commit("Update release version in readme", sign) ! log
+    }
+
+    state
+  }
+
   lazy val pushChanges: ReleaseStep = ReleaseStep(pushChangesAction, checkUpstream)
   private[sbtrelease] lazy val checkUpstream = { (st: State) =>
     if (!vcs(st).hasUpstream) {
