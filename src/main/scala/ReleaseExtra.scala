@@ -22,7 +22,7 @@ object ReleaseStateTransformations {
       if (snapshotDeps.nonEmpty) {
         val useDefaults = extractDefault(newSt, "n")
         st.log.warn("Snapshot dependencies detected:\n" + snapshotDeps.mkString("\n"))
-        useDefaults orElse SimpleReader.readLine("Do you want to continue (y/n)? [n] ") match {
+        useDefaults orElse CommandLineUIService.readLine("Do you want to continue (y/n)? [n] ", false) match {
           case Yes() =>
           case _ => sys.error("Aborting release due to snapshot dependencies.")
         }
@@ -194,8 +194,9 @@ object ReleaseStateTransformations {
     @tailrec
     def findTag(tag: String): Option[String] = {
       if (vcs(st).existsTag(tag)) {
-        defaultChoice orElse SimpleReader.readLine(
-          s"Tag [${tag}] exists! Overwrite, keep or abort or enter a new tag (o/k/a)? [a] "
+        defaultChoice orElse CommandLineUIService.readLine(
+          s"Tag [${tag}] exists! Overwrite, keep or abort or enter a new tag (o/k/a)? [a] ",
+          false
         ) match {
           case Some("" | "a" | "A") =>
             sys.error(s"Tag [${tag}] already exists. Aborting release!")
@@ -251,15 +252,19 @@ object ReleaseStateTransformations {
 
     st.log.info(s"Checking remote [${vcs(st).trackingRemote}] ...")
     if (vcs(st).checkRemote(vcs(st).trackingRemote) ! log != 0) {
-      defaultChoice orElse SimpleReader.readLine("Error while checking remote. Still continue (y/n)? [n] ") match {
+      defaultChoice orElse CommandLineUIService.readLine(
+        "Error while checking remote. Still continue (y/n)? [n] ",
+        false
+      ) match {
         case Yes() => // do nothing
         case _ => sys.error("Aborting the release!")
       }
     }
 
     if (vcs(st).isBehindRemote) {
-      defaultChoice orElse SimpleReader.readLine(
-        "The upstream branch has unmerged commits. A subsequent push will fail! Continue (y/n)? [n] "
+      defaultChoice orElse CommandLineUIService.readLine(
+        "The upstream branch has unmerged commits. A subsequent push will fail! Continue (y/n)? [n] ",
+        false
       ) match {
         case Yes() => // do nothing
         case _ => sys.error("Merge the upstream commits and run `release` again.")
@@ -281,7 +286,10 @@ object ReleaseStateTransformations {
 
     val vc = vcs(st)
     if (vc.hasUpstream) {
-      defaultChoice orElse SimpleReader.readLine("Push changes to the remote repository (y/n)? [y] ") match {
+      defaultChoice orElse CommandLineUIService.readLine(
+        "Push changes to the remote repository (y/n)? [y] ",
+        false
+      ) match {
         case Yes() | Some("") =>
           val processLogger: ProcessLogger = if (vc.isInstanceOf[Git]) {
             // Git outputs to standard error, so use a logger that redirects stderr to info
@@ -313,7 +321,7 @@ object ReleaseStateTransformations {
     commandLineVersion.getOrElse(
       if (useDef) ver
       else
-        SimpleReader.readLine(prompt format ver) match {
+        CommandLineUIService.readLine(prompt format ver, false) match {
           case Some("") => ver
           case Some(input) => Version(input).map(_.string).getOrElse(versionFormatError(input))
           case None => sys.error("No version provided!")
