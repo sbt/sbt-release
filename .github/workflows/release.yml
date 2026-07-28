@@ -13,7 +13,7 @@ jobs:
         with:
           java-version: 17
           distribution: temurin
-      - uses: sbt/setup-sbt@6444f4c8111de4b9059c3975def104b03cfaa5f0 # v1.5.2
+      - uses: sbt/setup-sbt@d059c39de700f4cc5cb64f9f56577315e44a984e # v1.5.5
       - run: sbt ci-release
         if: ${{ github.repository_owner == 'sbt' }}
         env:
