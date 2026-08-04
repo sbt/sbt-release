@@ -1,6 +1,6 @@
 lazy val `sbt-release` = project in file(".")
 
-def sbt2 = "2.0.4"
+def sbt2 = "2.0.5"
 
 organization := "com.github.sbt"
 name := "sbt-release"
