@@ -9,4 +9,4 @@ releaseProcess := Seq[ReleaseStep](runTest, createFile)
 
 scalaVersion := "2.13.18"
 
-libraryDependencies += "org.scalatest" %% "scalatest-flatspec" % "3.2.19" % "test"
+libraryDependencies += "org.scalatest" %% "scalatest-flatspec" % "3.2.20" % "test"

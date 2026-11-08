@@ -2,7 +2,7 @@ import sbtrelease.ReleaseStateTransformations._
 
 scalaVersion := "2.13.18"
 
-libraryDependencies += "org.scalatest" %% "scalatest-funspec" % "3.2.19" % "test"
+libraryDependencies += "org.scalatest" %% "scalatest-funspec" % "3.2.20" % "test"
 
 releaseProcess := Seq(
   checkSnapshotDependencies,
