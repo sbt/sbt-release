@@ -150,14 +150,14 @@ object ReleasePlugin extends AutoPlugin {
         (Space ~> token("release-version") ~> Space ~> token(
           StringBasic,
           "<release version>"
-        )) map ParseResult.ReleaseVersion
+        )).map(ParseResult.ReleaseVersion)
       private[this] val NextVersion: Parser[ParseResult] =
-        (Space ~> token("next-version") ~> Space ~> token(StringBasic, "<next version>")) map ParseResult.NextVersion
+        (Space ~> token("next-version") ~> Space ~> token(StringBasic, "<next version>")).map(ParseResult.NextVersion)
       private[this] val TagDefault: Parser[ParseResult] =
         (Space ~> token("default-tag-exists-answer") ~> Space ~> token(
           StringBasic,
           "o|k|a|<tag-name>"
-        )) map ParseResult.TagDefault
+        )).map(ParseResult.TagDefault)
 
       private[this] sealed abstract class ParseResult extends Product with Serializable
       private[this] object ParseResult {

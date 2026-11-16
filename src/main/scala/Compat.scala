@@ -69,9 +69,9 @@ object Compat {
 
   private def crossVersions(extracted: Extracted, proj: ProjectRef): Seq[String] = {
     import extracted.*
-    ((proj / crossScalaVersions) get structure.data) getOrElse {
+    (proj / crossScalaVersions).get(structure.data) getOrElse {
       // reading scalaVersion is a one-time deal
-      ((proj / scalaVersion) get structure.data).toSeq
+      (proj / scalaVersion).get(structure.data).toSeq
     }
   }
 
