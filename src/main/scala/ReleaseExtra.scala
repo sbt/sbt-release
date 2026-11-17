@@ -71,7 +71,7 @@ object ReleaseStateTransformations {
   lazy val setReleaseVersion: ReleaseStep = setVersion(_._1)
   lazy val setNextVersion: ReleaseStep = setVersion(_._2)
   val globalVersionString = "ThisBuild / version := \"%s\""
-  private[this] val globalVersionStringOldSyntax = "version in ThisBuild := \"%s\""
+  private val globalVersionStringOldSyntax = "version in ThisBuild := \"%s\""
   val versionString = "version := \"%s\""
   private[sbtrelease] def setVersion(selectVersion: Versions => String): ReleaseStep = { (st: State) =>
     val vs = st

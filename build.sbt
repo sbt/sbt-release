@@ -1,16 +1,17 @@
 lazy val `sbt-release` = project in file(".")
 
-def sbt2 = "2.0.12"
+def sbt2 = "2.1.0"
 
 organization := "com.github.sbt"
 name := "sbt-release"
 
-crossScalaVersions += scala_version_from_sbt_version.ScalaVersionFromSbtVersion(sbt2)
+scalaVersion := "2.12.21"
+crossScalaVersions := Seq("2.12.21", "3.9.0")
 
 pluginCrossBuild / sbtVersion := {
   scalaBinaryVersion.value match {
     case "2.12" =>
-      (pluginCrossBuild / sbtVersion).value
+      "1.13.1"
     case _ =>
       sbt2
   }
@@ -27,7 +28,7 @@ scalacOptions ++= {
     case "3" =>
       Seq("-Wconf:msg=it should not be used as infix operator:error")
     case _ =>
-      Seq("-release:8")
+      Seq("-Xsource:3", "-release:8")
   }
 }
 

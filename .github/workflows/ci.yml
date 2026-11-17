@@ -16,6 +16,10 @@ jobs:
             sbt_version: "1.4.9"
           - java: 17
             sbt_version: "2"
+          - java: 21
+            sbt_version: "2"
+          - java: 25
+            sbt_version: "2"
           - java: 8
           - java: 25
     steps:

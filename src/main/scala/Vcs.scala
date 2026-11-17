@@ -1,7 +1,6 @@
 package sbtrelease
 
 import java.io.File
-import sbt.*
 import sys.process.Process
 import sys.process.ProcessBuilder
 import sys.process.ProcessLogger

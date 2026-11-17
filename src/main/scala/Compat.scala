@@ -19,7 +19,6 @@ object Compat {
   import Utilities.*
 
   def runTaskAggregated[T](taskKey: TaskKey[T], state: State): (State, Result[Seq[KeyValue[T]]]) = {
-    import EvaluateTask.*
 
     val extra = DummyTaskMap(Nil)
     val extracted = state.extract
