@@ -84,8 +84,8 @@ object LoadCompat {
     val projectsMap = projects.map { case (k, v) => k -> v.defined.keySet }
     val configsMap: Map[String, Seq[Configuration]] =
       projects.values.flatMap(bu => bu.defined map { case (k, v) => (k, v.configurations) }).toMap
-    val keyIndex = keyIndexApply(scopedKeys.toVector, projectsMap, configsMap)
-    val aggIndex = keyIndexAggregate(scopedKeys.toVector, extra(keyIndex), projectsMap, configsMap)
+    val keyIndex = KeyIndex(scopedKeys.toVector, projectsMap, configsMap)
+    val aggIndex = KeyIndex.aggregate(scopedKeys.toVector, extra(keyIndex), projectsMap, configsMap)
     new StructureIndex(
       Index.stringToKeyMap(attributeKeys),
       Index.taskToKeyMap(data),
