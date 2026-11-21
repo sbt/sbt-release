@@ -50,7 +50,9 @@ trait Vcs {
 
 object Vcs {
   def detect(dir: File): Option[Vcs] = {
-    Stream(Git, Mercurial, Subversion).flatMap(comp => comp.isRepository(dir).map(comp.mkVcs(_))).headOption
+    Iterator(Git, Mercurial, Subversion).map(comp => comp.isRepository(dir).map(comp.mkVcs(_))).collectFirst {
+      case Some(x) => x
+    }
   }
 }
 
