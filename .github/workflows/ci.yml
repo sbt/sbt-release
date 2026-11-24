@@ -30,7 +30,7 @@ jobs:
       with:
         java-version: ${{matrix.java}}
         distribution: zulu
-    - uses: sbt/setup-sbt@v1.5.14
+    - uses: sbt/setup-sbt@v1.5.15
     - uses: coursier/cache-action@v9.0.1
     - run: |
         sudo apt-get update
